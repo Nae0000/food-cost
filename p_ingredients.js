@@ -9,8 +9,10 @@ const BUY_UNITS = ['กก.', 'กรัม', 'ลิตร', 'มล.', 'กำ
 function renderIngredients(container) {
   let filterGroup = 'ทั้งหมด', search = '';
   const GROUPS_LIST = ['ทั้งหมด', 'เนื้อสัตว์', 'ผัก/สมุนไพร', 'เครื่องปรุง', 'ของแห้ง', 'อื่นๆ'];
+  let selectedIds = new Set();
 
   function badge(ing) {
+    if (ing.priceMode === 'sub_recipe') return `<span class="badge" style="background:#7c3aed22;color:#7c3aed">🧪 Sub-Recipe</span>`;
     if (ing.priceMode === 'webhook') return `<span class="badge badge-webhook">🔗 Webhook</span>`;
     if (ing.priceMode === 'custom') return `<span class="badge badge-custom">🎯 Custom</span>`;
     return `<span class="badge badge-manual">✏️ Manual</span>`;
@@ -23,10 +25,15 @@ function renderIngredients(container) {
 
     document.getElementById('ingTableBody').innerHTML = ings.map(ing => {
       const price = DB.effectivePrice(ing);
-      const buyInfo = (ing.buyQty && ing.buyPrice)
-        ? `<small style="color:var(--text-faint);font-size:11px">ซื้อ ${ing.buyQty}${ing.buyUnit} ฿${ing.buyPrice} → ฿${price.toFixed(4)}/${ing.recipeUnit || ing.buyUnit}</small>`
-        : '';
-      return `<tr>
+      const buyInfo = ing.priceMode === 'sub_recipe'
+        ? `<small style="color:#7c3aed;font-size:11px">🧪 ${t('sub_recipe')} → ${formatPrice(price)}/${ing.subYieldUnit || ing.recipeUnit || ing.buyUnit}</small>`
+        : (ing.buyQty && ing.buyPrice)
+          ? `<small style="color:var(--text-faint);font-size:11px">ซื้อ ${ing.buyQty}${ing.buyUnit} ฿${ing.buyPrice} → ฿${price.toFixed(4)}/${ing.recipeUnit || ing.buyUnit}</small>`
+          : '';
+      return `<tr class="${selectedIds.has(ing.id) ? 'selected-row' : ''}">
+        <td style="width:40px;text-align:center">
+          <input type="checkbox" class="ing-select-cb" value="${ing.id}" ${selectedIds.has(ing.id) ? 'checked' : ''} onchange="toggleSelectIng(${ing.id})" style="accent-color:var(--primary);cursor:pointer;width:16px;height:16px" />
+        </td>
         <td>
           <strong>${ing.name}</strong>
           ${buyInfo}
@@ -44,7 +51,11 @@ function renderIngredients(container) {
               <button class="price-mode-btn ${ing.priceMode === 'manual' ? 'active' : ''}" onclick="setPriceMode(${ing.id},'manual')">Manual</button>
               <button class="price-mode-btn ${ing.priceMode === 'custom' ? 'active' : ''}" onclick="setPriceMode(${ing.id},'custom')">Custom</button>
               <button class="price-mode-btn ${ing.priceMode === 'webhook' ? 'active' : ''}" onclick="setPriceMode(${ing.id},'webhook')">Webhook</button>
+              <button class="price-mode-btn ${ing.priceMode === 'sub_recipe' ? 'active' : ''}" style="${ing.priceMode === 'sub_recipe' ? 'background:#7c3aed;color:white;border-color:#7c3aed' : ''}" onclick="setPriceMode(${ing.id},'sub_recipe')">🧪</button>
             </div>
+            <button class="btn btn-ghost btn-icon btn-sm" onclick="duplicateIngredient(${ing.id})" title="คัดลอก" style="color:var(--accent)">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+            </button>
             <button class="btn btn-ghost btn-icon btn-sm" onclick="openIngredientModal(${ing.id})" title="${t('btn_edit')}">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
             </button>
@@ -54,7 +65,19 @@ function renderIngredients(container) {
           </div>
         </td>
       </tr>`;
-    }).join('') || `<tr><td colspan="6"><div class="empty-state"><div class="empty-icon">🧂</div><div class="empty-title">${t('ing_empty')}</div></div></td></tr>`;
+    }).join('') || `<tr><td colspan="7"><div class="empty-state"><div class="empty-icon">🧂</div><div class="empty-title">${t('ing_empty')}</div></div></td></tr>`;
+
+    // Update toolbar 
+    const isAllSelected = ings.length > 0 && selectedIds.size === ings.length;
+    document.getElementById('selectAllCb').checked = isAllSelected;
+
+    const bulkBtn = document.getElementById('bulkDeleteBtn');
+    if (selectedIds.size > 0) {
+      bulkBtn.style.display = 'inline-flex';
+      bulkBtn.innerHTML = `<span>${t('btn_delete_selected')} (${selectedIds.size})</span>`;
+    } else {
+      bulkBtn.style.display = 'none';
+    }
   }
 
   container.innerHTML = `
@@ -74,10 +97,14 @@ function renderIngredients(container) {
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
           <input class="search-input" id="ingSearch" placeholder="${t('ing_search')}" oninput="ingSearch(this.value)" />
         </div>
-        <div style="font-size:12px;color:var(--text-muted)">${t('ing_mode_info')}</div>
+        <div style="display:flex;align-items:center;gap:12px">
+          <button id="bulkDeleteBtn" class="btn btn-sm" style="display:none;background:var(--danger);color:white;border:none" onclick="deleteSelectedIngredients()"></button>
+          <div style="font-size:12px;color:var(--text-muted)">${t('ing_mode_info')}</div>
+        </div>
       </div>
       <table>
         <thead><tr>
+          <th style="width:40px;text-align:center"><input type="checkbox" id="selectAllCb" onchange="toggleSelectAll(this.checked)" style="accent-color:var(--primary);cursor:pointer;width:16px;height:16px" /></th>
           <th>${t('ing_col_name')}</th><th>${t('ing_col_group')}</th><th>${t('ing_col_unit')}</th>
           <th>${t('ing_col_mode')}</th><th>${t('ing_col_price')}</th><th>${t('ing_col_actions')}</th>
         </tr></thead>
@@ -87,14 +114,68 @@ function renderIngredients(container) {
 
   window.ingFilterGroup = (g, btn) => {
     filterGroup = g;
+    selectedIds.clear();
     document.querySelectorAll('.filter-tab').forEach(b => b.classList.remove('active'));
     btn.classList.add('active'); draw();
   };
   window.ingSearch = (v) => { search = v; draw(); };
+
+  window.toggleSelectIng = (id) => {
+    if (selectedIds.has(id)) selectedIds.delete(id);
+    else selectedIds.add(id);
+    draw();
+  };
+
+  window.toggleSelectAll = (isChecked) => {
+    let ings = DB.getAll('ingredients');
+    if (filterGroup !== 'ทั้งหมด') ings = ings.filter(i => i.group === filterGroup);
+    if (search) ings = ings.filter(i => i.name.includes(search) || (i.group || '').includes(search));
+
+    if (isChecked) {
+      ings.forEach(i => selectedIds.add(i.id));
+    } else {
+      selectedIds.clear();
+    }
+    draw();
+  };
+
+  window.deleteSelectedIngredients = () => {
+    if (selectedIds.size === 0) return;
+    if (!confirm(t('bulk_delete_confirm').replace('{n}', selectedIds.size))) return;
+
+    const recipes = DB.getAll('recipes');
+    let deletedCount = 0;
+    let skippedCount = 0;
+
+    for (let id of selectedIds) {
+      if (recipes.some(r => r.ingredientId === id)) {
+        skippedCount++;
+      } else {
+        DB.delete('ingredients', id);
+        deletedCount++;
+      }
+    }
+
+    selectedIds.clear();
+    draw();
+
+    if (skippedCount > 0) {
+      Toast.show(t('bulk_delete_skip').replace('{n}', skippedCount), 'warning');
+    }
+    if (deletedCount > 0) {
+      setTimeout(() => Toast.show(t('bulk_delete_success').replace('{n}', deletedCount), 'success'), skippedCount > 0 ? 3000 : 0);
+    }
+  };
+
   draw();
 }
 
 window.setPriceMode = function (id, mode) {
+  if (mode === 'sub_recipe') {
+    DB.update('ingredients', id, { priceMode: mode });
+    openSubRecipeModal(id);
+    return;
+  }
   DB.update('ingredients', id, { priceMode: mode });
   if (mode === 'custom') {
     const ing = DB.getById('ingredients', id);
@@ -170,10 +251,18 @@ window.openIngredientModal = function (id = null) {
         </div>
       </div>
 
+      <!-- Sub-recipe button (only when editing) -->
+      ${id ? `<div style="margin-bottom:16px">
+        <button type="button" class="btn btn-sm" style="width:100%;background:linear-gradient(135deg,#7c3aed,#5b21b6);color:white;border:none;padding:10px;border-radius:var(--r-md);font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px" onclick="Modal.close();setTimeout(()=>openSubRecipeModal(${id}),80)">
+          🧪 <span>เปิด / แก้ไข สูตรย่อย</span>
+        </button>
+        <div class="form-hint" style="text-align:center">กดเพื่อกำหนดส่วนประกอบของวัตถุดิบผสม (Compound ingredient)</div>
+      </div>` : ''}
+
       <!-- Auto-calculated price preview -->
       <div id="ingPricePreview" style="background:linear-gradient(135deg,var(--primary)22,var(--accent)22);border:1px solid var(--primary);border-radius:var(--r-md);padding:12px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between">
         <div style="font-size:13px;color:var(--text-muted)">${t('ing_price_per_unit')}</div>
-        <div style="font-size:20px;font-weight:800;color:var(--primary)" id="ingPriceVal">${formatPrice(previewPrice)}</div>
+        <div style="font-size:20px;font-weight:800;color:var(--primary)" id="ingPriceVal">...</div>
       </div>
 
       <div class="form-group">
@@ -207,7 +296,7 @@ window.openIngredientModal = function (id = null) {
     }
   });
 
-  // Live preview calculation
+  // Live preview calculation — must be defined BEFORE the setTimeout below
   window.updateIngPreview = () => {
     const bq = parseFloat(document.getElementById('ingBuyQty')?.value) || 1;
     const bp = parseFloat(document.getElementById('ingBuyPrice')?.value) || 0;
@@ -217,9 +306,25 @@ window.openIngredientModal = function (id = null) {
     const el = document.getElementById('ingPriceVal');
     if (el) el.textContent = `${formatPrice(pricePerUnit)} / ${rUnit}`;
   };
+
+  // Trigger initial price preview after modal DOM is ready
+  setTimeout(window.updateIngPreview, 80);
 };
 
 window.deleteIngredient = function (id) {
   if (DB.getAll('recipes').some(r => r.ingredientId === id)) { Toast.show(t('ing_delete_warn'), 'warning'); return; }
   if (confirm(t('ing_delete_confirm'))) { DB.delete('ingredients', id); Toast.show(t('cat_deleted'), 'info'); Router.render(); }
+};
+
+window.duplicateIngredient = function (id) {
+  const src = DB.getById('ingredients', id);
+  if (!src) return;
+  const copy = {
+    ...src, name: src.name + ' (copy)', id: undefined, createdAt: undefined, updatedAt: undefined,
+    priceMode: src.priceMode === 'sub_recipe' ? 'manual' : src.priceMode,
+    webhookPrice: null, lastUpdated: null
+  };
+  DB.insert('ingredients', copy);
+  Toast.show('คัดลอกวัตถุดิบ "' + src.name + '" แล้ว', 'success');
+  Router.render();
 };

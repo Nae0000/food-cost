@@ -3,9 +3,10 @@
 // ===================================================
 
 let _recipeMenuId = null;
+let _drawRowsFn = null; // reference kept for partial updates
 window.setRecipeMenu = function (id) {
-  const sel = document.getElementById('recipeMenuSel');
-  if (sel) { sel.value = id; sel.dispatchEvent(new Event('change')); }
+  _recipeMenuId = id;
+  Router.render();
 };
 
 function renderRecipes(container) {
@@ -67,25 +68,89 @@ function renderRecipes(container) {
     }).join('') || `<tr><td colspan="6" style="text-align:center;padding:24px;color:var(--text-muted)">${t('rec_no_items')}</td></tr>`}
           </tbody>
         </table>
-        <div class="recipe-add-row">
+        <div class="recipe-add-row" style="position:relative;">
           <div class="form-group flex-1">
             <label class="form-label">${t('rec_add_ing')}</label>
-            <select class="form-select" id="addIngSel">
-              <option value="">-- ${t('rec_add_ing')} --</option>
-              ${ings.map(i => `<option value="${i.id}">${i.name} (${i.recipeUnit || i.buyUnit})</option>`).join('')}
-            </select>
+            <div class="searchable-select-container" id="ingSearchContainer" style="position:relative;">
+              <input type="text" class="form-input" id="addIngSearch" placeholder="-- ค้นหาวัตถุดิบ --" autocomplete="off" onfocus="showIngDropdown()" oninput="filterIngDropdown(); showIngDropdown();" style="width:100%;" />
+              <input type="hidden" id="addIngSel" value="" />
+              <div id="ingDropdown" class="searchable-dropdown" style="display:none; background:var(--bg); border:1px solid var(--border); border-radius:var(--r-md); max-height:220px; overflow-y:auto; z-index:9999; box-shadow:0 4px 16px rgba(0,0,0,0.6);">
+                ${ings.map(i => `<div class="dropdown-item" data-id="${i.id}" data-name="${i.name.toLowerCase()}" onclick="selectIng(${i.id}, '${i.name.replace(/'/g, "\\'")}')" style="padding:8px 12px; cursor:pointer; border-bottom:1px solid var(--border-light); font-size:14px;">
+                  <div style="font-weight:600;">${i.name}</div>
+                  <div style="font-size:11px; color:var(--text-muted);">${i.group || ''} (${i.recipeUnit || i.buyUnit})</div>
+                </div>`).join('')}
+              </div>
+            </div>
           </div>
           <div class="form-group" style="width:130px">
             <label class="form-label">${t('rec_qty')}</label>
             <input class="form-input" id="addIngQty" type="number" placeholder="0.1" step="0.001" min="0" />
           </div>
-          <button class="btn btn-primary" style="align-self:flex-end;margin-bottom:0" onclick="addRecipeItem()">
+          <button class="btn btn-primary" style="align-self:flex-end; margin-bottom:0" onclick="addRecipeItem()">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
             ${t('rec_add_btn')}
           </button>
         </div>
       </div>`;
+
+    // Close dropdowns on click outside or page scroll
+    setTimeout(() => {
+      document.addEventListener('click', function closeIngDropdown(e) {
+        const container = document.getElementById('ingSearchContainer');
+        const dropdown = document.getElementById('ingDropdown');
+        if (container && dropdown && !container.contains(e.target) && !dropdown.contains(e.target)) {
+          dropdown.style.display = 'none';
+        }
+      });
+      // Close on scroll so it doesn't block scrolling
+      document.getElementById('pageContainer')?.addEventListener('scroll', function () {
+        const d1 = document.getElementById('ingDropdown');
+        const d2 = document.getElementById('menuDropdown');
+        if (d1) d1.style.display = 'none';
+        if (d2) d2.style.display = 'none';
+      }, { passive: true });
+      window.addEventListener('scroll', function () {
+        const d1 = document.getElementById('ingDropdown');
+        const d2 = document.getElementById('menuDropdown');
+        if (d1) d1.style.display = 'none';
+        if (d2) d2.style.display = 'none';
+      }, { passive: true });
+    }, 100);
   }
+
+  window.showIngDropdown = function () {
+    const input = document.getElementById('addIngSearch');
+    const dropdown = document.getElementById('ingDropdown');
+    if (!input || !dropdown) return;
+    const rect = input.getBoundingClientRect();
+    dropdown.style.display = 'block';
+    dropdown.style.position = 'fixed';
+    dropdown.style.top = (rect.bottom + 4) + 'px';
+    dropdown.style.left = rect.left + 'px';
+    dropdown.style.width = rect.width + 'px';
+    filterIngDropdown();
+  };
+
+  window.filterIngDropdown = function () {
+    const term = document.getElementById('addIngSearch').value.toLowerCase();
+    const items = document.querySelectorAll('#ingDropdown .dropdown-item');
+    let hasVisible = false;
+    items.forEach(el => {
+      if (el.dataset.name.includes(term)) {
+        el.style.display = 'block';
+        hasVisible = true;
+      } else {
+        el.style.display = 'none';
+      }
+    });
+  };
+
+  window.selectIng = function (id, name) {
+    document.getElementById('addIngSel').value = id;
+    document.getElementById('addIngSearch').value = name;
+    document.getElementById('ingDropdown').style.display = 'none';
+    document.getElementById('addIngQty').focus(); // auto-focus qty for speed
+  };
 
   container.innerHTML = `
     <div class="page-header">
@@ -94,16 +159,81 @@ function renderRecipes(container) {
     <div class="recipe-header">
       <div class="recipe-select-wrap">
         <label class="form-label">${t('rec_select_menu')}</label>
-        <select class="form-select" id="recipeMenuSel" onchange="changeRecipeMenu(this.value)">
-          <option value="">${t('rec_menu_placeholder')}</option>
-          ${menus.map(m => { const cat = cats.find(c => c.id === m.categoryId); return `<option value="${m.id}" ${_recipeMenuId === m.id ? 'selected' : ''}>${cat ? cat.icon : ''} ${m.name}</option>`; }).join('')}
-        </select>
+        
+        <div class="searchable-select-container" id="menuSearchContainer" style="position:relative;">
+          <input type="text" class="form-input" id="recipeMenuSearch" placeholder="-- ค้นหาเมนูอาหาร --" autocomplete="off" onfocus="showMenuDropdown()" oninput="filterMenuDropdown()" style="width:100%; max-width:400px;" value="${_recipeMenuId ? (menus.find(m => m.id === _recipeMenuId)?.name || '') : ''}" />
+          <input type="hidden" id="recipeMenuSel" value="${_recipeMenuId || ''}" />
+          
+          <div id="menuDropdown" class="searchable-dropdown" style="display:none; background:var(--bg); border:1px solid var(--border); border-radius:var(--r-md); max-height:300px; overflow-y:auto; z-index:9999; box-shadow:0 4px 16px rgba(0,0,0,0.6);">
+            <div class="dropdown-item" data-id="" data-name="" onclick="selectMenu('', '-- เลือกลบเสร็จสิ้น --')" style="padding:8px 12px; cursor:pointer; border-bottom:1px solid var(--border-light); font-size:14px; font-style:italic; color:var(--text-muted)">
+              -- กลับหน้าเริ่มต้น --
+            </div>
+            ${menus.map(m => {
+    const cat = cats.find(c => c.id === m.categoryId);
+    return `<div class="dropdown-item" data-id="${m.id}" data-name="${m.name.toLowerCase()}" onclick="selectMenu(${m.id}, '${m.name.replace(/'/g, "\\'")}')" style="padding:8px 12px; cursor:pointer; border-bottom:1px solid var(--border-light); font-size:14px;">
+                  <div style="font-weight:600;">${cat ? cat.icon : ''} ${m.name}</div>
+               </div>`;
+  }).join('')}
+          </div>
+        </div>
+
       </div>
     </div>
     <div id="recipeSummary"></div>
     <div id="recipeRows"><div class="empty-state"><div class="empty-icon">📋</div><div class="empty-title">${t('rec_select_first')}</div></div></div>`;
 
+  // Global click listener to close menu dropdown
+  setTimeout(() => {
+    document.addEventListener('click', function closeMenuDropdown(e) {
+      const container = document.getElementById('menuSearchContainer');
+      const dropdown = document.getElementById('menuDropdown');
+      if (container && dropdown && !container.contains(e.target)) {
+        dropdown.style.display = 'none';
+      }
+    });
+  }, 100);
+
+  window.showMenuDropdown = function () {
+    const input = document.getElementById('recipeMenuSearch');
+    const dropdown = document.getElementById('menuDropdown');
+    if (!input || !dropdown) return;
+    const rect = input.getBoundingClientRect();
+    dropdown.style.display = 'block';
+    dropdown.style.position = 'fixed';
+    dropdown.style.top = (rect.bottom + 4) + 'px';
+    dropdown.style.left = rect.left + 'px';
+    dropdown.style.width = rect.width + 'px';
+    filterMenuDropdown();
+  };
+
+  window.filterMenuDropdown = function () {
+    const term = document.getElementById('recipeMenuSearch').value.toLowerCase();
+    const items = document.querySelectorAll('#menuDropdown .dropdown-item');
+    items.forEach(el => {
+      // The "clear" option always shows unless searching specifically
+      if (!el.dataset.id && term === '') {
+        el.style.display = 'block';
+      } else if (el.dataset.name.includes(term) || (!el.dataset.id && term === '')) {
+        el.style.display = 'block';
+      } else {
+        el.style.display = 'none';
+      }
+    });
+  };
+
+  window.selectMenu = function (id, name) {
+    document.getElementById('recipeMenuSel').value = id;
+    if (id) {
+      document.getElementById('recipeMenuSearch').value = name;
+    } else {
+      document.getElementById('recipeMenuSearch').value = '';
+    }
+    document.getElementById('menuDropdown').style.display = 'none';
+    changeRecipeMenu(id); // trigger the actual change logic
+  };
+
   window.changeRecipeMenu = (v) => { _recipeMenuId = v ? parseInt(v) : null; drawRows(); };
+  _drawRowsFn = drawRows; // expose for use in global action handlers
   if (_recipeMenuId) drawRows();
 }
 
@@ -115,16 +245,22 @@ window.addRecipeItem = function () {
   if (DB.getAll('recipes').some(r => r.menuId === _recipeMenuId && r.ingredientId === ingId)) { Toast.show(t('rec_duplicate'), 'warning'); return; }
   DB.insert('recipes', { menuId: _recipeMenuId, ingredientId: ingId, quantity: qty });
   Toast.show(t('rec_added'));
-  const sid = _recipeMenuId; Router.render(); setTimeout(() => setRecipeMenu(sid), 60);
+
+  // Clear inputs without re-rendering the full page (preserves scroll)
+  document.getElementById('addIngSearch').value = '';
+  document.getElementById('addIngSel').value = '';
+  document.getElementById('addIngQty').value = '';
+
+  if (_drawRowsFn) _drawRowsFn(); else { const sid = _recipeMenuId; Router.render(); setTimeout(() => setRecipeMenu(sid), 60); }
 };
 window.editRecipeQty = function (id, name, qty) {
   const val = prompt(`${t('rec_edit_qty')} "${name}":`, qty);
   if (val !== null && !isNaN(parseFloat(val)) && parseFloat(val) > 0) {
     DB.update('recipes', id, { quantity: parseFloat(val) }); Toast.show(t('rec_qty_updated'));
-    const sid = _recipeMenuId; Router.render(); setTimeout(() => setRecipeMenu(sid), 60);
+    if (_drawRowsFn) _drawRowsFn(); else { const sid = _recipeMenuId; Router.render(); setTimeout(() => setRecipeMenu(sid), 60); }
   }
 };
 window.deleteRecipe = function (id) {
   DB.delete('recipes', id); Toast.show(t('rec_deleted'), 'info');
-  const sid = _recipeMenuId; Router.render(); setTimeout(() => setRecipeMenu(sid), 60);
+  if (_drawRowsFn) _drawRowsFn(); else { const sid = _recipeMenuId; Router.render(); setTimeout(() => setRecipeMenu(sid), 60); }
 };

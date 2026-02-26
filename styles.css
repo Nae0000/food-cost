@@ -1702,3 +1702,8 @@ td {
 }
 .menu-list-actions { display: flex; gap: 8px; flex-shrink: 0; }
 
+
+/* Bulk Delete UI */
+tr.selected-row {
+  background-color: var(--primary-glow) !important;
+}

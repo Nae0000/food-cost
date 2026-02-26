@@ -5,6 +5,21 @@
 const TRANSLATIONS = {
     th: {
         // Nav
+        suggested_price: '💡 ราคาขายขั้นต่ำที่ควรเป็น (GP 70%):',
+        settings_data: 'ข้อมูลและการสำรอง',
+        settings_data_desc: 'จัดการข้อมูลทั้งหมดในระบบ ส่งออกเป็นไฟล์ CSV หรือสำรองข้อมูลทั้งหมด (Backup/Restore)',
+        btn_export_csv: '📊 โหลดไฟล์ CSV (ดูใน Excel)',
+        btn_backup_json: '📦 สำรองข้อมูลทั้งหมด (Backup)',
+        btn_restore_json: '🔄 นำข้อมูลกลับมาใส่ (Restore)',
+        restore_confirm: 'คำเตือน: การนำข้อมูลกลับมาใส่ (Restore) จะลบข้อมูลที่มีอยู่ปัจจุบันทั้งหมด คุณต้องการทำต่อหรือไม่?',
+        restore_success: 'ฟื้นฟูข้อมูลสำเร็จ!',
+        restore_error: 'ไฟล์ข้อมูลไม่ถูกต้อง หรือเสียหาย',
+        export_csv_success: 'ดาวน์โหลดไฟล์ CSV ทั้งหมดแล้ว',
+        btn_delete_selected: '🗑️ ลบรายการที่เลือก',
+        bulk_delete_confirm: 'คุณแน่ใจหรือไม่ว่าต้องการลบ {n} รายการที่เลือก?',
+        bulk_delete_skip: 'ข้าม {n} รายการเนื่องจากถูกใช้ในสูตรอาหารอยู่',
+        bulk_delete_success: 'ลบสำเร็จ {n} รายการ',
+        set_menu_title: 'เมนูเซต',
         nav_dashboard: 'ภาพรวม',
         nav_categories: 'หมวดหมู่อาหาร',
         nav_ingredients: 'ต้นทุนวัตถุดิบ',
@@ -81,6 +96,9 @@ const TRANSLATIONS = {
         menu_title: 'เมนูอาหาร',
         menu_sub: 'จัดการเมนูและดูต้นทุนแต่ละจาน',
         menu_add: 'เพิ่มเมนู',
+        menu_import_airregi: '📥 นำเข้าจาก Airregi CSV',
+        menu_import_success: 'อัปเดตราคา {u} เมนู / เพิ่มเมนูใหม่ {i} รายการ',
+        menu_import_err: 'เกิดข้อผิดพลาดในการอ่านไฟล์ Airregi CSV',
         menu_name: 'ชื่อเมนู',
         menu_category: 'หมวดหมู่',
         menu_selling_price: 'ราคาขาย',
@@ -100,6 +118,22 @@ const TRANSLATIONS = {
         menu_name_req: 'กรุณากรอกชื่อเมนู',
         menu_no_desc: 'ไม่มีคำอธิบาย',
         menu_cat_select: '-- เลือกหมวดหมู่ --',
+        menu_bulk_cat: '🏷️ เปลี่ยนหมวดหมู่', menu_bulk_cat_title: 'เปลี่ยนหมวดหมู่ให้ {n} เมนู',
+        menu_bulk_cat_ok: 'อัปเดตหมวดหมู่ {n} เมนูสำเร็จ',
+        // Sub-Recipe
+        sub_recipe: '🧪 สูตรย่อย',
+        sub_title: 'สูตรย่อย — {name}',
+        sub_components: 'ส่วนผสม',
+        sub_add_ing: 'เพิ่มวัตถุดิบ',
+        sub_yield: 'ปริมาณที่ได้',
+        sub_yield_unit: 'หน่วยที่ได้',
+        sub_total_cost: 'ต้นทุนรวม',
+        sub_cost_per_unit: 'ต้นทุนต่อหน่วย',
+        sub_no_items: 'ยังไม่มีส่วนผสม',
+        sub_saved: 'บันทึกสูตรย่อยแล้ว',
+        sub_yield_hint: 'เช่น ผสมแล้วได้ 500 มล.',
+        sub_dup: 'วัตถุดิบนี้มีอยู่แล้ว',
+        sub_self: 'ไม่สามารถเพิ่มตัวเองเป็นส่วนผสม',
         // Recipes
         rec_title: 'สูตรอาหาร',
         rec_sub: 'กำหนดวัตถุดิบและปริมาณต่อเมนู — ต้นทุนคำนวณอัตโนมัติ',
@@ -189,6 +223,21 @@ const TRANSLATIONS = {
     },
 
     en: {
+        suggested_price: '💡 Minimum Selling Price (70% GP):',
+        settings_data: 'Data & Backup',
+        settings_data_desc: 'Manage all database data, export to CSV for reporting, or Backup/Restore everything.',
+        btn_export_csv: '📊 Download CSV (Excel Report)',
+        btn_backup_json: '📦 Backup All Data (JSON)',
+        btn_restore_json: '🔄 Restore Data (JSON)',
+        restore_confirm: 'WARNING: Restoring data will OVERWRITE all current information. Proceed?',
+        restore_success: 'Data restored successfully!',
+        restore_error: 'Invalid or corrupted backup file.',
+        export_csv_success: 'All CSV files downloaded successfully!',
+        btn_delete_selected: '🗑️ Delete Selected',
+        bulk_delete_confirm: 'Are you sure you want to delete {n} selected items?',
+        bulk_delete_skip: 'Skipped {n} items because they are used in recipes.',
+        bulk_delete_success: 'Successfully deleted {n} items.',
+        set_menu_title: 'Set Menus',
         nav_dashboard: 'Dashboard', nav_categories: 'Categories', nav_ingredients: 'Ingredients',
         nav_menus: 'Menus', nav_recipes: 'Recipes', nav_webhook: 'Webhook', nav_settings: 'Settings',
         dash_title: 'System Overview', dash_categories: 'Categories', dash_ingredients: 'Ingredients',
@@ -220,7 +269,9 @@ const TRANSLATIONS = {
         ing_edit_modal: 'Edit Ingredient', ing_add_modal: 'Add Ingredient',
         ing_buy_section: '📦 Purchase Info', ing_use_section: '🍳 Recipe Unit',
         menu_title: 'Menus', menu_sub: 'Manage menus and view per-dish cost',
-        menu_add: 'Add Menu', menu_name: 'Menu Name', menu_category: 'Category',
+        menu_add: 'Add Menu', menu_import_airregi: '📥 Import Airregi CSV',
+        menu_import_success: 'Updated {u} / Added {i} menus', menu_import_err: 'Error reading Airregi CSV file',
+        menu_name: 'Menu Name', menu_category: 'Category',
         menu_selling_price: 'Selling Price', menu_description: 'Description',
         menu_cost: 'Total Cost', menu_selling: 'Price / GP', menu_view_recipe: '📋 View Recipe',
         menu_edit: 'Edit Menu', menu_all: 'All', menu_search: 'Search menus...',
@@ -229,6 +280,22 @@ const TRANSLATIONS = {
         menu_saved: 'Menu added', menu_updated: 'Menu updated', menu_deleted: 'Menu deleted',
         menu_name_req: 'Please enter menu name', menu_no_desc: 'No description',
         menu_cat_select: '-- Select Category --',
+        menu_bulk_cat: '🏷️ Change Category', menu_bulk_cat_title: 'Change category for {n} menus',
+        menu_bulk_cat_ok: 'Updated category for {n} menus',
+        // Sub-Recipe
+        sub_recipe: '🧪 Sub-Recipe',
+        sub_title: 'Sub-Recipe — {name}',
+        sub_components: 'Components',
+        sub_add_ing: 'Add Ingredient',
+        sub_yield: 'Yield Amount',
+        sub_yield_unit: 'Yield Unit',
+        sub_total_cost: 'Total Cost',
+        sub_cost_per_unit: 'Cost per Unit',
+        sub_no_items: 'No components yet',
+        sub_saved: 'Sub-recipe saved',
+        sub_yield_hint: 'e.g. makes 500 ml total',
+        sub_dup: 'This ingredient is already added',
+        sub_self: 'Cannot add itself as a component',
         rec_title: 'Recipes', rec_sub: 'Set ingredients & quantities per menu — cost calculated automatically',
         rec_select_menu: 'Select Menu', rec_menu_placeholder: '-- Select Menu --',
         rec_total_cost: 'Total Cost per Dish', rec_selling: 'Selling Price',
@@ -266,6 +333,21 @@ const TRANSLATIONS = {
     },
 
     ja: {
+        suggested_price: '💡 最低推奨販売価格 (粗利70%):',
+        settings_data: 'データとバックアップ',
+        settings_data_desc: '全データを管理し、CSVでエクスポートしたり、すべてのデータをバックアップ/復元したりできます。',
+        btn_export_csv: '📊 CSVダウンロード (Excel用)',
+        btn_backup_json: '📦 全データバックアップ (JSON)',
+        btn_restore_json: '🔄 データ復元 (JSON)',
+        restore_confirm: '警告: データを復元すると、現在のすべての情報が上書きされます。続行しますか？',
+        restore_success: 'データの復元に成功しました！',
+        restore_error: 'バックアップファイルが無効か破損しています。',
+        export_csv_success: 'すべてのCSVファイルがダウンロードされました！',
+        btn_delete_selected: '🗑️ 選択した項目を削除',
+        bulk_delete_confirm: '{n}件の選択されたアイテムを削除してもよろしいですか？',
+        bulk_delete_skip: 'レシピで使用されているため{n}件をスキップしました。',
+        bulk_delete_success: '{n}件のアイテムを正常に削除しました。',
+        set_menu_title: 'セットメニュー',
         nav_dashboard: 'ダッシュボード', nav_categories: 'カテゴリー', nav_ingredients: '原材料費',
         nav_menus: 'メニュー', nav_recipes: 'レシピ', nav_webhook: 'Webhook', nav_settings: '設定',
         dash_title: 'システム概要', dash_categories: 'カテゴリー', dash_ingredients: '原材料',
@@ -299,7 +381,9 @@ const TRANSLATIONS = {
         ing_edit_modal: '原材料編集', ing_add_modal: '原材料追加',
         ing_buy_section: '📦 購入情報', ing_use_section: '🍳 レシピ使用単位',
         menu_title: 'メニュー', menu_sub: 'メニューと各料理のコストを管理する',
-        menu_add: 'メニュー追加', menu_name: 'メニュー名', menu_category: 'カテゴリー',
+        menu_add: 'メニュー追加', menu_import_airregi: '📥 Airregi CSV インポート',
+        menu_import_success: '{u}件の価格を更新 / {i}件を新規追加', menu_import_err: 'Airregi CSVの読み込みエラー',
+        menu_name: 'メニュー名', menu_category: 'カテゴリー',
         menu_selling_price: '販売価格', menu_description: '説明',
         menu_cost: '合計原価', menu_selling: '販売価格 / GP', menu_view_recipe: '📋 レシピを見る',
         menu_edit: 'メニュー編集', menu_all: 'すべて', menu_search: 'メニューを検索...',
@@ -308,6 +392,22 @@ const TRANSLATIONS = {
         menu_saved: 'メニューを追加しました', menu_updated: 'メニューを更新しました',
         menu_deleted: 'メニューを削除しました', menu_name_req: 'メニュー名を入力してください',
         menu_no_desc: '説明なし', menu_cat_select: '-- カテゴリーを選択 --',
+        menu_bulk_cat: '🏷️ カテゴリー変更', menu_bulk_cat_title: '{n}件のメニューのカテゴリーを変更',
+        menu_bulk_cat_ok: '{n}件のメニューのカテゴリーを更新しました',
+        // Sub-Recipe
+        sub_recipe: '🧪 サブレシピ',
+        sub_title: 'サブレシピ — {name}',
+        sub_components: '構成原材料',
+        sub_add_ing: '原材料を追加',
+        sub_yield: '出来上がり量',
+        sub_yield_unit: '単位',
+        sub_total_cost: '合計コスト',
+        sub_cost_per_unit: '単位あたりコスト',
+        sub_no_items: 'まだ原材料がありません',
+        sub_saved: 'サブレシピを保存しました',
+        sub_yield_hint: '例：合計500mlができる',
+        sub_dup: 'この原材料はすでに追加されています',
+        sub_self: '自分自身を構成原材料にできません',
         rec_title: 'レシピ', rec_sub: 'メニューごとの食材と分量を設定 — コストは自動計算',
         rec_select_menu: 'メニューを選択', rec_menu_placeholder: '-- メニューを選択 --',
         rec_total_cost: '1皿あたり原価合計', rec_selling: '販売価格',
@@ -351,11 +451,7 @@ const TRANSLATIONS = {
 // ===================================================
 
 const CURRENCIES = {
-    THB: { symbol: '฿', name: 'Thai Baht (THB)', rate: 1, decimals: 2 },
-    JPY: { symbol: '¥', name: '日本円 (JPY)', rate: 0.43, decimals: 0 },
-    USD: { symbol: '$', name: 'US Dollar (USD)', rate: 0.028, decimals: 2 },
-    EUR: { symbol: '€', name: 'Euro (EUR)', rate: 0.026, decimals: 2 },
-    SGD: { symbol: 'S$', name: 'Singapore Dollar (SGD)', rate: 0.038, decimals: 2 },
+    JPY: { symbol: '¥', name: '日本円 (JPY)', rate: 1, decimals: 2 },
 };
 
 const SETTINGS_KEY = 'fc_settings';
@@ -366,7 +462,7 @@ function loadSettings() {
 function saveSettings(s) { localStorage.setItem(SETTINGS_KEY, JSON.stringify(s)); }
 
 // Current settings (live)
-let _settings = { lang: 'th', currency: 'THB', customRate: null, ...loadSettings() };
+let _settings = { lang: 'th', currency: 'JPY', customRate: null, ...loadSettings(), currency: 'JPY' };
 
 // t(key) — translate a key
 function t(key) {
@@ -376,9 +472,8 @@ function t(key) {
 
 // formatPrice(val) — format number as currency string
 function formatPrice(val) {
-    const cur = CURRENCIES[_settings.currency] || CURRENCIES.THB;
-    const rate = _settings.customRate ? parseFloat(_settings.customRate) : cur.rate;
-    const converted = (val || 0) * rate;
+    const cur = CURRENCIES.JPY;
+    const converted = (val || 0) * cur.rate;
     return cur.symbol + converted.toFixed(cur.decimals).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
 }
 

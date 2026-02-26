@@ -56,6 +56,76 @@ document.getElementById('resetDataBtn').addEventListener('click', () => {
   if (confirm(t('btn_reset_confirm'))) { DB.reset(); SEED.run(); Toast.show(t('btn_reset_ok')); Router.render(); }
 });
 
+const DataSync = {
+  exportCSV() {
+    const tables = ['categories', 'ingredients', 'menus', 'recipes', 'subRecipes', 'sets'];
+    tables.forEach(table => {
+      const data = DB.getAll(table);
+      if (data.length === 0) return;
+
+      const keys = Object.keys(data[0]);
+      const csvContent = [
+        keys.join(','),
+        ...data.map(item => keys.map(k => {
+          let val = item[k];
+          if (Array.isArray(val) || typeof val === 'object') val = JSON.stringify(val);
+          if (typeof val === 'string') val = '"' + val.replace(/"/g, '""') + '"';
+          return val;
+        }).join(','))
+      ].join('\n');
+
+      this._download(csvContent, `foodcost_${table}.csv`, 'text/csv;charset=utf-8;');
+    });
+    Toast.show(t('export_csv_success'), 'success');
+  },
+
+  exportJSON() {
+    const backup = {
+      categories: DB.getAll('categories'),
+      ingredients: DB.getAll('ingredients'),
+      menus: DB.getAll('menus'),
+      recipes: DB.getAll('recipes'),
+      subRecipes: DB.getAll('subRecipes'),
+      sets: DB.getAll('sets')
+    };
+    const jsonStr = JSON.stringify(backup, null, 2);
+    const dateStr = new Date().toISOString().split('T')[0];
+    this._download(jsonStr, `foodcost_backup_${dateStr}.json`, 'application/json;charset=utf-8;');
+    Toast.show(t('export_csv_success'), 'success');
+  },
+
+  importJSON(jsonString) {
+    try {
+      const data = JSON.parse(jsonString);
+      const tables = ['categories', 'ingredients', 'menus', 'recipes', 'subRecipes', 'sets'];
+      if (!tables.some(t => data[t])) throw new Error("Invalid structure");
+
+      tables.forEach(t => {
+        if (data[t] && Array.isArray(data[t])) {
+          localStorage.setItem('fc_' + t, JSON.stringify(data[t]));
+        }
+      });
+      Toast.show(t('restore_success'), 'success');
+      setTimeout(() => window.location.reload(), 1500);
+    } catch (e) {
+      Toast.show(t('restore_error'), 'error');
+      console.error("Import JSON error", e);
+    }
+  },
+
+  _download(content, fileName, mimeType) {
+    const blob = new Blob(['\uFEFF' + content], { type: mimeType });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = fileName;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+};
+
 // ===================================================
 // DASHBOARD (with i18n + formatPrice)
 // ===================================================
@@ -144,8 +214,29 @@ window.toggleViewMode = (page, mode) => {
 function renderCategories(container) {
   const cats = DB.getAll('categories'), menus = DB.getAll('menus');
   const viewMode = localStorage.getItem('fc_view_mode_categories') || 'grid';
+  const selectedCats = new Set();
+
+  window.toggleSelectCat = (id, checked) => {
+    if (checked) selectedCats.add(id);
+    else selectedCats.delete(id);
+    const toolbar = document.getElementById('catBulkToolbar');
+    if (toolbar) toolbar.style.display = selectedCats.size > 0 ? 'flex' : 'none';
+    const btn = document.getElementById('catBulkDelBtn');
+    if (btn) btn.querySelector('span').textContent = `ลบที่เลือก (${selectedCats.size})`;
+
+    const row = document.getElementById('ccard-' + id);
+    if (row) {
+      if (checked) row.classList.add('selected-row'); else row.classList.remove('selected-row');
+    }
+  };
 
   const viewToggleHtml = `
+    <div id="catBulkToolbar" style="display:${selectedCats.size > 0 ? 'flex' : 'none'}; align-items:center; gap:8px; margin-right:12px;">
+      <button class="btn btn-sm" id="catBulkDelBtn" style="border-color:var(--danger);color:var(--danger)" onclick="bulkDeleteCategory()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>
+        <span>ลบที่เลือก (${selectedCats.size})</span>
+      </button>
+    </div>
     <div class="view-toggle">
       <button class="view-btn ${viewMode === 'grid' ? 'active' : ''}" onclick="toggleViewMode('categories', 'grid')" title="${t('view_grid')}">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
@@ -156,12 +247,23 @@ function renderCategories(container) {
     </div>
   `;
 
+  window.catSelectAll = (checked) => {
+    cats.forEach(c => {
+      toggleSelectCat(c.id, checked);
+      const cb = document.getElementById('ccb-' + c.id);
+      if (cb) cb.checked = checked;
+    });
+  };
+
   let contentHtml = '';
   if (viewMode === 'grid') {
     contentHtml = `<div class="grid-auto">
       ${cats.map(c => {
       const cnt = menus.filter(m => m.categoryId === c.id).length;
-      return `<div class="category-card" style="--cat-bg:${c.color}22">
+      return `<div class="category-card ${selectedCats.has(c.id) ? 'selected-row' : ''}" id="ccard-${c.id}" style="--cat-bg:${c.color}22">
+          <div style="position:absolute;top:10px;left:10px;z-index:10;">
+             <input type="checkbox" class="form-checkbox" id="ccb-${c.id}" ${selectedCats.has(c.id) ? 'checked' : ''} onchange="toggleSelectCat(${c.id},this.checked)" />
+          </div>
           <div class="category-actions">
             <button class="btn btn-icon btn-ghost btn-sm" onclick="openCategoryModal(${c.id})">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
@@ -184,7 +286,10 @@ function renderCategories(container) {
     contentHtml = `<div class="list-container">
       ${cats.map(c => {
       const cnt = menus.filter(m => m.categoryId === c.id).length;
-      return `<div class="category-list-row">
+      return `<div class="category-list-row ${selectedCats.has(c.id) ? 'selected-row' : ''}" id="ccard-${c.id}" style="padding-left:45px; position:relative;">
+          <div style="position:absolute;top:50%;left:14px;transform:translateY(-50%);z-index:10;">
+             <input type="checkbox" class="form-checkbox" id="ccb-${c.id}" ${selectedCats.has(c.id) ? 'checked' : ''} onchange="toggleSelectCat(${c.id},this.checked)" />
+          </div>
           <div class="category-list-icon" style="background:${c.color}22"><span>${c.icon}</span></div>
           <div class="category-list-details">
             <div>
@@ -216,6 +321,12 @@ function renderCategories(container) {
         </button>
       </div>
     </div>
+    <div style="display:flex;gap:12px;margin-bottom:20px;align-items:center;">
+      <div style="display:flex;align-items:center;gap:8px;background:var(--bg);padding:6px 10px;border-radius:var(--r-md)">
+        <input type="checkbox" class="form-checkbox" onchange="catSelectAll(this.checked)" title="Select All" />
+        <span style="font-size:13px;color:var(--text-muted)">เลือกทั้งหมด</span>
+      </div>
+    </div>
     ${contentHtml}`;
 }
 
@@ -244,4 +355,28 @@ window.openCategoryModal = function (id = null) {
 window.deleteCategory = function (id) {
   if (DB.getAll('menus').some(m => m.categoryId === id)) { Toast.show(t('cat_delete_warn'), 'warning'); return; }
   if (confirm(t('cat_delete_confirm'))) { DB.delete('categories', id); Toast.show(t('cat_deleted'), 'info'); Router.render(); }
+};
+
+window.bulkDeleteCategory = function () {
+  const selectedCats = Array.from(document.querySelectorAll('input[id^="ccb-"]:checked')).map(cb => parseInt(cb.id.replace('ccb-', '')));
+  if (selectedCats.length === 0) return;
+
+  // Check if any selected category has menus
+  const allMenus = DB.getAll('menus');
+  const hasMenus = selectedCats.some(id => allMenus.some(m => m.categoryId === id));
+
+  if (hasMenus) {
+    Toast.show('ไม่สามารถลบหมวดหมู่ที่มีเมนูอาหารอยู่ได้ กรุณาย้ายเมนูก่อนลบ', 'warning', 4000);
+    return;
+  }
+
+  if (confirm(`คุณต้องการลบหมวดหมู่ที่เลือกจำนวน ${selectedCats.length} รายการใช่ไหม?`)) {
+    let delCount = 0;
+    selectedCats.forEach(id => {
+      DB.delete('categories', id);
+      delCount++;
+    });
+    Toast.show(`ลบสำเร็จ ${delCount} รายการ`, 'success');
+    Router.render();
+  }
 };

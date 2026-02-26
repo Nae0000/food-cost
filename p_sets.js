@@ -229,11 +229,16 @@ window.openSetModal = function (id = null) {
       </div>
       <div class="form-group">
         <label class="form-label">📋 ${t('set_menu_select_menus')} <span>*</span></label>
+        <div class="search-wrap" style="margin-bottom:8px">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input class="search-input" id="setMenuSearch" placeholder="${t('menu_search')}" oninput="filterSetMenus(this.value)" style="font-size:13px" />
+        </div>
         <div id="setMenuCheckboxes" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;max-height:220px;overflow-y:auto;background:var(--bg);border:1px solid var(--border);border-radius:var(--r-md);padding:12px">
           ${menus.map(m => {
       const cat = cats.find(c => c.id === m.categoryId);
       const mCost = DB.menuCost(m.id);
-      return `<label style="display:flex;align-items:flex-start;gap:8px;font-size:13px;cursor:pointer;padding:6px;border-radius:var(--r-sm);border:1px solid var(--border);background:var(--bg-card)">
+      const nameNorm = m.name.toLowerCase();
+      return `<label data-menu-name="${nameNorm}" style="display:flex;align-items:flex-start;gap:8px;font-size:13px;cursor:pointer;padding:6px;border-radius:var(--r-sm);border:1px solid var(--border);background:var(--bg-card)">
               <input type="checkbox" value="${m.id}" ${linkedIds.includes(m.id) ? 'checked' : ''} style="accent-color:var(--primary);margin-top:2px;flex-shrink:0" onchange="calcSetPreview()" />
               <div>
                 <div style="font-weight:600">${cat ? cat.icon + ' ' : ''}${m.name}</div>
@@ -241,7 +246,8 @@ window.openSetModal = function (id = null) {
               </div>
             </label>`;
     }).join('')}
-          ${menus.length === 0 ? `<div style="color:var(--text-muted);font-size:13px;grid-column:1/-1">ยังไม่มีเมนู กรุณาเพิ่มเมนูก่อน</div>` : ''}
+          ${menus.length === 0 ? `<div style="color:var(--text-muted);font-size:13px;grid-column:1/-1">${t('menu_empty')}</div>` : ''}
+          <div id="setMenuNoResult" style="display:none;color:var(--text-muted);font-size:13px;grid-column:1/-1;padding:8px 0;text-align:center">🔍 ${t('menu_empty')}</div>
         </div>
       </div>
       <div id="setPreview" style="background:var(--bg);border:1px solid var(--border);border-radius:var(--r-md);padding:10px;font-size:13px;text-align:center"></div>`,
@@ -261,6 +267,19 @@ window.openSetModal = function (id = null) {
   });
 
   window.calcSetPreview = calcPreview;
+  window.filterSetMenus = (q) => {
+    const query = q.toLowerCase().trim();
+    const labels = document.querySelectorAll('#setMenuCheckboxes label[data-menu-name]');
+    let visibleCount = 0;
+    labels.forEach(label => {
+      const name = label.getAttribute('data-menu-name') || '';
+      const match = !query || name.includes(query);
+      label.style.display = match ? '' : 'none';
+      if (match) visibleCount++;
+    });
+    const noResult = document.getElementById('setMenuNoResult');
+    if (noResult) noResult.style.display = visibleCount === 0 && labels.length > 0 ? 'block' : 'none';
+  };
   setTimeout(calcPreview, 50);
 };
 

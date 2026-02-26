@@ -43,8 +43,13 @@ const DB = {
   //
   // Logic:
   //   calcPrice = customPrice ?? (buyPrice / (buyQty * convFactor)) ?? (webhookPrice / convFactor) ?? basePrice
-  effectivePrice(ing) {
+  effectivePrice(ing, _visited) {
     if (!ing) return 0;
+    // Sub-recipe mode: cost = total component cost / yield
+    if (ing.priceMode === 'sub_recipe') {
+      const yield_ = Number(ing.subYield) || 1;
+      return Math.round((this.subRecipeCost(ing.id, _visited) / yield_) * 10000) / 10000;
+    }
     // Custom price always wins (per recipeUnit)
     if (ing.customPrice != null && ing.customPrice !== '') return Number(ing.customPrice);
     // Bulk purchase calculation
@@ -62,6 +67,20 @@ const DB = {
     return Number(ing.basePrice) || 0;
   },
 
+  // Total cost of a sub-recipe's components (with circular-reference guard)
+  subRecipeCost(ingredientId, _visited) {
+    const visited = _visited || new Set();
+    if (visited.has(ingredientId)) return 0; // prevent infinite loops
+    visited.add(ingredientId);
+    const items = this.getAll('subRecipes').filter(r => r.parentIngredientId === ingredientId);
+    let total = 0;
+    for (const item of items) {
+      const child = this.getById('ingredients', item.ingredientId);
+      if (child) total += this.effectivePrice(child, visited) * Number(item.quantity || 0);
+    }
+    return Math.round(total * 10000) / 10000;
+  },
+
   menuCost(menuId) {
     const recipes = this.getAll('recipes').filter(r => r.menuId === menuId);
     let total = 0;
@@ -75,7 +94,7 @@ const DB = {
   isInitialized() { return !!this._get('__initialized__'); },
   markInitialized() { this._set('__initialized__', true); },
   reset() {
-    ['categories', 'ingredients', 'menus', 'recipes', 'webhooks', '__initialized__']
+    ['categories', 'ingredients', 'menus', 'recipes', 'subRecipes', 'webhooks', '__initialized__']
       .forEach(k => localStorage.removeItem('fc_' + k));
   }
 };
