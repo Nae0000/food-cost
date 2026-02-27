@@ -371,7 +371,7 @@ window.openMenuModal = function (id = null) {
 
   const currentType = m?.menuType || 'single';
 
-  // Recipe section (single type)
+  // Recipe section (single type) — also shown for new menus as placeholder
   const recipeHtml = m ? `
     <div id="mRecipeSection" style="margin-top:4px;margin-bottom:16px;${currentType === 'set' ? 'display:none' : ''}">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
@@ -395,11 +395,17 @@ window.openMenuModal = function (id = null) {
         <input class="form-input" id="mAddQty" type="number" placeholder="จำนวน" step="0.001" min="0" style="width:80px;font-size:13px;min-height:40px" />
         <button class="btn btn-primary btn-sm" onclick="mAddRecipeItem()" style="min-height:40px;padding:0 14px;white-space:nowrap">+ เพิ่ม</button>
       </div>
-    </div>` : '';
+    </div>` : `
+    <div id="mRecipeSection" style="margin-top:4px;margin-bottom:16px;${currentType === 'set' ? 'display:none' : ''}">
+      <div style="font-weight:700;font-size:14px;color:var(--accent);margin-bottom:8px">📋 สูตรอาหาร</div>
+      <div style="padding:14px 16px;border:1px dashed var(--border);border-radius:var(--r-md);background:var(--bg);color:var(--text-muted);font-size:13px;text-align:center;line-height:1.8">
+        กด <strong style="color:var(--primary)">"💾 บันทึก &amp; เพิ่มสูตร"</strong> เพื่อบันทึกเมนูแล้วเพิ่มวัตถุดิบในสูตรได้ทันที
+      </div>
+    </div>`;
 
-  // Sub-menu section (set type)
+  // Sub-menu section (set type) — also shown for new menus
   const allMenusForSet = DB.getAll('menus').filter(x => !m || x.id !== m.id);
-  const subMenuHtml = m ? `
+  const subMenuHtml = `
     <div id="mSubMenuSection" style="margin-top:4px;margin-bottom:16px;${currentType === 'single' ? 'display:none' : ''}">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
         <div style="font-weight:700;font-size:14px;color:#7c3aed;display:flex;align-items:center;gap:6px">
@@ -426,7 +432,7 @@ window.openMenuModal = function (id = null) {
         <input class="form-input" id="mAddSubMenuPortion" type="number" placeholder="โพชั่น" step="0.1" min="0.1" value="1" style="width:80px;font-size:13px;min-height:40px" />
         <button class="btn btn-sm" style="min-height:40px;padding:0 14px;white-space:nowrap;background:#7c3aed;color:white;border-color:#7c3aed" onclick="mAddSubMenuItem()">+ เพิ่ม</button>
       </div>
-    </div>` : '';
+    </div>`;
 
   const typeToggleHtml = `
     <div class="form-group" style="margin-bottom:12px">
@@ -456,6 +462,11 @@ window.openMenuModal = function (id = null) {
       <input type="hidden" id="mMenuType" value="${currentType}" />
       <div class="form-group"><label class="form-label">${t('menu_description')}</label>
         <textarea class="form-textarea" id="mDesc">${m?.description || ''}</textarea></div>`,
+    footerHtml: m
+      ? `<button class="btn btn-secondary" onclick="Modal.close()">${t('btn_cancel')}</button>
+         <button class="btn btn-primary" id="modalConfirmBtn">${t('btn_save')}</button>`
+      : `<button class="btn btn-secondary" onclick="Modal.close()">${t('btn_cancel')}</button>
+         <button class="btn btn-primary" id="modalConfirmBtn">💾 บันทึก &amp; เพิ่มสูตร →</button>`,
     onConfirm() {
       const name = document.getElementById('mName').value.trim();
       if (!name) { Toast.show(t('menu_name_req'), 'error'); return; }
@@ -467,8 +478,17 @@ window.openMenuModal = function (id = null) {
         menuType: menuType,
         subMenus: menuType === 'set' ? _subMenus : (m?.subMenus || [])
       };
-      if (id) DB.update('menus', id, data); else DB.insert('menus', data);
-      Modal.close(); Toast.show(id ? t('menu_updated') : t('menu_saved')); Router.render();
+      if (id) {
+        DB.update('menus', id, data);
+        Modal.close(); Toast.show(t('menu_updated')); Router.render();
+      } else {
+        // For new menus: save first, then reopen with recipe section unlocked
+        const newMenu = DB.insert('menus', data);
+        Modal.close();
+        Toast.show(t('menu_saved'));
+        // Reopen immediately with the new id so user can add recipes
+        setTimeout(() => openMenuModal(newMenu.id), 80);
+      }
     }
   });
 

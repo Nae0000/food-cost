@@ -1,17 +1,17 @@
 # PowerShell script: auto_push.ps1
-# วางไฟล์นี้ไว้ใน e:\App\food-cost\ แล้วรันเพื่อ auto push ขึ้น GitHub ทุกครั้งที่มีการแก้ไขไฟล์
+# Place this file in e:\App\food-cost\ and run it to auto push to GitHub on every file change.
 
 $repoPath = "e:\App\food-cost"
-$gitExe = "git"   # ถ้า git อยู่ที่อื่น ให้แก้เป็น full path เช่น "C:\Program Files\Git\cmd\git.exe"
+$gitExe = "git"   # If git is elsewhere, use full path e.g. "C:\Program Files\Git\cmd\git.exe"
 $branch = "master"
 $remote = "origin"
-$debounceSeconds = 5   # รอ X วินาทีหลังแก้ไขก่อน push
+$debounceSeconds = 5   # Wait X seconds after a change before pushing
 
 Set-Location $repoPath
 
-Write-Host "🚀 Starting auto-push watcher for $repoPath" -ForegroundColor Cyan
+Write-Host "Starting auto-push watcher for $repoPath" -ForegroundColor Cyan
 Write-Host "   Branch: $branch | Remote: $remote" -ForegroundColor Gray
-Write-Host "   กด Ctrl+C เพื่อหยุด`n" -ForegroundColor Gray
+Write-Host "   Press Ctrl+C to stop" -ForegroundColor Gray
 
 $watcher = New-Object System.IO.FileSystemWatcher
 $watcher.Path = $repoPath
@@ -38,19 +38,19 @@ while ($true) {
             $global:pendingPush = $false
             $lastPush = $now
 
-            Write-Host "[$now] 📂 ตรวจพบการเปลี่ยนแปลง — กำลัง push..." -ForegroundColor Yellow
+            Write-Host "[$now] Detected changes - pushing..." -ForegroundColor Yellow
 
             & $gitExe add -A 2>&1
             $statusLn = & $gitExe status --short 2>&1
-            
+
             if ($statusLn) {
                 $msg = "auto: update $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
                 & $gitExe commit -m $msg 2>&1
                 & $gitExe push $remote $branch 2>&1
-                Write-Host "[$now] ✅ Push สำเร็จ: $msg" -ForegroundColor Green
+                Write-Host "[$now] Push OK: $msg" -ForegroundColor Green
             }
             else {
-                Write-Host "[$now] ℹ️  ไม่มีการเปลี่ยนแปลง — ข้าม" -ForegroundColor DarkGray
+                Write-Host "[$now] No changes - skip" -ForegroundColor DarkGray
             }
         }
     }
