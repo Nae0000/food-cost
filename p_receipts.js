@@ -17,55 +17,97 @@ function renderReceipts(container) {
     return isNaN(d) ? str : d.toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' });
   }
 
-  // ---- Parse OCR text into items ----
-  function parseReceiptLines(text) {
-    var lines = text.split('\n').map(function (l) { return l.trim(); }).filter(function (l) { return l.length > 1; });
+  // ---- Smart receipt parser — uses Tesseract line/word data ----
+  function parseReceiptData(ocrResult) {
     var results = [];
 
+    // Keywords that signal non-product lines
+    var SKIP_RE = /合計|小計|消費税|税込|外税|内税|税|割引|値引|お釣|おつり|ありがとう|レシート|領収|お買上|点数|会員|ポイント|担当|電話|住所|〒|TEL|FAX|receipt|total|subtotal|vat|\btax\b|discount|change|รวม|ยอด|ส่วนลด|เงินทอน|ใบเสร็จ|สาขา|เบอร์|หน้า|^\s*\d{4}[\-\/]\d{1,2}[\-\/]\d{1,2}/i;
+    var YEN_RE = /[¥]\s*([\d,]+)/;
+    var EN_RE = /([\d,]+)\s*円/;
+    var QTY_RE = /(\d+(?:\.\d+)?)\s*[×xX\*]\s*[\d.]+/;
+    var QTY_UNIT_RE = /(\d+(?:\.\d+)?)\s*(?:個|本|袋|枚|缶|パック|冊|本|ชิ้น|ขวด|กก|กรัม)/;
+
+    // Use Tesseract's line objects if available (higher accuracy)
+    var lines = [];
+    if (ocrResult.lines && ocrResult.lines.length) {
+      lines = ocrResult.lines
+        .filter(function (ln) { return ln.confidence > 25 && ln.text && ln.text.trim().length > 1; })
+        .map(function (ln) { return ln.text.trim(); });
+    } else {
+      lines = ocrResult.text.split('\n').map(function (l) { return l.trim(); }).filter(function (l) { return l.length > 1; });
+    }
+
     lines.forEach(function (line) {
-      // Skip total/header lines (Thai + Japanese)
-      if (/รวม|ยอด|total|subtotal|vat|tax|discount|ส่วนลด|change|เงินทอน|receipt|ใบเสร็จ|合計|小計|消費税|税込|外税|お釣|おつり|ありがとう|レシート|領収|お買上|点数|割引|値引/i.test(line)) return;
+      // --- Non-product filter ---
+      if (SKIP_RE.test(line)) return;
 
+      // Meaningful chars = Thai/JP/Kana/Latin — must be enough to be a product name
+      var meaningful = line.replace(/[^\u0e00-\u0e7f\u3000-\u9fff\u30a0-\u30ffa-zA-Z]/g, '');
+      if (!meaningful || meaningful.length < 1) return;
+      // Ratio filter: if mostly digits/symbols, skip (e.g. barcodes, dates)
+      var ratio = meaningful.length / line.replace(/\s/g, '').length;
+      if (ratio < 0.12) return;
+
+      // --- Price ---
       var price = 0;
-
-      // 1) Try ¥ or円 prefix/suffix first (most reliable for JP receipts)
-      var yenMatch = line.match(/[¥\\]\s*([\d,]+)/);
-      if (!yenMatch) yenMatch = line.match(/([\d,]+)\s*円/);
-      if (yenMatch) {
-        price = parseFloat(yenMatch[1].replace(/,/g, ''));
+      var yenM = line.match(YEN_RE);
+      var enM = line.match(EN_RE);
+      if (yenM) {
+        price = parseFloat(yenM[1].replace(/,/g, ''));
+      } else if (enM) {
+        price = parseFloat(enM[1].replace(/,/g, ''));
       } else {
-        // 2) Fallback: last number on the line
-        var nums = (line.match(/[\d,]+(?:\.\d{1,2})?/g) || []);
-        nums = nums.map(function (p) { return parseFloat(p.replace(/,/g, '')); }).filter(function (p) { return p > 0 && p < 200000; });
-        if (nums.length) price = nums[nums.length - 1];
+        var allNums = (line.match(/[\d,]+(?:\.\d{1,2})?/g) || [])
+          .map(function (n) { return parseFloat(n.replace(/,/g, '')); })
+          .filter(function (n) { return n > 0 && n < 200000; });
+        if (allNums.length) price = allNums[allNums.length - 1];
       }
       if (price <= 0) return;
 
-      // Name: remove price, ¥/円, digits, punctuation — keep Thai/JP/Latin chars
-      var name = line
-        .replace(/[¥\\]\s*[\d,]+/g, '')
-        .replace(/[\d,]+\s*円/g, '')
-        .replace(/[\d,\.]+/g, '')
-        .replace(/[฿$*×xX\\]/g, '')
-        .replace(/[\|\(\)\[\]{}「」【】]/g, ' ')
+      // --- Quantity ---
+      var qty = 1;
+      var qtyM = line.match(QTY_RE);
+      if (qtyM) {
+        qty = parseFloat(qtyM[1]) || 1;
+      } else {
+        var qtyU = line.match(QTY_UNIT_RE);
+        if (qtyU) qty = parseFloat(qtyU[1]) || 1;
+      }
+
+      // --- Name: strip price / qty tokens, keep text ---
+      var name = line;
+      if (yenM) name = name.replace(YEN_RE, '');
+      if (enM) name = name.replace(EN_RE, '');
+      // Remove qty×price pattern
+      name = name.replace(/(\d+(?:\.\d+)?)\s*[×xX\*]\s*[\d.,]+/g, '');
+      // Remove unit qty (e.g. 2個)
+      name = name.replace(/(\d+(?:\.\d+)?)\s*(?:個|本|袋|枚|缶|パック|ชิ้น|ขวด|กก|กรัม)/g, '');
+      // Remove remaining numbers and symbols
+      name = name
+        .replace(/[\d,]+(?:\.\d{1,2})?/g, '')
+        .replace(/[¥฿$*\\]/g, '')
+        .replace(/[|\(\)\[\]{}「」【】〔〕]/g, ' ')
         .replace(/\s+/g, ' ').trim()
-        .replace(/^[-\/\s*]+|[-\/\s*]+$/g, '').trim();
+        .replace(/^[\s\-\/\.\*]+|[\s\-\/\.\*]+$/g, '').trim();
 
-      // Must have at least 1 meaningful character (Thai, Kanji/Kana, or Latin letter)
-      var meaningful = name.replace(/[^\u0e00-\u0e7f\u3000-\u9fff\u30a0-\u30ffa-zA-Z]/g, '');
-      if (!meaningful || price <= 0) return;
+      // Final name quality check
+      var nameCheck = name.replace(/[^\u0e00-\u0e7f\u3000-\u9fff\u30a0-\u30ffa-zA-Z]/g, '');
+      if (!nameCheck || nameCheck.length < 1) return;
 
-      var qtyMatch = line.match(/(\d+)\s*[xX×]\s*[\d.]+/);
-      var qty = qtyMatch ? parseInt(qtyMatch[1]) : 1;
-
+      // --- Auto-match ingredient ---
       var ingredientId = null;
       var nameLower = name.toLowerCase();
       for (var k = 0; k < ings.length; k++) {
         var iName = ings[k].name.toLowerCase();
-        if (iName === nameLower || iName.includes(nameLower) || nameLower.includes(iName)) { ingredientId = ings[k].id; break; }
+        if (iName === nameLower || iName.includes(nameLower) || nameLower.includes(iName)) {
+          ingredientId = ings[k].id; break;
+        }
       }
+
       results.push({ name: name, price: price, qty: qty, unit: 'กก.', keep: true, ingredientId: ingredientId });
     });
+
     return results;
   }
 
@@ -277,7 +319,7 @@ function renderReceipts(container) {
       });
 
       setStatus('วิเคราะห์รายการ...', 97);
-      _parsed = parseReceiptLines(result.data.text);
+      _parsed = parseReceiptData(result.data);
       window._rcParsed = _parsed;
 
       setStatus('เสร็จแล้ว!', 100);
