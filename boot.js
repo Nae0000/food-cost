@@ -10,6 +10,7 @@ Router.register('sets', renderSets);
 Router.register('recipes', renderRecipes);
 Router.register('webhook', renderWebhook);
 Router.register('price-history', renderPriceHistory);
+Router.register('receipts', renderReceipts);
 Router.register('settings', renderSettings);
 
 // Apply saved language to sidebar nav labels

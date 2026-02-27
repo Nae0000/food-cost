@@ -137,8 +137,34 @@ const DB = {
   },
 
   reset() {
-    ['categories', 'ingredients', 'menus', 'recipes', 'subRecipes', 'webhooks', 'priceHistory', '__initialized__']
+    ['categories', 'ingredients', 'menus', 'recipes', 'subRecipes', 'webhooks', 'priceHistory', 'receipts', '__initialized__']
       .forEach(k => localStorage.removeItem('fc_' + k));
+  },
+
+  // ---------------------------------------------------
+  // Receipts
+  // ---------------------------------------------------
+  saveReceipt(receipt) {
+    const items = this._get('receipts') || [];
+    if (receipt.id) {
+      // update
+      const idx = items.findIndex(r => r.id === receipt.id);
+      if (idx >= 0) items[idx] = receipt;
+      else items.push(receipt);
+    } else {
+      receipt.id = Date.now();
+      receipt.createdAt = Date.now();
+      items.unshift(receipt);
+    }
+    this._set('receipts', items);
+    return receipt;
+  },
+  getReceipts() {
+    return (this._get('receipts') || []).sort((a, b) => b.createdAt - a.createdAt);
+  },
+  deleteReceipt(id) {
+    const items = (this._get('receipts') || []).filter(r => r.id !== id);
+    this._set('receipts', items);
   }
 };
 
