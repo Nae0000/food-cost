@@ -1,10 +1,10 @@
 # PowerShell script: auto_push.ps1
 # วางไฟล์นี้ไว้ใน e:\App\food-cost\ แล้วรันเพื่อ auto push ขึ้น GitHub ทุกครั้งที่มีการแก้ไขไฟล์
 
-$repoPath  = "e:\App\food-cost"
-$gitExe    = "git"   # ถ้า git อยู่ที่อื่น ให้แก้เป็น full path เช่น "C:\Program Files\Git\cmd\git.exe"
-$branch    = "main"
-$remote    = "origin"
+$repoPath = "e:\App\food-cost"
+$gitExe = "git"   # ถ้า git อยู่ที่อื่น ให้แก้เป็น full path เช่น "C:\Program Files\Git\cmd\git.exe"
+$branch = "master"
+$remote = "origin"
 $debounceSeconds = 5   # รอ X วินาทีหลังแก้ไขก่อน push
 
 Set-Location $repoPath
@@ -14,13 +14,13 @@ Write-Host "   Branch: $branch | Remote: $remote" -ForegroundColor Gray
 Write-Host "   กด Ctrl+C เพื่อหยุด`n" -ForegroundColor Gray
 
 $watcher = New-Object System.IO.FileSystemWatcher
-$watcher.Path   = $repoPath
+$watcher.Path = $repoPath
 $watcher.Filter = "*.*"
 $watcher.IncludeSubdirectories = $false
-$watcher.EnableRaisingEvents   = $true
+$watcher.EnableRaisingEvents = $true
 
 $lastPush = [DateTime]::MinValue
-$timer    = $null
+$timer = $null
 
 $action = {
     $global:pendingPush = $true
@@ -48,7 +48,8 @@ while ($true) {
                 & $gitExe commit -m $msg 2>&1
                 & $gitExe push $remote $branch 2>&1
                 Write-Host "[$now] ✅ Push สำเร็จ: $msg" -ForegroundColor Green
-            } else {
+            }
+            else {
                 Write-Host "[$now] ℹ️  ไม่มีการเปลี่ยนแปลง — ข้าม" -ForegroundColor DarkGray
             }
         }
