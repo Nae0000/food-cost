@@ -79,8 +79,9 @@ function renderMenus(container) {
             </div>
             <div style="text-align:right">
               <div style="font-size:11px;color:var(--text-faint)">${t('menu_selling')}</div>
-              <div style="font-weight:600">${m.sellingPrice ? formatPrice(m.sellingPrice) : (cost > 0 ? `<span style="color:var(--warning);font-size:11px;font-weight:500">${t('suggested_price')} ${formatPrice(cost / 0.3)}</span>` : '-')}</div>
+              <div style="font-weight:600">${m.sellingPrice ? formatPrice(m.sellingPrice) : '-'}</div>
               ${gp ? `<div style="font-size:12px;color:${gpColor};font-weight:700">${t('gp_label')} ${gp}%</div>` : ''}
+              ${cost > 0 ? `<div style="font-size:11px;color:var(--warning);margin-top:2px">${t('suggested_price')} <strong>${formatPrice(cost / 0.3)}</strong></div>` : ''}
             </div>
             ${m.sellingPrice ? `<div style="text-align:right">
               <div style="font-size:11px;color:var(--text-muted)">Tax 8%: <b style="color:var(--text)">${formatPrice(m.sellingPrice * 1.08)}</b></div>
@@ -127,8 +128,9 @@ function renderMenus(container) {
           </div>
           <div style="text-align:right">
             <div style="font-size:11px;color:var(--text-faint)">${t('menu_selling')}</div>
-            <div style="font-weight:600">${m.sellingPrice ? formatPrice(m.sellingPrice) : (cost > 0 ? `<span style="color:var(--warning);font-size:11px;font-weight:500">${t('suggested_price')} ${formatPrice(cost / 0.3)}</span>` : '-')}</div>
+            <div style="font-weight:600">${m.sellingPrice ? formatPrice(m.sellingPrice) : '-'}</div>
             ${gp ? `<div style="font-size:12px;color:${gpColor};font-weight:700">${t('gp_label')} ${gp}%</div>` : ''}
+            ${cost > 0 ? `<div style="font-size:11px;color:var(--warning);margin-top:2px">${t('suggested_price')} <strong>${formatPrice(cost / 0.3)}</strong></div>` : ''}
             ${m.sellingPrice ? `<div style="font-size:11px;color:var(--text-muted);margin-top:2px">Tax 8%: <b style="color:var(--text)">${formatPrice(m.sellingPrice * 1.08)}</b> | 10%: <b style="color:var(--text)">${formatPrice(m.sellingPrice * 1.10)}</b></div>` : ''}
           </div>
         </div>
