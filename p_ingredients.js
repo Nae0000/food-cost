@@ -18,99 +18,131 @@ function renderIngredients(container) {
     return `<span class="badge badge-manual">✏️ Manual</span>`;
   }
 
+  // ---- Group color map ----
+  const GROUP_COLORS = {
+    'เนื้อสัตว์': { bg: '#ef444422', color: '#ef4444', emoji: '🥩' },
+    'ผัก/สมุนไพร': { bg: '#22c55e22', color: '#22c55e', emoji: '🥬' },
+    'เครื่องปรุง': { bg: '#f59e0b22', color: '#f59e0b', emoji: '🧄' },
+    'ของแห้ง': { bg: '#8b5cf622', color: '#8b5cf6', emoji: '🌾' },
+    'อื่นๆ': { bg: '#64748b22', color: '#64748b', emoji: '📦' },
+  };
+
   function draw() {
     let ings = DB.getAll('ingredients');
     if (filterGroup !== 'ทั้งหมด') ings = ings.filter(i => i.group === filterGroup);
-    if (search) ings = ings.filter(i => i.name.includes(search) || (i.group || '').includes(search));
+    if (search) ings = ings.filter(i => i.name.toLowerCase().includes(search.toLowerCase()) || (i.group || '').includes(search));
 
-    document.getElementById('ingTableBody').innerHTML = ings.map(ing => {
+    // Update count
+    const countEl = document.getElementById('ingCount');
+    if (countEl) countEl.textContent = ings.length + ' รายการ';
+
+    const body = document.getElementById('ingCardBody');
+    if (!body) return;
+
+    if (!ings.length) {
+      body.innerHTML = `<div class="empty-state"><div class="empty-icon">🧂</div><div class="empty-title">${t('ing_empty')}</div></div>`;
+      return;
+    }
+
+    body.innerHTML = ings.map(ing => {
       const price = DB.effectivePrice(ing);
+      const gc = GROUP_COLORS[ing.group] || { bg: '#33415522', color: '#64748b', emoji: '🧂' };
+      const modeColor = ing.priceMode === 'webhook' ? '#8b5cf6' : ing.priceMode === 'custom' ? '#22c55e' : ing.priceMode === 'sub_recipe' ? '#7c3aed' : '#f59e0b';
+      const modeLabel = ing.priceMode === 'webhook' ? '🔗 Webhook' : ing.priceMode === 'custom' ? '🎯 Custom' : ing.priceMode === 'sub_recipe' ? '🧪 Sub-Recipe' : '✏️ Manual';
       const buyInfo = ing.priceMode === 'sub_recipe'
-        ? `<small style="color:#7c3aed;font-size:11px">🧪 ${t('sub_recipe')} → ${formatPrice(price)}/${ing.subYieldUnit || ing.recipeUnit || ing.buyUnit}</small>`
+        ? `<span style="color:#7c3aed;font-size:11px">🧪 → ${formatPrice(price)}/${ing.subYieldUnit || ing.recipeUnit || ing.buyUnit}</span>`
         : (ing.buyQty && ing.buyPrice)
-          ? `<small style="color:var(--text-faint);font-size:11px">ซื้อ ${ing.buyQty}${ing.buyUnit} ฿${ing.buyPrice} → ฿${price.toFixed(4)}/${ing.recipeUnit || ing.buyUnit}</small>`
+          ? `<span style="color:var(--text-faint);font-size:11px">ซื้อ ${ing.buyQty}${ing.buyUnit} ฿${ing.buyPrice} → ฿${Number(price).toFixed(2)}/${ing.recipeUnit || ing.buyUnit}</span>`
           : '';
-      return `<tr class="${selectedIds.has(ing.id) ? 'selected-row' : ''}">
-        <td style="width:40px;text-align:center">
-          <input type="checkbox" class="ing-select-cb" value="${ing.id}" ${selectedIds.has(ing.id) ? 'checked' : ''} onchange="toggleSelectIng(${ing.id})" style="accent-color:var(--primary);cursor:pointer;width:16px;height:16px" />
-        </td>
-        <td data-label="${t('ing_col_name')}">
-          <strong>${ing.name}</strong>
-          ${buyInfo}
-        </td>
-        <td data-label="${t('ing_col_group')}"><span class="text-muted" style="font-size:12px">${ing.group || '-'}</span></td>
-        <td data-label="${t('ing_col_unit')}">${ing.recipeUnit || ing.buyUnit || '-'}</td>
-        <td data-label="${t('ing_col_mode')}">${badge(ing)}</td>
-        <td data-label="${t('ing_col_price')}">
-          <span style="font-weight:700;color:var(--primary)">${formatPrice(price)}</span>
-          <span style="font-size:11px;color:var(--text-faint)">/${ing.recipeUnit || ing.buyUnit}</span>
-        </td>
-        <td>
-          <div class="td-actions">
-            <div class="price-mode-btns">
-              <button class="price-mode-btn ${ing.priceMode === 'manual' ? 'active' : ''}" onclick="setPriceMode(${ing.id},'manual')">Manual</button>
-              <button class="price-mode-btn ${ing.priceMode === 'custom' ? 'active' : ''}" onclick="setPriceMode(${ing.id},'custom')">Custom</button>
-              <button class="price-mode-btn ${ing.priceMode === 'webhook' ? 'active' : ''}" onclick="setPriceMode(${ing.id},'webhook')">Webhook</button>
-              <button class="price-mode-btn ${ing.priceMode === 'sub_recipe' ? 'active' : ''}" style="${ing.priceMode === 'sub_recipe' ? 'background:#7c3aed;color:white;border-color:#7c3aed' : ''}" onclick="setPriceMode(${ing.id},'sub_recipe')">🧪</button>
+      const isSelected = selectedIds.has(ing.id);
+
+      // Suggested min price
+      const suggestHtml = price > 0
+        ? `<span style="font-size:10px;color:var(--text-faint);margin-top:2px">💡 ขายขั้นต่ำ ${formatPrice(price / 0.3)}</span>`
+        : '';
+
+      return `<div class="ing-card${isSelected ? ' ing-card--selected' : ''}" onclick="ingCardClick(event,${ing.id})">
+        <div class="ing-card__left">
+          <input type="checkbox" class="ing-select-cb" value="${ing.id}" ${isSelected ? 'checked' : ''} onchange="toggleSelectIng(${ing.id})" style="accent-color:var(--primary);cursor:pointer;width:16px;height:16px;flex-shrink:0" onclick="event.stopPropagation()" />
+          <div class="ing-card__avatar" style="background:${gc.bg};color:${gc.color}">${gc.emoji}</div>
+          <div class="ing-card__info">
+            <div class="ing-card__name">${ing.name}</div>
+            <div class="ing-card__meta">
+              <span class="ing-card__group" style="background:${gc.bg};color:${gc.color}">${ing.group || 'อื่นๆ'}</span>
+              <span class="ing-card__mode" style="background:${modeColor}22;color:${modeColor}">${modeLabel}</span>
+              <span style="color:var(--text-faint);font-size:11px">${ing.recipeUnit || ing.buyUnit || ''}</span>
             </div>
-            <button class="btn btn-ghost btn-icon btn-sm" onclick="duplicateIngredient(${ing.id})" title="คัดลอก" style="color:var(--accent)">
+            ${buyInfo ? `<div style="margin-top:3px">${buyInfo}</div>` : ''}
+          </div>
+        </div>
+        <div class="ing-card__right">
+          <div class="ing-card__price">${formatPrice(price)}<span class="ing-card__unit">/${ing.recipeUnit || ing.buyUnit}</span></div>
+          ${suggestHtml}
+          <div class="ing-card__actions">
+            <button class="ing-action-btn" onclick="event.stopPropagation();duplicateIngredient(${ing.id})" title="คัดลอก" style="color:var(--accent)">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
             </button>
-            <button class="btn btn-ghost btn-icon btn-sm" onclick="openIngredientModal(${ing.id})" title="${t('btn_edit')}">
+            <button class="ing-action-btn" onclick="event.stopPropagation();openIngredientModal(${ing.id})" title="แก้ไข" style="color:var(--primary)">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
             </button>
-            <button class="btn btn-icon btn-sm" style="background:transparent;border:none;color:var(--danger)" onclick="deleteIngredient(${ing.id})" title="${t('btn_delete')}">
+            <button class="ing-action-btn" onclick="event.stopPropagation();deleteIngredient(${ing.id})" title="ลบ" style="color:var(--danger)">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>
             </button>
           </div>
-        </td>
-      </tr>`;
-    }).join('') || `<tr><td colspan="7"><div class="empty-state"><div class="empty-icon">🧂</div><div class="empty-title">${t('ing_empty')}</div></div></td></tr>`;
-
-    // Update toolbar 
-    const isAllSelected = ings.length > 0 && selectedIds.size === ings.length;
-    document.getElementById('selectAllCb').checked = isAllSelected;
+        </div>
+      </div>`;
+    }).join('');
 
     const bulkBtn = document.getElementById('bulkDeleteBtn');
-    if (selectedIds.size > 0) {
-      bulkBtn.style.display = 'inline-flex';
-      bulkBtn.innerHTML = `<span>${t('btn_delete_selected')} (${selectedIds.size})</span>`;
-    } else {
-      bulkBtn.style.display = 'none';
+    const isAllSelected = ings.length > 0 && ings.every(i => selectedIds.has(i.id));
+    const selectAllCb = document.getElementById('selectAllCb');
+    if (selectAllCb) selectAllCb.checked = isAllSelected;
+    if (bulkBtn) {
+      if (selectedIds.size > 0) {
+        bulkBtn.style.display = 'inline-flex';
+        bulkBtn.innerHTML = `<span>🗑 ลบที่เลือก (${selectedIds.size})</span>`;
+      } else {
+        bulkBtn.style.display = 'none';
+      }
     }
   }
 
   container.innerHTML = `
     <div class="page-header">
-      <div><div class="page-title">🧂 ${t('ing_title')}</div><div class="page-subtitle">${t('ing_sub')}</div></div>
-      <button class="btn btn-primary" onclick="openIngredientModal()">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-        ${t('ing_add')}
-      </button>
+      <div>
+        <div class="page-title">🧂 ${t('ing_title')}</div>
+        <div class="page-subtitle">${t('ing_sub')}</div>
+      </div>
+      <div style="display:flex;gap:10px;align-items:center">
+        <span id="ingCount" style="font-size:13px;color:var(--text-muted)"></span>
+        <button id="bulkDeleteBtn" class="btn btn-sm" style="display:none;background:var(--danger);color:white;border:none" onclick="deleteSelectedIngredients()"></button>
+        <button class="btn btn-primary" onclick="openIngredientModal()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          ${t('ing_add')}
+        </button>
+      </div>
     </div>
-    <div class="filter-tabs">
+
+    <!-- Category filter tabs -->
+    <div class="filter-tabs" style="margin-bottom:16px">
       ${GROUPS_LIST.map(g => `<button class="filter-tab${g === 'ทั้งหมด' ? ' active' : ''}" onclick="ingFilterGroup('${g}',this)">${g}</button>`).join('')}
     </div>
-    <div class="table-wrap">
-      <div class="table-toolbar">
-        <div class="search-wrap">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-          <input class="search-input" id="ingSearch" placeholder="${t('ing_search')}" oninput="ingSearch(this.value)" />
-        </div>
-        <div style="display:flex;align-items:center;gap:12px">
-          <button id="bulkDeleteBtn" class="btn btn-sm" style="display:none;background:var(--danger);color:white;border:none" onclick="deleteSelectedIngredients()"></button>
-          <div style="font-size:12px;color:var(--text-muted)">${t('ing_mode_info')}</div>
-        </div>
+
+    <!-- Search + select-all bar -->
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
+      <div class="search-wrap" style="flex:1">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input class="search-input" id="ingSearch" placeholder="${t('ing_search')}" oninput="ingSearch(this.value)" />
       </div>
-      <table>
-        <thead><tr>
-          <th style="width:40px;text-align:center"><input type="checkbox" id="selectAllCb" onchange="toggleSelectAll(this.checked)" style="accent-color:var(--primary);cursor:pointer;width:16px;height:16px" /></th>
-          <th>${t('ing_col_name')}</th><th>${t('ing_col_group')}</th><th>${t('ing_col_unit')}</th>
-          <th>${t('ing_col_mode')}</th><th>${t('ing_col_price')}</th><th>${t('ing_col_actions')}</th>
-        </tr></thead>
-        <tbody id="ingTableBody"></tbody>
-      </table>
-    </div>`;
+      <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--text-muted);cursor:pointer;white-space:nowrap">
+        <input type="checkbox" id="selectAllCb" onchange="toggleSelectAll(this.checked)" style="accent-color:var(--primary);cursor:pointer;width:15px;height:15px" />
+        เลือกทั้งหมด
+      </label>
+    </div>
+
+    <!-- Cards -->
+    <div id="ingCardBody" style="display:flex;flex-direction:column;gap:10px"></div>`;
+
 
   window.ingFilterGroup = (g, btn) => {
     filterGroup = g;
@@ -119,6 +151,8 @@ function renderIngredients(container) {
     btn.classList.add('active'); draw();
   };
   window.ingSearch = (v) => { search = v; draw(); };
+  window.ingCardClick = (e, id) => { openIngredientModal(id); };
+
 
   window.toggleSelectIng = (id) => {
     if (selectedIds.has(id)) selectedIds.delete(id);
