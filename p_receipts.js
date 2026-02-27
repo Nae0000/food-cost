@@ -236,6 +236,8 @@ function renderReceipts(container) {
     '    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">',
     '      <div style="font-weight:700;font-size:15px;color:var(--primary)">② ตรวจสอบรายการที่อ่านได้</div>',
     '      <div style="display:flex;gap:8px;align-items:center"><span id="parsedCount" style="font-size:13px;color:var(--text-muted)"></span>',
+    '      <button class="btn btn-ghost btn-sm" onclick="rcToggleAll(false)" title="ติ๊กออกทั้งหมด">☐ ติ๊กออกทั้งหมด</button>',
+    '      <button class="btn btn-ghost btn-sm" onclick="rcToggleAll(true)" title="เลือกทั้งหมด">☑ เลือกทั้งหมด</button>',
     '      <button class="btn btn-ghost btn-sm" onclick="rcRescan()">🔄 สแกนใหม่</button></div>',
     '    </div>',
     '    <div style="display:grid;grid-template-columns:1fr 2fr;gap:20px">',
@@ -244,7 +246,7 @@ function renderReceipts(container) {
     '        <div style="overflow-x:auto">',
     '          <table style="width:100%;border-collapse:collapse;font-size:13px">',
     '            <thead><tr style="background:var(--bg)">',
-    '              <th style="padding:8px;text-align:center;width:36px">✓</th>',
+    '              <th style="padding:8px;text-align:center;width:36px"><input type="checkbox" id="rcSelectAll" checked onchange="rcToggleAll(this.checked)" style="accent-color:var(--primary);width:15px;height:15px;cursor:pointer" title="เลือก/ติ๊กออกทั้งหมด" /></th>',
     '              <th style="padding:8px;text-align:left">ชื่อสินค้า</th>',
     '              <th style="padding:8px;text-align:right;width:90px">ราคา (฿)</th>',
     '              <th style="padding:8px;text-align:center;width:70px">จำนวน</th>',
@@ -349,6 +351,14 @@ function renderReceipts(container) {
   window.rcQty = function (i, v) { _parsed[i].qty = parseFloat(v) || 1; };
   window.rcUnit = function (i, v) { _parsed[i].unit = v; };
   window.rcUnlink = function (i) { _parsed[i].ingredientId = null; drawParsedRows(); };
+
+  window.rcToggleAll = function (val) {
+    _parsed.forEach(function (r) { r.keep = val; });
+    // Sync master checkbox
+    var cb = document.getElementById('rcSelectAll');
+    if (cb) cb.checked = val;
+    drawParsedRows();
+  };
 
   window.rcShow = function (i) {
     var inp = document.getElementById('rcls' + i);
