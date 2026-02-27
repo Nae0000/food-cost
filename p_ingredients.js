@@ -290,8 +290,18 @@ window.openIngredientModal = function (id = null) {
         basePrice: 0,
         priceMode: customPrice !== null ? 'custom' : (id ? (DB.getById('ingredients', id)?.priceMode || 'manual') : 'manual'),
       };
-      if (id) DB.update('ingredients', id, data);
-      else DB.insert('ingredients', { ...data, webhookPrice: null, lastUpdated: null });
+      // Record price history when price changes
+      const newPrice = customPrice !== null ? customPrice : (buyPrice > 0 && buyQty > 0 ? buyPrice / (buyQty * convFactor) : 0);
+      if (id) {
+        const oldPrice = DB.effectivePrice(DB.getById('ingredients', id));
+        DB.update('ingredients', id, data);
+        if (newPrice > 0 && Math.abs(newPrice - oldPrice) > 0.0001) {
+          DB.recordPriceHistory(id, newPrice, 'Edit');
+        }
+      } else {
+        const inserted = DB.insert('ingredients', { ...data, webhookPrice: null, lastUpdated: null });
+        if (newPrice > 0) DB.recordPriceHistory(inserted.id, newPrice, 'New');
+      }
       Modal.close(); Toast.show(id ? t('ing_updated') : t('ing_saved')); Router.render();
     }
   });

@@ -8,6 +8,8 @@
   <meta name="description" content="ระบบคิดต้นทุนอาหารไทย จัดการหมวดหมู่ วัตถุดิบ เมนูอาหาร สูตรอาหาร พร้อม Webhook" />
   <!-- Google Identity Services -->
   <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link
@@ -48,6 +50,8 @@
       <li class="nav-divider"></li>
       <li><a href="#webhook" class="nav-link" data-page="webhook" title="Webhook">
           <span class="nav-icon">🔗</span><span class="nav-label">Webhook</span></a></li>
+      <li><a href="#price-history" class="nav-link" data-page="price-history" title="ประวัติราคา">
+          <span class="nav-icon">📈</span><span class="nav-label">ประวัติราคา</span></a></li>
       <li><a href="#settings" class="nav-link" data-page="settings" title="ตั้งค่า">
           <span class="nav-icon">⚙️</span><span class="nav-label">ตั้งค่า</span></a></li>
     </ul>
@@ -159,6 +163,7 @@
   <script src="p_sub_recipe.js"></script>
   <script src="p_webhook.js"></script>
   <script src="p_gdrive.js"></script>
+  <script src="p_price_history.js"></script>
   <script src="p_settings.js"></script>
   <script src="boot.js"></script>
 </body>

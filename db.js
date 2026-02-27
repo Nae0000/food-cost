@@ -110,8 +110,34 @@ const DB = {
 
   isInitialized() { return !!this._get('__initialized__'); },
   markInitialized() { this._set('__initialized__', true); },
+
+  // ---------------------------------------------------
+  // Price History
+  // ---------------------------------------------------
+  recordPriceHistory(ingredientId, price, note = 'auto') {
+    const items = this._get('priceHistory') || [];
+    items.push({ id: Date.now(), ingredientId, price, timestamp: Date.now(), note });
+    this._set('priceHistory', items);
+  },
+  getPriceHistory(ingredientId) {
+    const all = this._get('priceHistory') || [];
+    const rows = ingredientId ? all.filter(r => r.ingredientId === ingredientId) : all;
+    return rows.sort((a, b) => a.timestamp - b.timestamp);
+  },
+  snapshotAllPrices(note = 'snapshot') {
+    const ings = this.getAll('ingredients');
+    const ts = Date.now();
+    const items = this._get('priceHistory') || [];
+    ings.forEach(ing => {
+      const price = this.effectivePrice(ing);
+      if (price > 0) items.push({ id: ts + ing.id, ingredientId: ing.id, price, timestamp: ts, note });
+    });
+    this._set('priceHistory', items);
+    return ings.length;
+  },
+
   reset() {
-    ['categories', 'ingredients', 'menus', 'recipes', 'subRecipes', 'webhooks', '__initialized__']
+    ['categories', 'ingredients', 'menus', 'recipes', 'subRecipes', 'webhooks', 'priceHistory', '__initialized__']
       .forEach(k => localStorage.removeItem('fc_' + k));
   }
 };
