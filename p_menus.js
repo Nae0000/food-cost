@@ -63,8 +63,9 @@ function renderMenus(container) {
           </div>
           <div class="menu-list-details">
             <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
-              <div style="font-size:16px;font-weight:700">${m.name}</div>
+              <div style="font-size:16px;font-weight:700">${m.menuType === 'set' ? '🍱 ' : ''}${m.name}</div>
               ${cat ? `<span class="badge badge-cat" style="background:${cat.color}22;color:${cat.color};padding:2px 8px;font-size:11px">${cat.icon} ${cat.name}</span>` : ''}
+              ${m.menuType === 'set' ? `<span class="badge" style="background:#7c3aed22;color:#7c3aed;padding:2px 6px;font-size:10px">SET</span>` : ''}
             </div>
             <div style="font-size:12px;color:var(--text-muted)">${m.description || t('menu_no_desc')}</div>
             <button class="btn btn-ghost btn-sm mt-2" onclick="Router.navigate('recipes');setTimeout(()=>setRecipeMenu(${m.id}),80)" style="padding:4px 8px;font-size:11px">
@@ -116,6 +117,7 @@ function renderMenus(container) {
           </button>
         </div>
         ${cat ? `<span class="badge badge-cat" style="background:${cat.color}22;color:${cat.color};margin-bottom:8px">${cat.icon} ${cat.name}</span>` : ''}
+        ${m.menuType === 'set' ? `<span class="badge" style="background:#7c3aed22;color:#7c3aed;margin-bottom:8px;margin-left:4px">🍱 SET</span>` : ''}
         <div style="font-size:18px;font-weight:700;margin-bottom:4px">${m.name}</div>
         <div style="font-size:13px;color:var(--text-muted);margin-bottom:16px">${m.description || t('menu_no_desc')}</div>
         <div style="display:flex;justify-content:space-between;align-items:flex-end;border-top:1px solid var(--border);padding-top:12px">
@@ -234,10 +236,8 @@ function renderMenus(container) {
       const allRecipes = DB.getAll('recipes');
 
       selectedMenus.forEach(id => {
-        // Drop associated recipes first
         const recipes = allRecipes.filter(r => r.menuId === id);
         recipes.forEach(r => DB.delete('recipes', r.id));
-        // Drop menu
         DB.delete('menus', id);
         delCount++;
       });
@@ -254,28 +254,194 @@ function renderMenus(container) {
 window.openMenuModal = function (id = null) {
   const m = id ? DB.getById('menus', id) : null;
   const cats = DB.getAll('categories');
-  const cost = m ? DB.menuCost(m.id) : 0;
+  const ings = DB.getAll('ingredients');
+  let cost = m ? DB.menuCost(m.id) : 0;
 
   function calcPreview() {
+    cost = m ? DB.menuCost(m.id) : 0;
     const sp = parseFloat(document.getElementById('mPrice')?.value) || 0;
     const el = document.getElementById('mTaxPreview');
     if (el) {
       let html = '';
       if (sp > 0) {
         const gp = (((sp - cost) / sp) * 100).toFixed(1);
-        html += `${t('gp_label')} <strong style="color:var(--success)">${gp}%</strong> &nbsp;|&nbsp; Tax 8%: <strong style="color:var(--text)">${formatPrice(sp * 1.08)}</strong> &nbsp;|&nbsp; 10%: <strong style="color:var(--text)">${formatPrice(sp * 1.10)}</strong><br>`;
+        const gpColor = gp >= 60 ? 'var(--success)' : gp >= 40 ? 'var(--warning)' : 'var(--danger)';
+        html += `${t('gp_label')} <strong style="color:${gpColor}">${gp}%</strong> &nbsp;|&nbsp; Tax 8%: <strong style="color:var(--text)">${formatPrice(sp * 1.08)}</strong> &nbsp;|&nbsp; 10%: <strong style="color:var(--text)">${formatPrice(sp * 1.10)}</strong><br>`;
       }
       if (cost > 0) {
         html += `<span style="color:var(--warning);font-size:12px">${t('suggested_price')} <strong>${formatPrice(cost / 0.3)}</strong></span>`;
       }
       el.innerHTML = html;
     }
+    const costEl = document.getElementById('mRecipeCostVal');
+    if (costEl) costEl.textContent = formatPrice(cost);
   }
+
+  function drawRecipeRows() {
+    if (!m) return;
+    const recipes = DB.getAll('recipes').filter(r => r.menuId === m.id);
+    cost = DB.menuCost(m.id);
+    const tbody = document.getElementById('mRecipeBody');
+    if (!tbody) return;
+    tbody.innerHTML = recipes.map(r => {
+      const ing = DB.getById('ingredients', r.ingredientId);
+      if (!ing) return '';
+      const price = DB.effectivePrice(ing);
+      const line = price * r.quantity;
+      const pct = cost > 0 ? ((line / cost) * 100).toFixed(1) : 0;
+      return `<div class="m-recipe-row">
+        <div class="m-recipe-name"><strong>${ing.name}</strong><small class="text-muted">${ing.group || ''}</small></div>
+        <div class="m-recipe-detail">
+          <span class="m-recipe-qty" onclick="mEditQty(${r.id},'${ing.name.replace(/'/g, "\\'")}',${r.quantity})" title="กดเพื่อแก้ไข" style="cursor:pointer;text-decoration:underline dotted;text-underline-offset:3px">${r.quantity}</span>
+          <span class="m-recipe-unit">${ing.recipeUnit || ing.buyUnit}</span>
+        </div>
+        <div class="m-recipe-cost"><strong style="color:var(--primary)">${formatPrice(line)}</strong><small style="color:var(--text-faint)">${pct}%</small></div>
+        <button class="btn btn-icon btn-sm" style="background:transparent;border:none;color:var(--danger);flex-shrink:0;min-height:32px;min-width:32px;padding:4px" onclick="mDelRecipe(${r.id})" title="ลบ">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>
+        </button>
+      </div>`;
+    }).join('') || `<div style="text-align:center;padding:16px;color:var(--text-faint);font-size:13px">ยังไม่มีวัตถุดิบในสูตร</div>`;
+    const costEl = document.getElementById('mRecipeCostVal');
+    if (costEl) costEl.textContent = formatPrice(cost);
+    calcPreview();
+  }
+
+  // Sub-menu management for SET type
+  let _subMenus = m ? (m.subMenus || []).map(sm => ({ ...sm })) : [];
+
+  function calcSetCost() {
+    const allMenus = DB.getAll('menus');
+    let total = 0;
+    for (const sm of _subMenus) {
+      const menu = allMenus.find(x => x.id === sm.menuId);
+      if (menu) total += DB.menuCost(menu.id) * Number(sm.portion || 1);
+    }
+    return Math.round(total * 10000) / 10000;
+  }
+
+  function drawSubMenuRows() {
+    const allMenus = DB.getAll('menus');
+    const allCats = DB.getAll('categories');
+    const body = document.getElementById('mSubMenuBody');
+    if (!body) return;
+    const setCost = calcSetCost();
+    body.innerHTML = _subMenus.map((sm, idx) => {
+      const menu = allMenus.find(x => x.id === sm.menuId);
+      if (!menu) return '';
+      const cat = allCats.find(c => c.id === menu.categoryId);
+      const baseCost = DB.menuCost(menu.id);
+      const lineCost = baseCost * Number(sm.portion || 1);
+      const pct = setCost > 0 ? ((lineCost / setCost) * 100).toFixed(1) : 0;
+      return `<div class="m-recipe-row">
+        <div class="m-recipe-name"><strong>${cat ? cat.icon + ' ' : ''}${menu.name}</strong><small class="text-muted">ต้นทุนเต็ม: ${formatPrice(baseCost)}</small></div>
+        <div class="m-recipe-detail" style="min-width:90px">
+          <input type="number" class="inline-input" value="${sm.portion}" step="0.1" min="0.1" max="10" style="width:55px;font-size:13px;text-align:center;padding:4px;min-height:30px" onchange="mSetPortion(${idx},this.value)" title="โพชั่น" />
+          <span class="m-recipe-unit">โพชั่น</span>
+        </div>
+        <div class="m-recipe-cost"><strong style="color:var(--primary)">${formatPrice(lineCost)}</strong><small style="color:var(--text-faint)">${pct}%</small></div>
+        <button class="btn btn-icon btn-sm" style="background:transparent;border:none;color:var(--danger);flex-shrink:0;min-height:32px;min-width:32px;padding:4px" onclick="mDelSubMenu(${idx})" title="ลบ">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>
+        </button>
+      </div>`;
+    }).join('') || `<div style="text-align:center;padding:16px;color:var(--text-faint);font-size:13px">ยังไม่มีเมนูย่อยในเซต</div>`;
+    const costEl = document.getElementById('mSubMenuCostVal');
+    if (costEl) costEl.textContent = formatPrice(setCost);
+    calcSetPreview();
+  }
+
+  function calcSetPreview() {
+    const setCost = calcSetCost();
+    const sp = parseFloat(document.getElementById('mPrice')?.value) || 0;
+    const el = document.getElementById('mTaxPreview');
+    if (el) {
+      let html = '';
+      if (sp > 0) {
+        const gp = (((sp - setCost) / sp) * 100).toFixed(1);
+        const gpColor = gp >= 60 ? 'var(--success)' : gp >= 40 ? 'var(--warning)' : 'var(--danger)';
+        html += `${t('gp_label')} <strong style="color:${gpColor}">${gp}%</strong> &nbsp;|&nbsp; Tax 8%: <strong style="color:var(--text)">${formatPrice(sp * 1.08)}</strong> &nbsp;|&nbsp; 10%: <strong style="color:var(--text)">${formatPrice(sp * 1.10)}</strong><br>`;
+      }
+      if (setCost > 0) {
+        html += `<span style="color:var(--warning);font-size:12px">${t('suggested_price')} <strong>${formatPrice(setCost / 0.3)}</strong></span>`;
+      }
+      el.innerHTML = html;
+    }
+    const costEl = document.getElementById('mSubMenuCostVal');
+    if (costEl) costEl.textContent = formatPrice(setCost);
+  }
+
+  const currentType = m?.menuType || 'single';
+
+  // Recipe section (single type)
+  const recipeHtml = m ? `
+    <div id="mRecipeSection" style="margin-top:4px;margin-bottom:16px;${currentType === 'set' ? 'display:none' : ''}">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+        <div style="font-weight:700;font-size:14px;color:var(--accent);display:flex;align-items:center;gap:6px">
+          📋 สูตรอาหาร
+          <span style="background:var(--primary);color:white;font-size:11px;font-weight:700;padding:2px 8px;border-radius:var(--r-full)">${t('rec_total_cost')}: <span id="mRecipeCostVal">${formatPrice(cost)}</span></span>
+        </div>
+      </div>
+      <div id="mRecipeBody" style="max-height:240px;overflow-y:auto;border:1px solid var(--border);border-radius:var(--r-md);background:var(--bg)"></div>
+      <div style="display:flex;gap:8px;margin-top:8px;align-items:flex-end">
+        <div style="flex:1;position:relative" id="mIngContainer">
+          <input type="text" class="form-input" id="mAddIngSearch" placeholder="+ เพิ่มวัตถุดิบ..." autocomplete="off" style="font-size:13px;min-height:40px" onfocus="mShowIngDD()" oninput="mFilterIngDD()" />
+          <input type="hidden" id="mAddIngId" value="" />
+          <div id="mIngDD" style="display:none;position:absolute;left:0;right:0;top:100%;background:var(--bg);border:1px solid var(--border);border-radius:var(--r-md);max-height:180px;overflow-y:auto;z-index:9999;box-shadow:0 4px 16px rgba(0,0,0,0.6)">
+            ${ings.map(i => `<div class="dropdown-item" data-id="${i.id}" data-name="${i.name.toLowerCase()}" onclick="mSelectIng(${i.id},'${i.name.replace(/'/g, "\\'")}')" style="padding:8px 12px;cursor:pointer;border-bottom:1px solid var(--border-light);font-size:13px">
+              <div style="font-weight:600">${i.name}</div>
+              <div style="font-size:11px;color:var(--text-muted)">${i.group || ''} · ${i.recipeUnit || i.buyUnit}</div>
+            </div>`).join('')}
+          </div>
+        </div>
+        <input class="form-input" id="mAddQty" type="number" placeholder="จำนวน" step="0.001" min="0" style="width:80px;font-size:13px;min-height:40px" />
+        <button class="btn btn-primary btn-sm" onclick="mAddRecipeItem()" style="min-height:40px;padding:0 14px;white-space:nowrap">+ เพิ่ม</button>
+      </div>
+    </div>` : '';
+
+  // Sub-menu section (set type)
+  const allMenusForSet = DB.getAll('menus').filter(x => !m || x.id !== m.id);
+  const subMenuHtml = m ? `
+    <div id="mSubMenuSection" style="margin-top:4px;margin-bottom:16px;${currentType === 'single' ? 'display:none' : ''}">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+        <div style="font-weight:700;font-size:14px;color:#7c3aed;display:flex;align-items:center;gap:6px">
+          🍱 เมนูย่อยในเซต
+          <span style="background:#7c3aed;color:white;font-size:11px;font-weight:700;padding:2px 8px;border-radius:var(--r-full)">${t('rec_total_cost')}: <span id="mSubMenuCostVal">${formatPrice(calcSetCost())}</span></span>
+        </div>
+      </div>
+      <div id="mSubMenuBody" style="max-height:260px;overflow-y:auto;border:1px solid var(--border);border-radius:var(--r-md);background:var(--bg)"></div>
+      <div style="display:flex;gap:8px;margin-top:8px;align-items:flex-end">
+        <div style="flex:1;position:relative" id="mSubMenuContainer">
+          <input type="text" class="form-input" id="mAddSubMenuSearch" placeholder="+ เพิ่มเมนูย่อย..." autocomplete="off" style="font-size:13px;min-height:40px" onfocus="mShowSubMenuDD()" oninput="mFilterSubMenuDD()" />
+          <input type="hidden" id="mAddSubMenuId" value="" />
+          <div id="mSubMenuDD" style="display:none;position:absolute;left:0;right:0;top:100%;background:var(--bg);border:1px solid var(--border);border-radius:var(--r-md);max-height:180px;overflow-y:auto;z-index:9999;box-shadow:0 4px 16px rgba(0,0,0,0.6)">
+            ${allMenusForSet.map(x => {
+    const cat = cats.find(c => c.id === x.categoryId);
+    const xCost = DB.menuCost(x.id);
+    return `<div class="dropdown-item" data-id="${x.id}" data-name="${x.name.toLowerCase()}" onclick="mSelectSubMenu(${x.id},'${x.name.replace(/'/g, "\\'")}')" style="padding:8px 12px;cursor:pointer;border-bottom:1px solid var(--border-light);font-size:13px">
+                <div style="font-weight:600">${cat ? cat.icon + ' ' : ''}${x.name}</div>
+                <div style="font-size:11px;color:var(--text-muted)">ต้นทุน: ${formatPrice(xCost)}</div>
+              </div>`;
+  }).join('')}
+          </div>
+        </div>
+        <input class="form-input" id="mAddSubMenuPortion" type="number" placeholder="โพชั่น" step="0.1" min="0.1" value="1" style="width:80px;font-size:13px;min-height:40px" />
+        <button class="btn btn-sm" style="min-height:40px;padding:0 14px;white-space:nowrap;background:#7c3aed;color:white;border-color:#7c3aed" onclick="mAddSubMenuItem()">+ เพิ่ม</button>
+      </div>
+    </div>` : '';
+
+  const typeToggleHtml = `
+    <div class="form-group" style="margin-bottom:12px">
+      <label class="form-label">ประเภทเมนู</label>
+      <div style="display:flex;gap:0;border:1px solid var(--border);border-radius:var(--r-md);overflow:hidden">
+        <button type="button" id="mTypeBtn_single" class="btn btn-sm" style="flex:1;border:none;border-radius:0;min-height:38px;font-weight:600;${currentType === 'single' ? 'background:var(--primary);color:white' : 'background:var(--bg);color:var(--text-muted)'}" onclick="mSwitchType('single')">🍜 เมนูปกติ</button>
+        <button type="button" id="mTypeBtn_set" class="btn btn-sm" style="flex:1;border:none;border-radius:0;border-left:1px solid var(--border);min-height:38px;font-weight:600;${currentType === 'set' ? 'background:#7c3aed;color:white' : 'background:var(--bg);color:var(--text-muted)'}" onclick="mSwitchType('set')">🍱 เมนูเซต</button>
+      </div>
+    </div>`;
 
   Modal.open({
     title: m ? `✏️ ${t('menu_edit')}` : `➕ ${t('menu_add')}`,
     body: `<div class="form-group"><label class="form-label">${t('menu_name')} <span>*</span></label>
-      <input class="form-input" id="mName" value="${m?.name || ''}" placeholder="เช่น ผัดกะเพราหมูสับ" /></div>
+      <input class="form-input" id="mName" value="${m?.name || ''}" placeholder="เช่น ผัดกะเพราหมูสับ / เซต A" /></div>
+      ${typeToggleHtml}
       <div class="form-row">
         <div class="form-group"><label class="form-label">${t('menu_category')}</label>
           <select class="form-select" id="mCat"><option value="">${t('menu_cat_select')}</option>
@@ -285,23 +451,120 @@ window.openMenuModal = function (id = null) {
           <div id="mTaxPreview" style="font-size:11px;color:var(--text-muted);margin-top:4px;text-align:right"></div>
         </div>
       </div>
+      ${recipeHtml}
+      ${subMenuHtml}
+      <input type="hidden" id="mMenuType" value="${currentType}" />
       <div class="form-group"><label class="form-label">${t('menu_description')}</label>
         <textarea class="form-textarea" id="mDesc">${m?.description || ''}</textarea></div>`,
     onConfirm() {
       const name = document.getElementById('mName').value.trim();
       if (!name) { Toast.show(t('menu_name_req'), 'error'); return; }
+      const menuType = document.getElementById('mMenuType').value;
       const data = {
         name, categoryId: parseInt(document.getElementById('mCat').value) || null,
         sellingPrice: parseFloat(document.getElementById('mPrice').value) || null,
-        description: document.getElementById('mDesc').value.trim()
+        description: document.getElementById('mDesc').value.trim(),
+        menuType: menuType,
+        subMenus: menuType === 'set' ? _subMenus : (m?.subMenus || [])
       };
       if (id) DB.update('menus', id, data); else DB.insert('menus', data);
       Modal.close(); Toast.show(id ? t('menu_updated') : t('menu_saved')); Router.render();
     }
   });
 
-  window.calcMenuPreview = calcPreview;
-  setTimeout(calcPreview, 50);
+  // Type switching
+  window.mSwitchType = function (type) {
+    document.getElementById('mMenuType').value = type;
+    const singleBtn = document.getElementById('mTypeBtn_single');
+    const setBtn = document.getElementById('mTypeBtn_set');
+    if (singleBtn) singleBtn.style.cssText = `flex:1;border:none;border-radius:0;min-height:38px;font-weight:600;${type === 'single' ? 'background:var(--primary);color:white' : 'background:var(--bg);color:var(--text-muted)'}`;
+    if (setBtn) setBtn.style.cssText = `flex:1;border:none;border-radius:0;border-left:1px solid var(--border);min-height:38px;font-weight:600;${type === 'set' ? 'background:#7c3aed;color:white' : 'background:var(--bg);color:var(--text-muted)'}`;
+    const recSec = document.getElementById('mRecipeSection');
+    const subSec = document.getElementById('mSubMenuSection');
+    if (recSec) recSec.style.display = type === 'single' ? '' : 'none';
+    if (subSec) subSec.style.display = type === 'set' ? '' : 'none';
+    if (type === 'set') calcSetPreview(); else calcPreview();
+  };
+
+  window.calcMenuPreview = function () {
+    const type = document.getElementById('mMenuType')?.value || 'single';
+    if (type === 'set') calcSetPreview(); else calcPreview();
+  };
+  setTimeout(() => window.calcMenuPreview(), 50);
+
+  // Inline recipe/sub-menu editing functions
+  if (m) {
+    if (currentType !== 'set') setTimeout(drawRecipeRows, 80);
+    if (currentType === 'set') setTimeout(drawSubMenuRows, 80);
+
+    window.mShowIngDD = function () { const dd = document.getElementById('mIngDD'); if (dd) { dd.style.display = 'block'; mFilterIngDD(); } };
+    window.mFilterIngDD = function () {
+      const term = (document.getElementById('mAddIngSearch')?.value || '').toLowerCase();
+      document.querySelectorAll('#mIngDD .dropdown-item').forEach(el => { el.style.display = el.dataset.name.includes(term) ? 'block' : 'none'; });
+    };
+    window.mSelectIng = function (ingId, name) {
+      document.getElementById('mAddIngId').value = ingId;
+      document.getElementById('mAddIngSearch').value = name;
+      document.getElementById('mIngDD').style.display = 'none';
+      document.getElementById('mAddQty').focus();
+    };
+    window.mAddRecipeItem = function () {
+      const ingId = parseInt(document.getElementById('mAddIngId').value);
+      const qty = parseFloat(document.getElementById('mAddQty').value);
+      if (!ingId) { Toast.show(t('rec_ing_req'), 'error'); return; }
+      if (!qty || qty <= 0) { Toast.show(t('rec_qty_req'), 'error'); return; }
+      if (DB.getAll('recipes').some(r => r.menuId === m.id && r.ingredientId === ingId)) { Toast.show(t('rec_duplicate'), 'warning'); return; }
+      DB.insert('recipes', { menuId: m.id, ingredientId: ingId, quantity: qty });
+      Toast.show(t('rec_added'));
+      document.getElementById('mAddIngSearch').value = ''; document.getElementById('mAddIngId').value = ''; document.getElementById('mAddQty').value = '';
+      drawRecipeRows();
+    };
+    window.mEditQty = function (recipeId, name, currentQty) {
+      const val = prompt(`${t('rec_edit_qty')} "${name}":`, currentQty);
+      if (val !== null && !isNaN(parseFloat(val)) && parseFloat(val) > 0) { DB.update('recipes', recipeId, { quantity: parseFloat(val) }); Toast.show(t('rec_qty_updated')); drawRecipeRows(); }
+    };
+    window.mDelRecipe = function (recipeId) { DB.delete('recipes', recipeId); Toast.show(t('rec_deleted'), 'info'); drawRecipeRows(); };
+
+    // Sub-menu functions (set type)
+    window.mShowSubMenuDD = function () { const dd = document.getElementById('mSubMenuDD'); if (dd) { dd.style.display = 'block'; mFilterSubMenuDD(); } };
+    window.mFilterSubMenuDD = function () {
+      const term = (document.getElementById('mAddSubMenuSearch')?.value || '').toLowerCase();
+      document.querySelectorAll('#mSubMenuDD .dropdown-item').forEach(el => { el.style.display = el.dataset.name.includes(term) ? 'block' : 'none'; });
+    };
+    window.mSelectSubMenu = function (menuId, name) {
+      document.getElementById('mAddSubMenuId').value = menuId;
+      document.getElementById('mAddSubMenuSearch').value = name;
+      document.getElementById('mSubMenuDD').style.display = 'none';
+      document.getElementById('mAddSubMenuPortion').focus();
+    };
+    window.mAddSubMenuItem = function () {
+      const menuId = parseInt(document.getElementById('mAddSubMenuId').value);
+      const portion = parseFloat(document.getElementById('mAddSubMenuPortion').value) || 1;
+      if (!menuId) { Toast.show('กรุณาเลือกเมนูก่อน', 'error'); return; }
+      if (_subMenus.some(sm => sm.menuId === menuId)) { Toast.show('เมนูนี้ถูกเพิ่มแล้ว', 'warning'); return; }
+      _subMenus.push({ menuId, portion });
+      Toast.show('เพิ่มเมนูย่อยแล้ว');
+      document.getElementById('mAddSubMenuSearch').value = ''; document.getElementById('mAddSubMenuId').value = ''; document.getElementById('mAddSubMenuPortion').value = '1';
+      drawSubMenuRows();
+    };
+    window.mSetPortion = function (idx, val) {
+      const portion = parseFloat(val);
+      if (portion > 0 && idx >= 0 && idx < _subMenus.length) { _subMenus[idx].portion = portion; drawSubMenuRows(); }
+    };
+    window.mDelSubMenu = function (idx) {
+      if (idx >= 0 && idx < _subMenus.length) { _subMenus.splice(idx, 1); Toast.show('ลบเมนูย่อยแล้ว', 'info'); drawSubMenuRows(); }
+    };
+
+    // Close dropdowns on outside click
+    setTimeout(() => {
+      document.getElementById('modalBody')?.addEventListener('click', (e) => {
+        const c1 = document.getElementById('mIngContainer');
+        if (c1 && !c1.contains(e.target)) { const dd = document.getElementById('mIngDD'); if (dd) dd.style.display = 'none'; }
+        const c2 = document.getElementById('mSubMenuContainer');
+        if (c2 && !c2.contains(e.target)) { const dd = document.getElementById('mSubMenuDD'); if (dd) dd.style.display = 'none'; }
+      });
+    }, 100);
+  }
 };
 
 window.deleteMenu = function (id) {
@@ -317,7 +580,9 @@ window.duplicateMenu = function (id) {
     name: src.name + ' (copy)',
     categoryId: src.categoryId,
     sellingPrice: src.sellingPrice,
-    description: src.description || ''
+    description: src.description || '',
+    menuType: src.menuType || 'single',
+    subMenus: src.subMenus ? src.subMenus.map(sm => ({ ...sm })) : []
   });
   // Copy recipe items too
   const recipes = DB.getAll('recipes').filter(r => r.menuId === id);

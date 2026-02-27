@@ -17,3 +17,19 @@ applyI18n();
 // Init data and router
 SEED.run();
 Router.init();
+
+// Initialize GDrive after Google Identity Services library is ready
+function _initGDrive() {
+    if (typeof google !== 'undefined' && google.accounts) {
+        GDrive.init();
+    } else {
+        // Retry until the GIS script loads (it has async defer)
+        setTimeout(_initGDrive, 300);
+    }
+}
+_initGDrive();
+
+// Helper to re-render the current hash page (used by GDrive callbacks)
+window.renderCurrentPage = function () {
+    Router.render();
+};

@@ -34,14 +34,14 @@ function renderIngredients(container) {
         <td style="width:40px;text-align:center">
           <input type="checkbox" class="ing-select-cb" value="${ing.id}" ${selectedIds.has(ing.id) ? 'checked' : ''} onchange="toggleSelectIng(${ing.id})" style="accent-color:var(--primary);cursor:pointer;width:16px;height:16px" />
         </td>
-        <td>
+        <td data-label="${t('ing_col_name')}">
           <strong>${ing.name}</strong>
           ${buyInfo}
         </td>
-        <td><span class="text-muted" style="font-size:12px">${ing.group || '-'}</span></td>
-        <td>${ing.recipeUnit || ing.buyUnit || '-'}</td>
-        <td>${badge(ing)}</td>
-        <td>
+        <td data-label="${t('ing_col_group')}"><span class="text-muted" style="font-size:12px">${ing.group || '-'}</span></td>
+        <td data-label="${t('ing_col_unit')}">${ing.recipeUnit || ing.buyUnit || '-'}</td>
+        <td data-label="${t('ing_col_mode')}">${badge(ing)}</td>
+        <td data-label="${t('ing_col_price')}">
           <span style="font-weight:700;color:var(--primary)">${formatPrice(price)}</span>
           <span style="font-size:11px;color:var(--text-faint)">/${ing.recipeUnit || ing.buyUnit}</span>
         </td>

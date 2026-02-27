@@ -41,10 +41,18 @@ const Router = {
   render() {
     const hash = window.location.hash.replace('#', '') || 'dashboard';
     document.querySelectorAll('.nav-link').forEach(l => l.classList.toggle('active', l.dataset.page === hash));
+    // Sync bottom nav active state
+    document.querySelectorAll('.bottom-nav-item[data-page]').forEach(b => b.classList.toggle('active', b.dataset.page === hash));
+    // Update mobile header title
+    const pageTitles = { dashboard: '📊 ภาพรวม', categories: '🏷️ หมวดหมู่', ingredients: '🧂 วัตถุดิบ', menus: '🍜 เมนู', sets: '🍱 เซต', recipes: '📋 สูตร', webhook: '🔗 Webhook', settings: '⚙️ ตั้งค่า' };
+    const mTitle = document.getElementById('mobilePageTitle');
+    if (mTitle) mTitle.textContent = pageTitles[hash] || 'FoodCost';
     const c = document.getElementById('pageContainer');
     c.innerHTML = '';
     const fn = this.routes[hash];
     if (fn) fn(c); else c.innerHTML = `<div class="empty-state"><div class="empty-icon">🔍</div><div class="empty-title">${t('page_not_found')}</div></div>`;
+    // Close mobile sidebar on navigation
+    closeMobileSidebar();
   }
 };
 
@@ -54,6 +62,57 @@ document.getElementById('sidebarToggle').addEventListener('click', () => {
 });
 document.getElementById('resetDataBtn').addEventListener('click', () => {
   if (confirm(t('btn_reset_confirm'))) { DB.reset(); SEED.run(); Toast.show(t('btn_reset_ok')); Router.render(); }
+});
+
+// ===================================================
+// MOBILE: Sidebar, Bottom Nav, More Overlay
+// ===================================================
+function openMobileSidebar() {
+  const sidebar = document.getElementById('sidebar');
+  sidebar.classList.add('mobile-open');
+  // Create backdrop
+  let bd = document.querySelector('.sidebar-mobile-backdrop');
+  if (!bd) {
+    bd = document.createElement('div');
+    bd.className = 'sidebar-mobile-backdrop';
+    bd.addEventListener('click', closeMobileSidebar);
+    document.body.appendChild(bd);
+  }
+}
+function closeMobileSidebar() {
+  document.getElementById('sidebar').classList.remove('mobile-open');
+  const bd = document.querySelector('.sidebar-mobile-backdrop');
+  if (bd) bd.remove();
+}
+window.closeMobileSidebar = closeMobileSidebar;
+
+// Mobile header hamburger → open full sidebar
+const mobileSidebarBtn = document.getElementById('mobileSidebarBtn');
+if (mobileSidebarBtn) {
+  mobileSidebarBtn.addEventListener('click', openMobileSidebar);
+}
+
+// More overlay toggle
+function openMoreOverlay() {
+  document.getElementById('moreOverlay').classList.add('show');
+}
+function closeMoreOverlay() {
+  document.getElementById('moreOverlay').classList.remove('show');
+}
+window.closeMoreOverlay = closeMoreOverlay;
+
+const moreMenuBtn = document.getElementById('moreMenuBtn');
+if (moreMenuBtn) moreMenuBtn.addEventListener('click', openMoreOverlay);
+const moreOverlayBackdrop = document.getElementById('moreOverlayBackdrop');
+if (moreOverlayBackdrop) moreOverlayBackdrop.addEventListener('click', closeMoreOverlay);
+const moreOverlayClose = document.getElementById('moreOverlayClose');
+if (moreOverlayClose) moreOverlayClose.addEventListener('click', closeMoreOverlay);
+
+// Sidebar nav links: close sidebar on mobile after navigation
+document.querySelectorAll('.sidebar .nav-link').forEach(link => {
+  link.addEventListener('click', () => {
+    if (window.innerWidth <= 768) closeMobileSidebar();
+  });
 });
 
 const DataSync = {

@@ -46,11 +46,11 @@ function renderRecipes(container) {
       const line = price * r.quantity;
       const pct = cost > 0 ? ((line / cost) * 100).toFixed(1) : 0;
       return `<tr>
-                <td><strong>${ing.name}</strong><br><small class="text-muted">${ing.group || ''}</small></td>
-                <td>${ing.recipeUnit || ing.buyUnit}</td>
-                <td style="font-weight:600">${r.quantity}</td>
-                <td>${formatPrice(price)}</td>
-                <td>
+                <td data-label="${t('rec_ingredient')}"><strong>${ing.name}</strong><br><small class="text-muted">${ing.group || ''}</small></td>
+                <td data-label="${t('rec_unit')}">${ing.recipeUnit || ing.buyUnit}</td>
+                <td data-label="${t('rec_qty')}" style="font-weight:600">${r.quantity}</td>
+                <td data-label="${t('rec_price_unit')}">${formatPrice(price)}</td>
+                <td data-label="${t('rec_cost')}">
                   <strong class="text-primary">${formatPrice(line)}</strong>
                   <div style="font-size:11px;color:var(--text-faint)">${pct}% ${t('rec_pct_cost')}</div>
                 </td>

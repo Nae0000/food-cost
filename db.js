@@ -81,7 +81,24 @@ const DB = {
     return Math.round(total * 10000) / 10000;
   },
 
-  menuCost(menuId) {
+  menuCost(menuId, _visited) {
+    // Guard against circular references
+    if (!_visited) _visited = new Set();
+    if (_visited.has(menuId)) return 0;
+    _visited.add(menuId);
+
+    const menu = this.getById('menus', menuId);
+
+    // Set menu: sum of sub-menu costs * portion
+    if (menu && menu.menuType === 'set' && Array.isArray(menu.subMenus)) {
+      let total = 0;
+      for (const sm of menu.subMenus) {
+        total += this.menuCost(sm.menuId, new Set(_visited)) * Number(sm.portion || 1);
+      }
+      return Math.round(total * 10000) / 10000;
+    }
+
+    // Regular menu: sum of recipe ingredient costs
     const recipes = this.getAll('recipes').filter(r => r.menuId === menuId);
     let total = 0;
     for (const r of recipes) {

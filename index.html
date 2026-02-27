@@ -6,6 +6,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>ระบบคิดต้นทุนอาหาร | FoodCost</title>
   <meta name="description" content="ระบบคิดต้นทุนอาหารไทย จัดการหมวดหมู่ วัตถุดิบ เมนูอาหาร สูตรอาหาร พร้อม Webhook" />
+  <!-- Google Identity Services -->
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link
@@ -43,10 +45,6 @@
           <span class="nav-icon">🧂</span><span class="nav-label">ต้นทุนวัตถุดิบ</span></a></li>
       <li><a href="#menus" class="nav-link" data-page="menus" title="เมนูอาหาร">
           <span class="nav-icon">🍜</span><span class="nav-label">เมนูอาหาร</span></a></li>
-      <li><a href="#sets" class="nav-link" data-page="sets" title="เมนูเซต">
-          <span class="nav-icon">🍱</span><span class="nav-label">เมนูเซต</span></a></li>
-      <li><a href="#recipes" class="nav-link" data-page="recipes" title="สูตรอาหาร">
-          <span class="nav-icon">📋</span><span class="nav-label">สูตรอาหาร</span></a></li>
       <li class="nav-divider"></li>
       <li><a href="#webhook" class="nav-link" data-page="webhook" title="Webhook">
           <span class="nav-icon">🔗</span><span class="nav-label">Webhook</span></a></li>
@@ -65,9 +63,75 @@
     </div>
   </nav>
 
+  <!-- Mobile Header -->
+  <header class="mobile-header" id="mobileHeader">
+    <div class="mobile-header-left">
+      <span class="logo-icon">🍳</span>
+      <span class="mobile-header-title" id="mobilePageTitle">FoodCost</span>
+    </div>
+    <button class="mobile-menu-btn" id="mobileSidebarBtn" title="Open menu">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <line x1="3" y1="6" x2="21" y2="6" />
+        <line x1="3" y1="12" x2="21" y2="12" />
+        <line x1="3" y1="18" x2="21" y2="18" />
+      </svg>
+    </button>
+  </header>
+
   <main class="main-content" id="mainContent">
     <div class="page-container" id="pageContainer"></div>
   </main>
+
+  <!-- Bottom Navigation (Mobile) -->
+  <nav class="bottom-nav" id="bottomNav">
+    <a href="#dashboard" class="bottom-nav-item" data-page="dashboard">
+      <span class="bottom-nav-icon">📊</span>
+      <span class="bottom-nav-label">ภาพรวม</span>
+    </a>
+    <a href="#ingredients" class="bottom-nav-item" data-page="ingredients">
+      <span class="bottom-nav-icon">🧂</span>
+      <span class="bottom-nav-label">วัตถุดิบ</span>
+    </a>
+    <a href="#menus" class="bottom-nav-item" data-page="menus">
+      <span class="bottom-nav-icon">🍜</span>
+      <span class="bottom-nav-label">เมนู</span>
+    </a>
+    <a href="#categories" class="bottom-nav-item" data-page="categories">
+      <span class="bottom-nav-icon">🏷️</span>
+      <span class="bottom-nav-label">หมวดหมู่</span>
+    </a>
+    <button class="bottom-nav-item" id="moreMenuBtn">
+      <span class="bottom-nav-icon">⋯</span>
+      <span class="bottom-nav-label">เพิ่มเติม</span>
+    </button>
+  </nav>
+
+  <!-- More Menu Overlay (Mobile) -->
+  <div class="more-overlay" id="moreOverlay">
+    <div class="more-overlay-backdrop" id="moreOverlayBackdrop"></div>
+    <div class="more-overlay-panel">
+      <div class="more-overlay-header">
+        <span>เมนูเพิ่มเติม</span>
+        <button class="modal-close" id="moreOverlayClose">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18" />
+            <line x1="6" y1="6" x2="18" y2="18" />
+          </svg>
+        </button>
+      </div>
+      <div class="more-overlay-body">
+        <a href="#categories" class="more-item" data-page="categories" onclick="closeMoreOverlay()">
+          <span class="more-item-icon">🏷️</span><span>หมวดหมู่อาหาร</span>
+        </a>
+        <a href="#webhook" class="more-item" data-page="webhook" onclick="closeMoreOverlay()">
+          <span class="more-item-icon">🔗</span><span>Webhook</span>
+        </a>
+        <a href="#settings" class="more-item" data-page="settings" onclick="closeMoreOverlay()">
+          <span class="more-item-icon">⚙️</span><span>ตั้งค่า</span>
+        </a>
+      </div>
+    </div>
+  </div>
 
   <div class="toast-container" id="toastContainer"></div>
   <div class="modal-backdrop" id="modalBackdrop"></div>
@@ -94,6 +158,7 @@
   <script src="p_recipes.js"></script>
   <script src="p_sub_recipe.js"></script>
   <script src="p_webhook.js"></script>
+  <script src="p_gdrive.js"></script>
   <script src="p_settings.js"></script>
   <script src="boot.js"></script>
 </body>
