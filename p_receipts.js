@@ -21,26 +21,49 @@ function renderReceipts(container) {
   function parseReceiptLines(text) {
     var lines = text.split('\n').map(function (l) { return l.trim(); }).filter(function (l) { return l.length > 1; });
     var results = [];
-    var priceRe = /[\d,]+\.?\d{0,2}/g;
 
     lines.forEach(function (line) {
-      if (/รวม|ยอด|total|subtotal|vat|tax|discount|ส่วนลด|change|เงินทอน|receipt|ใบเสร็จ/i.test(line)) return;
-      var prices = (line.match(priceRe) || []).map(function (p) { return parseFloat(p.replace(/,/g, '')); }).filter(function (p) { return p > 0 && p < 100000; });
-      if (!prices.length) return;
-      var price = prices[prices.length - 1];
-      var name = line.replace(/[\d,\.]+/g, '').replace(/[฿$*xX×]/g, '').replace(/\s+/g, ' ').trim();
-      name = name.replace(/^[-\/\s]+|[-\/\s]+$/g, '').trim();
-      if (!name || price <= 0) return;
+      // Skip total/header lines (Thai + Japanese)
+      if (/รวม|ยอด|total|subtotal|vat|tax|discount|ส่วนลด|change|เงินทอน|receipt|ใบเสร็จ|合計|小計|消費税|税込|外税|お釣|おつり|ありがとう|レシート|領収|お買上|点数|割引|値引/i.test(line)) return;
+
+      var price = 0;
+
+      // 1) Try ¥ or円 prefix/suffix first (most reliable for JP receipts)
+      var yenMatch = line.match(/[¥\\]\s*([\d,]+)/);
+      if (!yenMatch) yenMatch = line.match(/([\d,]+)\s*円/);
+      if (yenMatch) {
+        price = parseFloat(yenMatch[1].replace(/,/g, ''));
+      } else {
+        // 2) Fallback: last number on the line
+        var nums = (line.match(/[\d,]+(?:\.\d{1,2})?/g) || []);
+        nums = nums.map(function (p) { return parseFloat(p.replace(/,/g, '')); }).filter(function (p) { return p > 0 && p < 200000; });
+        if (nums.length) price = nums[nums.length - 1];
+      }
+      if (price <= 0) return;
+
+      // Name: remove price, ¥/円, digits, punctuation — keep Thai/JP/Latin chars
+      var name = line
+        .replace(/[¥\\]\s*[\d,]+/g, '')
+        .replace(/[\d,]+\s*円/g, '')
+        .replace(/[\d,\.]+/g, '')
+        .replace(/[฿$*×xX\\]/g, '')
+        .replace(/[\|\(\)\[\]{}「」【】]/g, ' ')
+        .replace(/\s+/g, ' ').trim()
+        .replace(/^[-\/\s*]+|[-\/\s*]+$/g, '').trim();
+
+      // Must have at least 1 meaningful character (Thai, Kanji/Kana, or Latin letter)
+      var meaningful = name.replace(/[^\u0e00-\u0e7f\u3000-\u9fff\u30a0-\u30ffa-zA-Z]/g, '');
+      if (!meaningful || price <= 0) return;
+
       var qtyMatch = line.match(/(\d+)\s*[xX×]\s*[\d.]+/);
       var qty = qtyMatch ? parseInt(qtyMatch[1]) : 1;
+
       var ingredientId = null;
       var nameLower = name.toLowerCase();
-      var match = null;
       for (var k = 0; k < ings.length; k++) {
         var iName = ings[k].name.toLowerCase();
-        if (iName === nameLower || iName.includes(nameLower) || nameLower.includes(iName)) { match = ings[k]; break; }
+        if (iName === nameLower || iName.includes(nameLower) || nameLower.includes(iName)) { ingredientId = ings[k].id; break; }
       }
-      if (match) ingredientId = match.id;
       results.push({ name: name, price: price, qty: qty, unit: 'กก.', keep: true, ingredientId: ingredientId });
     });
     return results;
@@ -142,6 +165,15 @@ function renderReceipts(container) {
     '    <div style="display:flex;flex-direction:column;gap:14px">',
     '      <div><label class="form-label">📅 วันที่ซื้อ</label><input class="form-input" type="date" id="rcDate" value="' + _receiptDate + '" oninput="window._rcDate=this.value" /></div>',
     '      <div><label class="form-label">🏪 ชื่อร้าน / ตลาด</label><input class="form-input" id="rcNote" placeholder="เช่น ตลาดสดท่าเรือ, Makro" oninput="window._rcNote=this.value" /></div>',
+    '      <div>',
+    '        <label class="form-label">🌐 ภาษาในใบเสร็จ</label>',
+    '        <select class="form-select" id="rcLang">',
+    '          <option value="tha+eng">🇹🇭 ภาษาไทย + อังกฤษ</option>',
+    '          <option value="jpn" selected>🇯🇵 ภาษาญี่ปุ่น</option>',
+    '          <option value="jpn+eng">🇯🇵 ญี่ปุ่น + อังกฤษ</option>',
+    '          <option value="tha+eng+jpn">🌐 ทุกภาษา (ช้ากว่า)</option>',
+    '        </select>',
+    '      </div>',
     '    </div>',
     '  </div>',
     '</div>',
@@ -234,7 +266,9 @@ function renderReceipts(container) {
       }
 
       setStatus('กำลังประมวลผลรูป...', 15);
-      var result = await Tesseract.recognize(_imageBase64, 'tha+eng+jpn', {
+      var langEl = document.getElementById('rcLang');
+      var ocrLang = langEl ? langEl.value : 'jpn';
+      var result = await Tesseract.recognize(_imageBase64, ocrLang, {
         logger: function (m) {
           if (m.status === 'recognizing text') {
             setStatus('กำลังอ่านข้อความ... ' + Math.round(m.progress * 100) + '%', Math.round(m.progress * 80) + 15);
