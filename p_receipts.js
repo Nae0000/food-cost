@@ -234,7 +234,7 @@ function renderReceipts(container) {
       }
 
       setStatus('กำลังประมวลผลรูป...', 15);
-      var result = await Tesseract.recognize(_imageBase64, 'tha+eng', {
+      var result = await Tesseract.recognize(_imageBase64, 'tha+eng+jpn', {
         logger: function (m) {
           if (m.status === 'recognizing text') {
             setStatus('กำลังอ่านข้อความ... ' + Math.round(m.progress * 100) + '%', Math.round(m.progress * 80) + 15);
