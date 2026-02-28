@@ -523,6 +523,7 @@ window.bulkDeleteCategory = function () {
 function handleLogout(e) {
   if (e) e.preventDefault();
   if (confirm('ต้องการออกจากระบบใช่หรือไม่?')) {
+    localStorage.removeItem('local_admin_bypass'); // Clear local bypass flag
     if (typeof auth !== 'undefined' && auth) {
       auth.signOut().then(() => {
         window.location.href = 'login.html';
