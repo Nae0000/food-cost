@@ -251,7 +251,7 @@ function renderIngredients(container) {
       title: '📁 จัดการหมวดหมู่วัตถุดิบ',
       body: `
         <div style="margin-bottom:16px; display:flex; gap:8px;">
-          <input type="text" id="newGroupName" class="form-input" placeholder="ชื่อหมวดหมู่ใหม่..." style="flex:1;" />
+          <input type="text" id="newGroupName" class="form-input" placeholder="ชื่อหมวดหมู่ใหม่..." style="flex:1;" oninput="autoSuggestGroupEmoji(this.value)" />
           <input type="text" id="newGroupEmoji" class="form-input" placeholder="อีโมจิ (เช่น 🥩)" style="width:100px; text-align:center;" />
           <input type="color" id="newGroupColor" class="form-input" value="#0ea5e9" style="width:40px; padding:2px; height:40px; cursor:pointer;" />
         </div>
@@ -263,6 +263,52 @@ function renderIngredients(container) {
       footerHtml: `<button class="btn btn-secondary" onclick="Modal.close(); Router.render();">ปิด</button>`,
       onConfirm: () => { Modal.close(); Router.render(); }
     });
+
+    window.autoSuggestGroupEmoji = (name) => {
+      const mapping = {
+        'เนื้อสัตว์': { e: '🥩', c: '#ef4444' },
+        'หมู': { e: '🐷', c: '#f472b6' },
+        'ไก่': { e: '🍗', c: '#fb923c' },
+        'วัว': { e: '🥩', c: '#ef4444' },
+        'เนื้อวัว': { e: '🥩', c: '#ef4444' },
+        'ปลา': { e: '🐟', c: '#3b82f6' },
+        'อาหารทะเล': { e: '🦐', c: '#0ea5e9' },
+        'กุ้ง': { e: '🦐', c: '#f87171' },
+        'ผัก': { e: '🥬', c: '#22c55e' },
+        'สมุนไพร': { e: '🌿', c: '#16a34a' },
+        'ผลไม้': { e: '🍎', c: '#f43f5e' },
+        'เครื่องปรุง': { e: '🧄', c: '#f59e0b' },
+        'ซอส': { e: '🥫', c: '#d97706' },
+        'ของแห้ง': { e: '🌾', c: '#8b5cf6' },
+        'แป้ง': { e: '🥟', c: '#d8b4fe' },
+        'เส้น': { e: '🍜', c: '#eab308' },
+        'น้ำ': { e: '💧', c: '#0ea5e9' },
+        'เครื่องดื่ม': { e: '🍹', c: '#06b6d4' },
+        'นม': { e: '🥛', c: '#93c5fd' },
+        'ไข่': { e: '🥚', c: '#facc15' },
+        'อื่นๆ': { e: '📦', c: '#64748b' }
+      };
+
+      const em = document.getElementById('newGroupEmoji');
+      const co = document.getElementById('newGroupColor');
+
+      // Don't overwrite if user already typed an emoji
+      if (em.dataset.userModified === 'true') return;
+
+      for (const [key, val] of Object.entries(mapping)) {
+        if (name.includes(key)) {
+          if (em) em.value = val.e;
+          if (co) co.value = val.c;
+          return;
+        }
+      }
+    };
+
+    // Track if user manually edits emoji so we don't overwrite
+    setTimeout(() => {
+      const em = document.getElementById('newGroupEmoji');
+      if (em) em.addEventListener('input', () => { em.dataset.userModified = 'true'; });
+    }, 100);
 
     window.addIngGroup = () => {
       const name = document.getElementById('newGroupName').value.trim();
