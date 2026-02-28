@@ -15,7 +15,7 @@ const DB = {
     this._listeners = [];
 
     // Collections to sync
-    const collections = ['categories', 'ingredients', 'menus', 'recipes', 'subRecipes', 'sets', 'priceHistory', 'receipts'];
+    const collections = ['categories', 'ingGroups', 'ingredients', 'menus', 'recipes', 'subRecipes', 'sets', 'priceHistory', 'receipts'];
 
     collections.forEach(col => {
       // Ensure local array exists
