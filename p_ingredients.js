@@ -8,7 +8,19 @@ const BUY_UNITS = ['กก.', 'กรัม', 'ลิตร', 'มล.', 'กำ
 
 function renderIngredients(container) {
   let filterGroup = 'ทั้งหมด', search = '';
-  const GROUPS_LIST = ['ทั้งหมด', 'เนื้อสัตว์', 'ผัก/สมุนไพร', 'เครื่องปรุง', 'ของแห้ง', 'อื่นๆ'];
+  // Load dynamic groups
+  let customGroups = DB.getAll('ingGroups');
+  if (customGroups.length === 0) {
+    customGroups = [
+      { id: 'temp1', name: 'เนื้อสัตว์', bg: '#ef444422', color: '#ef4444', emoji: '🥩' },
+      { id: 'temp2', name: 'ผัก/สมุนไพร', bg: '#22c55e22', color: '#22c55e', emoji: '🥬' },
+      { id: 'temp3', name: 'เครื่องปรุง', bg: '#f59e0b22', color: '#f59e0b', emoji: '🧄' },
+      { id: 'temp4', name: 'ของแห้ง', bg: '#8b5cf622', color: '#8b5cf6', emoji: '🌾' },
+      { id: 'temp5', name: 'อื่นๆ', bg: '#64748b22', color: '#64748b', emoji: '📦' }
+    ];
+  }
+  const GROUPS_LIST = ['ทั้งหมด', ...customGroups.map(g => g.name)];
+
   let selectedIds = new Set();
 
   function badge(ing) {
@@ -18,14 +30,11 @@ function renderIngredients(container) {
     return `<span class="badge badge-manual">✏️ Manual</span>`;
   }
 
-  // ---- Group color map ----
-  const GROUP_COLORS = {
-    'เนื้อสัตว์': { bg: '#ef444422', color: '#ef4444', emoji: '🥩' },
-    'ผัก/สมุนไพร': { bg: '#22c55e22', color: '#22c55e', emoji: '🥬' },
-    'เครื่องปรุง': { bg: '#f59e0b22', color: '#f59e0b', emoji: '🧄' },
-    'ของแห้ง': { bg: '#8b5cf622', color: '#8b5cf6', emoji: '🌾' },
-    'อื่นๆ': { bg: '#64748b22', color: '#64748b', emoji: '📦' },
-  };
+  // ---- Group color map dynamic ----
+  const GROUP_COLORS = {};
+  customGroups.forEach(g => {
+    GROUP_COLORS[g.name] = { bg: g.bg || (g.color + '22'), color: g.color || '#64748b', emoji: g.emoji || '📦' };
+  });
 
   function draw() {
     let ings = DB.getAll('ingredients');
