@@ -28,7 +28,11 @@ if (loginForm && typeof auth !== 'undefined' && auth) {
         const password = passwordInput.value;
 
         // --- Local Admin Bypass ---
-        const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+        const isLocal = window.location.hostname === 'localhost' ||
+            window.location.hostname === '127.0.0.1' ||
+            window.location.protocol === 'file:' ||
+            window.location.hostname === '';
+
         if (isLocal && email === 'Admin' && password === 'Naents0000') {
             // Set a flag to bypass auth in auth-state.js
             localStorage.setItem('local_admin_bypass', 'true');
