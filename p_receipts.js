@@ -287,6 +287,11 @@ function renderReceipts(container) {
   window.rcRescan = function () { if (_imageBase64) rcDoOCR(); };
 
   async function rcDoOCR() {
+    if (!_settings.geminiApiKey) {
+      Toast.show('กรุณาใส่ Gemini API Key ในเมนู ตั้งค่า ก่อนใช้งาน', 'error');
+      return;
+    }
+
     document.getElementById('ocrProgress').style.display = '';
     document.getElementById('stepReview').style.display = 'none';
     document.getElementById('stepUpload').style.display = 'none';
@@ -299,29 +304,77 @@ function renderReceipts(container) {
     }
 
     try {
-      if (typeof Tesseract === 'undefined') {
-        setStatus('โหลด OCR engine...', 5);
-        await new Promise(function (res, rej) {
-          var s = document.createElement('script');
-          s.src = 'https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js';
-          s.onload = res; s.onerror = rej;
-          document.head.appendChild(s);
-        });
-      }
+      setStatus('ส่งรูปให้ AI วิเคราะห์...', 20);
 
-      setStatus('กำลังประมวลผลรูป...', 15);
-      var langEl = document.getElementById('rcLang');
-      var ocrLang = langEl ? langEl.value : 'jpn';
-      var result = await Tesseract.recognize(_imageBase64, ocrLang, {
-        logger: function (m) {
-          if (m.status === 'recognizing text') {
-            setStatus('กำลังอ่านข้อความ... ' + Math.round(m.progress * 100) + '%', Math.round(m.progress * 80) + 15);
+      // Clean base64 string
+      const base64Data = _imageBase64.split(',')[1];
+      const mimeType = _imageBase64.split(';')[0].split(':')[1];
+
+      // Build Gemini Payload
+      const payload = {
+        "contents": [
+          {
+            "parts": [
+              { "text": "You are a professional data extractor. Read this receipt image. Translate all non-Thai item names to valid Thai. Ignore non-food items, taxes, totals, and discounts. Return ONLY a valid JSON array of objects with keys: `name` (string, valid Thai name of the ingredient), `qty` (number), `unit` (string, e.g., กก., กรัม, ชิ้น, แพ็ค), and `price` (number in original currency but clean digits only). DO NOT WRAP IN MARKDOWN BACKTICKS. JUST STRICT JSON ARRAY." },
+              {
+                "inline_data": {
+                  "mime_type": mimeType,
+                  "data": base64Data
+                }
+              }
+            ]
           }
-        }
+        ]
+      };
+
+      setStatus('AI กำลังอ่านและแปลภาษา...', 60);
+
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${_settings.geminiApiKey}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
       });
 
-      setStatus('วิเคราะห์รายการ...', 97);
-      _parsed = parseReceiptData(result.data);
+      if (!response.ok) {
+        throw new Error(`API Error: ${response.status} ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      let rawText = data.candidates?.[0]?.content?.parts?.[0]?.text || '[]';
+
+      // Clean up markdown markers if Gemini ignores the prompt instruction
+      rawText = rawText.replace(/```json/g, '').replace(/```/g, '').trim();
+
+      setStatus('รวบรวมข้อมูล...', 90);
+
+      let items = [];
+      try {
+        items = JSON.parse(rawText);
+      } catch (e) {
+        console.error('Failed to parse Gemini JSON:', rawText);
+        throw new Error('AI ส่งข้อมูลกลับมาไม่ถูกต้อง');
+      }
+
+      // Map back to our structure and find matching ingredients
+      _parsed = items.map(item => {
+        let ingredientId = null;
+        let nameLower = item.name.toLowerCase();
+        for (let k = 0; k < ings.length; k++) {
+          let iName = ings[k].name.toLowerCase();
+          if (iName === nameLower || iName.includes(nameLower) || nameLower.includes(iName)) {
+            ingredientId = ings[k].id; break;
+          }
+        }
+        return {
+          name: item.name,
+          price: parseFloat(item.price) || 0,
+          qty: parseFloat(item.qty) || 1,
+          unit: item.unit || 'ชิ้น',
+          keep: true,
+          ingredientId: ingredientId
+        };
+      });
+
       window._rcParsed = _parsed;
 
       setStatus('เสร็จแล้ว!', 100);
@@ -340,7 +393,7 @@ function renderReceipts(container) {
     } catch (err) {
       document.getElementById('ocrProgress').style.display = 'none';
       document.getElementById('stepUpload').style.display = '';
-      Toast.show('OCR Error: ' + err.message, 'error');
+      Toast.show('AI Error: ' + err.message, 'error');
     }
   }
 
