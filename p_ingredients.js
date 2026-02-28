@@ -52,7 +52,7 @@ function renderIngredients(container) {
       const buyInfo = ing.priceMode === 'sub_recipe'
         ? `<span style="color:#7c3aed;font-size:11px">🧪 → ${formatPrice(price)}/${ing.subYieldUnit || ing.recipeUnit || ing.buyUnit}</span>`
         : (ing.buyQty && ing.buyPrice)
-          ? `<span style="color:var(--text-faint);font-size:11px">ซื้อ ${ing.buyQty}${ing.buyUnit} ฿${ing.buyPrice} → ฿${Number(price).toFixed(2)}/${ing.recipeUnit || ing.buyUnit}</span>`
+          ? `<span style="color:var(--text-faint);font-size:11px">ซื้อ ${ing.buyQty}${ing.buyUnit} ${formatPrice(ing.buyPrice)} → ${formatPrice(price)}/${ing.recipeUnit || ing.buyUnit}</span>`
           : '';
       const isSelected = selectedIds.has(ing.id);
 
