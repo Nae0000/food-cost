@@ -3,28 +3,89 @@
 // ===================================================
 
 const DB = {
-  _get(key) { try { return JSON.parse(localStorage.getItem('fc_' + key) || 'null'); } catch { return null; } },
-  _set(key, data) { localStorage.setItem('fc_' + key, JSON.stringify(data)); },
-  _nextId(col) { const a = this._get(col) || []; return a.length > 0 ? Math.max(...a.map(i => i.id)) + 1 : 1; },
+  _cache: {}, // In-memory cache for all collections
+  _listeners: [], // array to hold unsubscribe functions
 
-  getAll(col) { return this._get(col) || []; },
-  getById(col, id) { return (this._get(col) || []).find(i => i.id === id) || null; },
+  // Initialize snapshot listeners to sync Firestore -> Local Cache 
+  initFirestoreRealtime(uid) {
+    if (!uid || typeof dbFirestore === 'undefined') return;
+
+    // Clear any existing listeners
+    this._listeners.forEach(unsub => unsub());
+    this._listeners = [];
+
+    // Collections to sync
+    const collections = ['categories', 'ingredients', 'menus', 'recipes', 'subRecipes', 'sets', 'priceHistory', 'receipts'];
+
+    collections.forEach(col => {
+      // Ensure local array exists
+      this._cache[col] = [];
+      const unsub = dbFirestore.collection('users').doc(uid).collection(col)
+        .onSnapshot((snapshot) => {
+          const items = [];
+          snapshot.forEach(doc => {
+            items.push({ _docId: doc.id, ...doc.data() });
+          });
+          // Update local cache
+          this._cache[col] = items;
+
+          // Re-render UI upon data change
+          if (typeof Router !== 'undefined' && Router.render) {
+            Router.render();
+          }
+        });
+      this._listeners.push(unsub);
+    });
+
+    this.markInitialized();
+  },
+
+  _get(col) { return this._cache[col] || []; },
+  _nextId(col) { const a = this._get(col); return a.length > 0 ? Math.max(...a.map(i => i.id || 0)) + 1 : 1; },
+
+  getAll(col) { return this._get(col); },
+  getById(col, id) { return (this._get(col)).find(i => i.id === id) || null; },
+
   insert(col, data) {
-    const items = this._get(col) || [];
+    if (typeof auth === 'undefined' || !auth.currentUser) return null;
+    const uid = auth.currentUser.uid;
+
+    // Generate an ID for consistency across app logic
     const item = { ...data, id: this._nextId(col), createdAt: Date.now() };
-    items.push(item); this._set(col, items); return item;
+
+    // Push push to Firestore, it will trigger onSnapshot to update cache
+    dbFirestore.collection('users').doc(uid).collection(col).add(item)
+      .catch(err => console.error("Error inserting to Firestore", err));
+
+    return item;
   },
+
   update(col, id, data) {
-    const items = this._get(col) || [];
-    const idx = items.findIndex(i => i.id === id);
-    if (idx === -1) return null;
-    items[idx] = { ...items[idx], ...data, updatedAt: Date.now() };
-    this._set(col, items); return items[idx];
+    if (typeof auth === 'undefined' || !auth.currentUser) return null;
+    const uid = auth.currentUser.uid;
+    const items = this._get(col);
+    const target = items.find(i => i.id === id);
+    if (!target || !target._docId) return null;
+
+    const payload = { ...data, updatedAt: Date.now() };
+
+    dbFirestore.collection('users').doc(uid).collection(col).doc(target._docId).update(payload)
+      .catch(err => console.error("Error updating to Firestore", err));
+
+    return { ...target, ...payload };
   },
+
   delete(col, id) {
-    const items = this._get(col) || [];
-    const next = items.filter(i => i.id !== id);
-    this._set(col, next); return next.length < items.length;
+    if (typeof auth === 'undefined' || !auth.currentUser) return false;
+    const uid = auth.currentUser.uid;
+    const items = this._get(col);
+    const target = items.find(i => i.id === id);
+    if (!target || !target._docId) return false;
+
+    dbFirestore.collection('users').doc(uid).collection(col).doc(target._docId).delete()
+      .catch(err => console.error("Error deleting in Firestore", err));
+
+    return true;
   },
 
   // ---------------------------------------------------
@@ -108,16 +169,14 @@ const DB = {
     return Math.round(total * 10000) / 10000;
   },
 
-  isInitialized() { return !!this._get('__initialized__'); },
-  markInitialized() { this._set('__initialized__', true); },
+  isInitialized() { return this._cache['__initialized__']; },
+  markInitialized() { this._cache['__initialized__'] = true; },
 
   // ---------------------------------------------------
   // Price History
   // ---------------------------------------------------
   recordPriceHistory(ingredientId, price, note = 'auto') {
-    const items = this._get('priceHistory') || [];
-    items.push({ id: Date.now(), ingredientId, price, timestamp: Date.now(), note });
-    this._set('priceHistory', items);
+    this.insert('priceHistory', { ingredientId, price, timestamp: Date.now(), note });
   },
   getPriceHistory(ingredientId) {
     const all = this._get('priceHistory') || [];
@@ -127,44 +186,49 @@ const DB = {
   snapshotAllPrices(note = 'snapshot') {
     const ings = this.getAll('ingredients');
     const ts = Date.now();
-    const items = this._get('priceHistory') || [];
+    let count = 0;
     ings.forEach(ing => {
       const price = this.effectivePrice(ing);
-      if (price > 0) items.push({ id: ts + ing.id, ingredientId: ing.id, price, timestamp: ts, note });
+      if (price > 0) {
+        this.insert('priceHistory', { ingredientId: ing.id, price, timestamp: ts, note });
+        count++;
+      }
     });
-    this._set('priceHistory', items);
-    return ings.length;
+    return count;
   },
 
   reset() {
-    ['categories', 'ingredients', 'menus', 'recipes', 'subRecipes', 'webhooks', 'priceHistory', 'receipts', '__initialized__']
-      .forEach(k => localStorage.removeItem('fc_' + k));
+    if (typeof auth === 'undefined' || !auth.currentUser) return;
+    const uid = auth.currentUser.uid;
+    const cols = ['categories', 'ingredients', 'menus', 'recipes', 'subRecipes', 'webhooks', 'priceHistory', 'receipts'];
+
+    if (confirm('ยืนยันว่าจะลบข้อมูลทั้งหมดใน Cloud Firestore ของคุณ? ข้อมูลจะไม่สามารถกู้คืนได้')) {
+      cols.forEach(col => {
+        // Warning: This does not delete all deeply nested docs efficiently, but works for limited client-side resets
+        dbFirestore.collection('users').doc(uid).collection(col).get().then(snapshot => {
+          snapshot.forEach(doc => doc.ref.delete());
+        });
+      });
+      Toast.show('กำลังรีเซ็ตข้อมูลทั้งหมด...', 'info');
+    }
   },
 
   // ---------------------------------------------------
   // Receipts
   // ---------------------------------------------------
   saveReceipt(receipt) {
-    const items = this._get('receipts') || [];
     if (receipt.id) {
-      // update
-      const idx = items.findIndex(r => r.id === receipt.id);
-      if (idx >= 0) items[idx] = receipt;
-      else items.push(receipt);
+      this.update('receipts', receipt.id, receipt);
     } else {
-      receipt.id = Date.now();
-      receipt.createdAt = Date.now();
-      items.unshift(receipt);
+      this.insert('receipts', receipt);
     }
-    this._set('receipts', items);
     return receipt;
   },
   getReceipts() {
     return (this._get('receipts') || []).sort((a, b) => b.createdAt - a.createdAt);
   },
   deleteReceipt(id) {
-    const items = (this._get('receipts') || []).filter(r => r.id !== id);
-    this._set('receipts', items);
+    this.delete('receipts', id);
   }
 };
 

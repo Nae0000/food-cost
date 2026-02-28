@@ -11,6 +11,13 @@
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <!-- Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+  <script src="firebase-config.js"></script>
+  <script src="auth-state.js"></script>
+
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link
@@ -66,6 +73,15 @@
           <path d="M3 3v5h5" />
         </svg>
         รีเซ็ตข้อมูล
+      </button>
+      <button class="btn-reset-data" id="logoutBtn"
+        style="margin-top: 10px; background-color: var(--danger, #ef4444); color: white; border: none;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+          <polyline points="16 17 21 12 16 7"></polyline>
+          <line x1="21" y1="12" x2="9" y2="12"></line>
+        </svg>
+        ออกจากระบบ
       </button>
     </div>
   </nav>
@@ -135,6 +151,9 @@
         </a>
         <a href="#settings" class="more-item" data-page="settings" onclick="closeMoreOverlay()">
           <span class="more-item-icon">⚙️</span><span>ตั้งค่า</span>
+        </a>
+        <a href="#" class="more-item" id="mobileLogoutBtn" style="color: var(--danger, #ef4444);">
+          <span class="more-item-icon">🚪</span><span>ออกจากระบบ</span>
         </a>
       </div>
     </div>

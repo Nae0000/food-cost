@@ -161,7 +161,7 @@ const DataSync = {
 
       tables.forEach(t => {
         if (data[t] && Array.isArray(data[t])) {
-          localStorage.setItem('fc_' + t, JSON.stringify(data[t]));
+          data[t].forEach(item => DB.insert(t, item)); // Use DB wrapper to push to Cloud
         }
       });
       Toast.show(t('restore_success'), 'success');
@@ -439,3 +439,29 @@ window.bulkDeleteCategory = function () {
     Router.render();
   }
 };
+
+// ===================================================
+// AUTHENTICATION (Logout functionality)
+// ===================================================
+function handleLogout(e) {
+  if (e) e.preventDefault();
+  if (confirm('ต้องการออกจากระบบใช่หรือไม่?')) {
+    if (typeof auth !== 'undefined' && auth) {
+      auth.signOut().then(() => {
+        window.location.href = 'login.html';
+      }).catch((error) => {
+        console.error("Sign out error", error);
+        Toast.show('เกิดข้อผิดพลาดในการออกจากระบบ', 'error');
+      });
+    } else {
+      window.location.href = 'login.html';
+    }
+  }
+}
+
+const logoutBtn = document.getElementById('logoutBtn');
+if (logoutBtn) logoutBtn.addEventListener('click', handleLogout);
+
+const mobileLogoutBtn = document.getElementById('mobileLogoutBtn');
+if (mobileLogoutBtn) mobileLogoutBtn.addEventListener('click', handleLogout);
+
