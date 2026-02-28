@@ -320,7 +320,7 @@ window.setPriceMode = function (id, mode) {
 
 window.openIngredientModal = function (id = null) {
   const ing = id ? DB.getById('ingredients', id) : null;
-  const groups = ['เนื้อสัตว์', 'ผัก/สมุนไพร', 'เครื่องปรุง', 'ของแห้ง', 'อื่นๆ'];
+  const groups = DB.getAll('ingGroups').map(g => g.name);
 
   function unitOpts(list, selected) {
     return list.map(u => `<option value="${u}" ${selected === u ? 'selected' : ''}>${u}</option>`).join('');
