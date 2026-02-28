@@ -536,16 +536,32 @@ window.openMenuModal = function (id = null) {
       if (!ingId) { Toast.show(t('rec_ing_req'), 'error'); return; }
       if (!qty || qty <= 0) { Toast.show(t('rec_qty_req'), 'error'); return; }
       if (DB.getAll('recipes').some(r => r.menuId === m.id && r.ingredientId === ingId)) { Toast.show(t('rec_duplicate'), 'warning'); return; }
+
+      // Update DB and instantly draw
       DB.insert('recipes', { menuId: m.id, ingredientId: ingId, quantity: qty });
-      Toast.show(t('rec_added'));
-      document.getElementById('mAddIngSearch').value = ''; document.getElementById('mAddIngId').value = ''; document.getElementById('mAddQty').value = '';
+
+      document.getElementById('mAddIngSearch').value = '';
+      document.getElementById('mAddIngId').value = '';
+      document.getElementById('mAddQty').value = '';
+
       drawRecipeRows();
+      setTimeout(() => Router.render(), 10); // Refresh the background list lightly
     };
+
     window.mEditQty = function (recipeId, name, currentQty) {
       const val = prompt(`${t('rec_edit_qty')} "${name}":`, currentQty);
-      if (val !== null && !isNaN(parseFloat(val)) && parseFloat(val) > 0) { DB.update('recipes', recipeId, { quantity: parseFloat(val) }); Toast.show(t('rec_qty_updated')); drawRecipeRows(); }
+      if (val !== null && !isNaN(parseFloat(val)) && parseFloat(val) > 0) {
+        DB.update('recipes', recipeId, { quantity: parseFloat(val) });
+        drawRecipeRows();
+        setTimeout(() => Router.render(), 10);
+      }
     };
-    window.mDelRecipe = function (recipeId) { DB.delete('recipes', recipeId); Toast.show(t('rec_deleted'), 'info'); drawRecipeRows(); };
+
+    window.mDelRecipe = function (recipeId) {
+      DB.delete('recipes', recipeId);
+      drawRecipeRows();
+      setTimeout(() => Router.render(), 10);
+    };
 
     // Sub-menu functions (set type)
     window.mShowSubMenuDD = function () { const dd = document.getElementById('mSubMenuDD'); if (dd) { dd.style.display = 'block'; mFilterSubMenuDD(); } };
