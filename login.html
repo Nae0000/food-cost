@@ -13,21 +13,36 @@
         rel="stylesheet" />
     <link rel="stylesheet" href="styles.css" />
     <style>
+        :root {
+            --bg-color: #0f172a;
+            /* Dark background similar to main app */
+            --modal-bg: #1e293b;
+            /* Card background */
+            --text-color: #f8fafc;
+            --text-muted: #94a3b8;
+            --border-color: #334155;
+            --primary-color: #0ea5e9;
+            --input-bg: rgba(15, 23, 42, 0.5);
+            --danger-color: #ef4444;
+        }
+
         body {
             display: flex;
             justify-content: center;
             align-items: center;
             height: 100vh;
-            background-color: var(--bg-color, #f4f6f8);
+            background-color: var(--bg-color);
             margin: 0;
             font-family: 'Noto Sans Thai', sans-serif;
+            color: var(--text-color);
         }
 
         .login-container {
-            background: white;
+            background: var(--modal-bg);
             padding: 40px 30px;
             border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--border-color);
             width: 100%;
             max-width: 400px;
             text-align: center;
@@ -42,11 +57,11 @@
             font-size: 24px;
             font-weight: 600;
             margin-bottom: 8px;
-            color: var(--text-color, #1f2937);
+            color: var(--text-color);
         }
 
         .login-sub {
-            color: var(--text-muted, #6b7280);
+            color: var(--text-muted);
             margin-bottom: 30px;
         }
 
@@ -58,21 +73,30 @@
 
         .login-input {
             padding: 12px;
-            border: 1px solid var(--border-color, #e5e7eb);
+            background-color: var(--input-bg);
+            border: 1px solid var(--border-color);
+            color: var(--text-color);
             border-radius: 8px;
             font-size: 16px;
             font-family: inherit;
             outline: none;
-            transition: border-color 0.2s;
+            transition: all 0.2s;
+        }
+
+        .login-input::placeholder {
+            color: var(--text-muted);
+            opacity: 0.7;
         }
 
         .login-input:focus {
-            border-color: var(--primary-color, #0ea5e9);
+            border-color: var(--primary-color);
+            background-color: rgba(15, 23, 42, 0.8);
+            box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.15);
         }
 
         .login-btn {
             padding: 12px;
-            background-color: var(--primary-color, #0ea5e9);
+            background-color: var(--primary-color);
             color: white;
             border: none;
             border-radius: 8px;
@@ -89,25 +113,50 @@
 
         .google-btn {
             background-color: white;
-            color: #333;
-            border: 1px solid var(--border-color, #e5e7eb);
+            color: #1f2937;
+            /* Dark text for contrast */
+            border: 1px solid white;
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 10px;
             margin-top: 15px;
             width: 100%;
+            font-weight: 600;
         }
 
         .google-btn:hover {
-            background-color: #f8f9fa;
+            background-color: #f1f5f9;
         }
 
         .error-msg {
-            color: var(--danger-color, #ef4444);
+            color: var(--danger-color);
             font-size: 14px;
             margin-top: 10px;
             display: none;
+        }
+
+        .divider {
+            margin: 20px 0;
+            color: var(--text-muted);
+            font-size: 14px;
+            position: relative;
+        }
+
+        .divider span {
+            background: var(--modal-bg);
+            padding: 0 10px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .divider-line {
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            border-top: 1px solid var(--border-color);
+            z-index: 0;
         }
     </style>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
@@ -127,11 +176,9 @@
             <div id="errorMsg" class="error-msg"></div>
         </form>
 
-        <div style="margin: 20px 0; color: #999; font-size: 14px; position: relative;">
-            <span style="background: white; padding: 0 10px; position: relative; z-index: 1;">หรือ</span>
-            <div
-                style="position: absolute; top: 50%; left: 0; right: 0; border-top: 1px solid var(--border-color, #e5e7eb); z-index: 0;">
-            </div>
+        <div class="divider">
+            <span>หรือ</span>
+            <div class="divider-line"></div>
         </div>
 
         <button id="googleLoginBtn" class="login-btn google-btn">

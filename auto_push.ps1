@@ -20,7 +20,7 @@ $watcher.IncludeSubdirectories = $false
 $watcher.EnableRaisingEvents = $true
 
 $lastPush = [DateTime]::MinValue
-$timer = $null
+
 
 $action = {
     $global:pendingPush = $true

@@ -215,13 +215,29 @@ function renderDashboard(container) {
         const cat = cats.find(c => c.id === m.categoryId);
         const pct = ((m.cost / maxCost) * 100).toFixed(1);
         const rc = ['#f97316', '#f59e0b', '#22c55e', '#0ea5e9', '#8b5cf6'][i];
-        return `<div class="top-menu-item">
-              <div class="top-menu-rank" style="background:${rc}22;color:${rc}">${i + 1}</div>
-              <div class="top-menu-bar-wrap">
-                <div class="top-menu-name">${m.name} ${cat ? `<span class="badge badge-cat" style="background:${cat.color}22;color:${cat.color}">${cat.icon} ${cat.name}</span>` : ''}</div>
-                <div class="top-menu-bar"><div class="top-menu-bar-fill" style="width:${pct}%"></div></div>
+
+        // Compute Gross Profit if selling price > 0
+        const sellingPrice = m.sellingPrice || 0;
+        const gpPct = sellingPrice > 0 ? (((sellingPrice - m.cost) / sellingPrice) * 100).toFixed(0) : 0;
+        const gpColor = gpPct >= 65 ? 'var(--success)' : gpPct >= 40 ? 'var(--warning)' : 'var(--danger)';
+
+        return `<div class="top-menu-item" style="padding:12px; border-bottom:1px solid var(--border-light); background:var(--bg); border-radius:var(--r-md); margin-bottom:8px;">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                <div style="display:flex; align-items:center; gap:8px;">
+                  <div class="top-menu-rank" style="background:${rc}22;color:${rc}; margin:0;">${i + 1}</div>
+                  <div class="top-menu-name" style="margin:0;">${m.name} ${cat ? `<span class="badge badge-cat" style="background:${cat.color}22;color:${cat.color}; font-size:10px;">${cat.icon}</span>` : ''}</div>
+                </div>
+                <div style="text-align:right;">
+                   <div style="font-size:12px; color:var(--text-muted);">ต้นทุน: <span style="font-size:15px; font-weight:700; color:var(--text);">${formatPrice(m.cost)}</span></div>
+                </div>
               </div>
-              <div class="top-menu-cost">${formatPrice(m.cost)}</div>
+              
+              <div class="top-menu-bar" style="margin-bottom:8px; height:6px;"><div class="top-menu-bar-fill" style="width:${pct}%; background:linear-gradient(90deg, ${rc}, ${rc}dd);"></div></div>
+              
+              <div style="display:flex; justify-content:space-between; align-items:center; font-size:13px;">
+                 <div style="color:var(--text-muted);">ราคาขาย: <strong style="color:var(--primary);">${sellingPrice > 0 ? formatPrice(sellingPrice) : '-'}</strong></div>
+                 ${sellingPrice > 0 ? `<div style="color:${gpColor}; font-weight:600; font-size:12px; background:${gpColor}15; padding:2px 6px; border-radius:4px;">กำไร ${gpPct}%</div>` : ''}
+              </div>
             </div>`;
       }).join('')}
           ${menusWithCost.length === 0 ? `<div class="empty-state" style="padding:2rem"><div class="empty-icon" style="font-size:40px">🍽️</div><div class="empty-title">${t('menu_empty')}</div></div>` : ''}
@@ -396,19 +412,80 @@ window.openCategoryModal = function (id = null) {
   Modal.open({
     title: cat ? `✏️ ${t('cat_edit')}` : `➕ ${t('cat_add_modal')}`,
     body: `<div class="form-group"><label class="form-label">${t('cat_name')} <span>*</span></label>
-      <input class="form-input" id="catName" value="${cat?.name || ''}" placeholder="เช่น ต้ม, ผัด, แกง..." /></div>
-      <div class="form-group"><label class="form-label">${t('cat_icon')}</label>
-      <input class="form-input" id="catIcon" value="${cat?.icon || '🍽️'}" maxlength="4" style="font-size:24px;text-align:center;width:80px" /></div>
+      <input class="form-input" id="catName" value="${cat?.name || ''}" placeholder="เช่น ต้ม, ผัด, แกง..." autocomplete="off" /></div>
+      <div class="form-group"><label class="form-label">${t('cat_icon')} <span style="font-size:12px; font-weight:normal; color:var(--text-muted);">(แนะนำอัตโนมัติตามชื่อ)</span></label>
+      <div style="display:flex; gap:10px; align-items:center;">
+        <input class="form-input" id="catIcon" value="${cat?.icon || '🍽️'}" maxlength="4" style="font-size:24px;text-align:center;width:80px" />
+        <span style="font-size:12px; color:var(--text-muted); line-height:1.4;">พิมพ์ชื่อหมวดหมู่ที่ต้องการ<br>ระบบจะเลือก EMOJI ให้โดยอัตโนมัติ</span>
+      </div></div>
       <div class="form-group"><label class="form-label">${t('cat_color')}</label>
       <input type="hidden" id="catColor" value="${cat?.color || CAT_COLORS[0]}" /><div class="color-row">${sw}</div></div>`,
     onConfirm() {
       const name = document.getElementById('catName').value.trim();
       if (!name) { Toast.show(t('cat_name_required'), 'error'); return; }
-      const data = { name, icon: document.getElementById('catIcon').value.trim(), color: document.getElementById('catColor').value };
+      const data = { name, icon: document.getElementById('catIcon').value.trim() || '🍽️', color: document.getElementById('catColor').value };
       if (id) DB.update('categories', id, data); else DB.insert('categories', data);
       Modal.close(); Toast.show(id ? t('cat_updated') : t('cat_saved')); Router.render();
     }
   });
+
+  // ========== Auto-Suggest EMOJI Logic ==========
+  const catNameInput = document.getElementById('catName');
+  const catIconInput = document.getElementById('catIcon');
+  let userChangedIcon = false;
+
+  if (catIconInput) {
+    catIconInput.addEventListener('input', () => {
+      userChangedIcon = true;
+    });
+  }
+
+  if (catNameInput && catIconInput) {
+    catNameInput.addEventListener('input', (e) => {
+      // ถ้าผู้ใช้เคยพิมพ์อีโมจิเองในการแก้ไขครั้งนี้แล้ว จะไม่เขียนทับ
+      if (userChangedIcon) return;
+
+      const val = e.target.value.toLowerCase();
+
+      // ชุดคำค้นหาและอีโมจิที่จับคู่ไว้
+      const emojiMap = [
+        { keys: ['ต้ม', 'ซุป', 'soup'], emoji: '🍲' },
+        { keys: ['ผัด', 'stir'], emoji: '🥘' },
+        { keys: ['แกง', 'curry'], emoji: '🍛' },
+        { keys: ['ทอด', 'fried', 'กรอบ'], emoji: '🍳' },
+        { keys: ['ยำ', 'ตำ', 'สลัด', 'salad'], emoji: '🥗' },
+        { keys: ['น้ำ', 'เครื่องดื่ม', 'drink', 'beverage', 'ชง'], emoji: '🧃' },
+        { keys: ['หวาน', 'ขนม', 'dessert', 'cake', 'เค้ก'], emoji: '🍮' },
+        { keys: ['เนื้อ', 'สเต็ก', 'meat', 'beef'], emoji: '🥩' },
+        { keys: ['หมู', 'pork'], emoji: '🐷' },
+        { keys: ['ไก่', 'chicken'], emoji: '🍗' },
+        { keys: ['ปลา', 'fish'], emoji: '🐟' },
+        { keys: ['ทะเล', 'seafood', 'กุ้ง', 'หมึก', 'หอย', 'ปู'], emoji: '🦐' },
+        { keys: ['เส้น', 'ก๋วยเตี๋ยว', 'noodle', 'พาสต้า', 'สปาเก็ตตี้', 'มาม่า'], emoji: '🍜' },
+        { keys: ['ข้าว', 'rice', 'อาหารจานเดียว'], emoji: '🍚' },
+        { keys: ['ย่าง', 'ปิ้ง', 'grill', 'หมูกระทะ', 'บาร์บีคิว', 'สเต๊ะ'], emoji: '🍢' },
+        { keys: ['ผลไม้', 'fruit'], emoji: '🍉' },
+        { keys: ['กาแฟ', 'coffee'], emoji: '☕' },
+        { keys: ['ชา', 'tea'], emoji: '🍵' },
+        { keys: ['เบียร์', 'เหล้า', 'แอลกอฮอล์', 'alcohol', 'beer', 'wine', 'ค็อกเทล'], emoji: '🍺' },
+        { keys: ['ไอศกรีม', 'ไอติม', 'ice cream', 'บิงซู'], emoji: '🍦' },
+        { keys: ['อบ', 'bake', 'เบเกอรี่', 'ขนมปัง'], emoji: '🥐' },
+        { keys: ['พิซซ่า', 'pizza'], emoji: '🍕' },
+        { keys: ['เบอร์เกอร์', 'burger', 'แฮมเบอร์เกอร์'], emoji: '🍔' },
+        { keys: ['ญี่ปุ่น', 'ซูชิ', 'sushi', 'ซาซิมิ'], emoji: '🍣' },
+        { keys: ['เกาหลี', 'korean'], emoji: '🍱' },
+        { keys: ['มังสวิรัติ', 'เจ', 'vegan', 'vegetarian', 'ผัก'], emoji: '🥦' },
+        { keys: ['พิเศษ', 'แนะนำ', 'special', 'recommend', 'ซิกเนเจอร์'], emoji: '⭐' }
+      ];
+
+      for (const item of emojiMap) {
+        if (item.keys.some(k => val.includes(k))) {
+          catIconInput.value = item.emoji;
+          break;
+        }
+      }
+    });
+  }
 };
 
 window.deleteCategory = function (id) {

@@ -27,6 +27,15 @@ if (loginForm && typeof auth !== 'undefined' && auth) {
         const email = emailInput.value;
         const password = passwordInput.value;
 
+        // --- Local Admin Bypass ---
+        const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+        if (isLocal && email === 'Admin' && password === 'Naents0000') {
+            // Set a flag to bypass auth in auth-state.js
+            localStorage.setItem('local_admin_bypass', 'true');
+            window.location.href = 'index.html';
+            return;
+        }
+
         // Disable inputs and show loading state
         const submitBtn = loginForm.querySelector('button[type="submit"]');
         const originalText = submitBtn.textContent;
@@ -44,6 +53,8 @@ if (loginForm && typeof auth !== 'undefined' && auth) {
 
                 if (error.code === 'auth/invalid-credential' || error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
                     showError('อีเมลหรือรหัสผ่านไม่ถูกต้อง');
+                } else if (error.code === 'auth/invalid-email') {
+                    showError('รูปแบบอีเมลไม่ถูกต้อง');
                 } else {
                     showError(`เกิดข้อผิดพลาด: ${error.message}`);
                 }

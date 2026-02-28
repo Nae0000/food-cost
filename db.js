@@ -53,9 +53,16 @@ const DB = {
     // Generate an ID for consistency across app logic
     const item = { ...data, id: this._nextId(col), createdAt: Date.now() };
 
-    // Push push to Firestore, it will trigger onSnapshot to update cache
+    // Optimistically update local cache immediately for instant UI response
+    if (!this._cache[col]) this._cache[col] = [];
+    this._cache[col].push(item);
+
+    // Push to Firestore, it will trigger onSnapshot later to confirm
     dbFirestore.collection('users').doc(uid).collection(col).add(item)
-      .catch(err => console.error("Error inserting to Firestore", err));
+      .catch(err => {
+        console.error("Error inserting to Firestore", err);
+        // On error, we could rollback the local cache here, but for now just log it
+      });
 
     return item;
   },
@@ -65,25 +72,37 @@ const DB = {
     const uid = auth.currentUser.uid;
     const items = this._get(col);
     const target = items.find(i => i.id === id);
-    if (!target || !target._docId) return null;
+    if (!target) return null;
 
     const payload = { ...data, updatedAt: Date.now() };
 
-    dbFirestore.collection('users').doc(uid).collection(col).doc(target._docId).update(payload)
-      .catch(err => console.error("Error updating to Firestore", err));
+    // Optimistically update local cache immediately
+    Object.assign(target, payload);
 
-    return { ...target, ...payload };
+    if (target._docId) {
+      dbFirestore.collection('users').doc(uid).collection(col).doc(target._docId).update(payload)
+        .catch(err => console.error("Error updating to Firestore", err));
+    }
+
+    return target;
   },
 
   delete(col, id) {
     if (typeof auth === 'undefined' || !auth.currentUser) return false;
     const uid = auth.currentUser.uid;
     const items = this._get(col);
-    const target = items.find(i => i.id === id);
-    if (!target || !target._docId) return false;
+    const targetIdx = items.findIndex(i => i.id === id);
+    if (targetIdx === -1) return false;
 
-    dbFirestore.collection('users').doc(uid).collection(col).doc(target._docId).delete()
-      .catch(err => console.error("Error deleting in Firestore", err));
+    const target = items[targetIdx];
+
+    // Optimistically remove from local cache immediately
+    items.splice(targetIdx, 1);
+
+    if (target._docId) {
+      dbFirestore.collection('users').doc(uid).collection(col).doc(target._docId).delete()
+        .catch(err => console.error("Error deleting in Firestore", err));
+    }
 
     return true;
   },

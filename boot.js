@@ -16,9 +16,23 @@ Router.register('settings', renderSettings);
 // Apply saved language to sidebar nav labels
 applyI18n();
 
-// Init data and router
-SEED.run();
-Router.init();
+// Init data and router only if authenticated
+if (typeof auth !== 'undefined' && auth) {
+    auth.onAuthStateChanged((user) => {
+        if (user) {
+            // Already initialized in auth-state.js, but make sure Router only starts here
+            SEED.run();
+            Router.init();
+            _initGDrive();
+        }
+    });
+} else {
+    // Fallback if no auth 
+    SEED.run();
+    Router.init();
+    _initGDrive();
+}
+
 
 // Initialize GDrive after Google Identity Services library is ready
 function _initGDrive() {
@@ -29,7 +43,6 @@ function _initGDrive() {
         setTimeout(_initGDrive, 300);
     }
 }
-_initGDrive();
 
 // Helper to re-render the current hash page (used by GDrive callbacks)
 window.renderCurrentPage = function () {
