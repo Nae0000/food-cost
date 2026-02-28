@@ -4,9 +4,9 @@ if (auth) {
     auth.onAuthStateChanged((user) => {
         if (!user) {
             // Redirect to login page if no user is signed in
-            const currentPage = window.location.pathname.split('/').pop();
-            if (currentPage !== 'login.html') {
-                window.location.href = 'login.html';
+            const isLoginPage = window.location.pathname.endsWith('login.html');
+            if (!isLoginPage) {
+                window.location.replace('login.html');
             }
         } else {
             console.log("User is authenticated:", user.email || user.displayName);
