@@ -133,8 +133,14 @@ function renderIngredients(container) {
     </div>
 
     <!-- Category filter tabs -->
-    <div class="filter-tabs" style="margin-bottom:16px">
-      ${GROUPS_LIST.map(g => `<button class="filter-tab${g === 'ทั้งหมด' ? ' active' : ''}" onclick="ingFilterGroup('${g}',this)">${g}</button>`).join('')}
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+      <div class="filter-tabs" style="margin-bottom:0; flex:1; overflow-x:auto;">
+        ${GROUPS_LIST.map(g => `<button class="filter-tab${g === filterGroup ? ' active' : ''}" onclick="ingFilterGroup('${g}',this)">${g}</button>`).join('')}
+      </div>
+      <button class="btn btn-ghost btn-sm" style="margin-left:12px; white-space:nowrap; color:var(--text-muted);" onclick="openManageGroupsModal()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg> 
+        จัดการหมวดหมู่
+      </button>
     </div>
 
     <!-- Search + select-all bar -->
@@ -208,6 +214,89 @@ function renderIngredients(container) {
     if (deletedCount > 0) {
       setTimeout(() => Toast.show(t('bulk_delete_success').replace('{n}', deletedCount), 'success'), skippedCount > 0 ? 3000 : 0);
     }
+  };
+
+  // Manage Groups logic
+  window.openManageGroupsModal = () => {
+    // If DB has no groups, seed them first so we can edit
+    let dGroups = DB.getAll('ingGroups');
+    if (dGroups.length === 0) {
+      const defs = [
+        { name: 'เนื้อสัตว์', bg: '#ef444422', color: '#ef4444', emoji: '🥩' },
+        { name: 'ผัก/สมุนไพร', bg: '#22c55e22', color: '#22c55e', emoji: '🥬' },
+        { name: 'เครื่องปรุง', bg: '#f59e0b22', color: '#f59e0b', emoji: '🧄' },
+        { name: 'ของแห้ง', bg: '#8b5cf622', color: '#8b5cf6', emoji: '🌾' },
+        { name: 'อื่นๆ', bg: '#64748b22', color: '#64748b', emoji: '📦' }
+      ];
+      defs.forEach(g => DB.insert('ingGroups', g));
+      dGroups = DB.getAll('ingGroups');
+    }
+
+    const renderGroupRows = () => {
+      const gList = DB.getAll('ingGroups');
+      return gList.map(g => `
+        <div style="display:flex; align-items:center; justify-content:space-between; padding:8px; border-bottom:1px solid var(--border-light);">
+          <div style="display:flex; align-items:center; gap:10px;">
+            <div style="background:${g.bg || (g.color + '22')}; color:${g.color}; width:32px; height:32px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:16px;">${g.emoji || '📦'}</div>
+            <div style="font-weight:600;">${g.name}</div>
+          </div>
+          <button class="btn btn-icon btn-sm" style="color:var(--danger); background:transparent; border:none;" onclick="deleteIngGroup(${g.id}, '${g.name}')">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>
+          </button>
+        </div>
+      `).join('');
+    };
+
+    Modal.open({
+      title: '📁 จัดการหมวดหมู่วัตถุดิบ',
+      body: `
+        <div style="margin-bottom:16px; display:flex; gap:8px;">
+          <input type="text" id="newGroupName" class="form-input" placeholder="ชื่อหมวดหมู่ใหม่..." style="flex:1;" />
+          <input type="text" id="newGroupEmoji" class="form-input" placeholder="อีโมจิ (เช่น 🥩)" style="width:100px; text-align:center;" />
+          <input type="color" id="newGroupColor" class="form-input" value="#0ea5e9" style="width:40px; padding:2px; height:40px; cursor:pointer;" />
+        </div>
+        <button class="btn btn-primary" style="width:100%; margin-bottom:16px;" onclick="addIngGroup()">+ เพิ่มหมวดหมู่</button>
+        <div id="manageGroupsList" style="max-height:250px; overflow-y:auto; border:1px solid var(--border); border-radius:var(--r-md); background:var(--bg);">
+          ${renderGroupRows()}
+        </div>
+      `,
+      footerHtml: `<button class="btn btn-secondary" onclick="Modal.close(); Router.render();">ปิด</button>`,
+      onConfirm: () => { Modal.close(); Router.render(); }
+    });
+
+    window.addIngGroup = () => {
+      const name = document.getElementById('newGroupName').value.trim();
+      const emoji = document.getElementById('newGroupEmoji').value.trim() || '📦';
+      const color = document.getElementById('newGroupColor').value || '#0ea5e9';
+      if (!name) { Toast.show('กรุณาใส่ชื่อหมวดหมู่', 'error'); return; }
+
+      const exists = DB.getAll('ingGroups').some(g => g.name.toLowerCase() === name.toLowerCase());
+      if (exists) { Toast.show('มีชื่อหมวดหมู่นี้อยู่แล้ว', 'error'); return; }
+
+      // Also support converting hex down to a lighter background tone for bg
+      const bg = color + '22';
+
+      DB.insert('ingGroups', { name, emoji, color, bg });
+      document.getElementById('newGroupName').value = '';
+      document.getElementById('newGroupEmoji').value = '';
+
+      const listEl = document.getElementById('manageGroupsList');
+      if (listEl) listEl.innerHTML = renderGroupRows();
+    };
+
+    window.deleteIngGroup = (id, checkName) => {
+      // Check if ingredients use this group
+      const inUse = DB.getAll('ingredients').some(i => i.group === checkName);
+      if (inUse) {
+        Toast.show('ไม่สามารถลบได้ มีวัตถุดิบอยู่ในหมวดหมู่นี้', 'error');
+        return;
+      }
+      if (confirm('ยืนยันชารลบหมวดหมู่ "' + checkName + '" ?')) {
+        DB.delete('ingGroups', id);
+        const listEl = document.getElementById('manageGroupsList');
+        if (listEl) listEl.innerHTML = renderGroupRows();
+      }
+    };
   };
 
   draw();
