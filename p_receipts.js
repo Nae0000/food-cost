@@ -227,11 +227,16 @@ function renderReceipts(container) {
     '<div class="card" style="margin-bottom:20px" id="stepUpload">',
     '  <div style="font-weight:700;font-size:15px;margin-bottom:16px;color:var(--primary)">① อัพโหลดรูปใบเสร็จ</div>',
     '  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">',
-    '    <div id="imgArea">',
-    '      <label for="rcFile" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;height:240px;border:2px dashed var(--border);border-radius:var(--r-lg);cursor:pointer;color:var(--text-muted);background:var(--bg);transition:all 0.2s" onmouseenter="this.style.borderColor=\'var(--primary)\'" onmouseleave="this.style.borderColor=\'var(--border)\'">',
-    '        <span style="font-size:52px">📷</span>',
-    '        <div style="text-align:center"><div style="font-size:14px;font-weight:700">คลิกเพื่ออัพโหลดรูปใบเสร็จ</div><div style="font-size:12px;margin-top:4px">รองรับ JPG, PNG — บนมือถือถ่ายรูปได้เลย</div></div>',
-    '        <input type="file" id="rcFile" accept="image/*" capture="environment" style="display:none" onchange="rcOnImg(event)" />',
+    '    <div id="imgArea" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;height:240px;">',
+    '      <label for="rcFileCam" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;border:2px dashed var(--border);border-radius:var(--r-lg);cursor:pointer;color:var(--text-muted);background:var(--bg);transition:all 0.2s" onmouseenter="this.style.borderColor=\'var(--primary)\'" onmouseleave="this.style.borderColor=\'var(--border)\'">',
+    '        <span style="font-size:42px">📷</span>',
+    '        <div style="text-align:center"><div style="font-size:14px;font-weight:700">ถ่ายรูป</div><div style="font-size:12px;margin-top:4px">เปิดกล้องมือถือ</div></div>',
+    '        <input type="file" id="rcFileCam" accept="image/*" capture="environment" style="display:none" onchange="rcOnImg(event)" />',
+    '      </label>',
+    '      <label for="rcFile" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;border:2px dashed var(--border);border-radius:var(--r-lg);cursor:pointer;color:var(--text-muted);background:var(--bg);transition:all 0.2s" onmouseenter="this.style.borderColor=\'var(--primary)\'" onmouseleave="this.style.borderColor=\'var(--border)\'">',
+    '        <span style="font-size:42px">🖼️</span>',
+    '        <div style="text-align:center"><div style="font-size:14px;font-weight:700">อัพโหลดรูป</div><div style="font-size:12px;margin-top:4px">เลือกจากอัลบั้ม</div></div>',
+    '        <input type="file" id="rcFile" accept="image/*" style="display:none" onchange="rcOnImg(event)" />',
     '      </label>',
     '    </div>',
     '    <div style="display:flex;flex-direction:column;gap:14px">',
@@ -539,6 +544,7 @@ function renderReceipts(container) {
     document.getElementById('stepReview').style.display = 'none';
     document.getElementById('ocrProgress').style.display = 'none';
     var fi = document.getElementById('rcFile'); if (fi) fi.value = '';
+    var fic = document.getElementById('rcFileCam'); if (fic) fic.value = '';
     drawHistory();
   };
 
