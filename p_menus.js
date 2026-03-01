@@ -174,8 +174,8 @@ function renderMenus(container) {
       <div style="flex:1"><div class="page-title">🍜 ${t('menu_title')}</div><div class="page-subtitle">${t('menu_sub')}</div></div>
       <div style="display:flex;gap:12px;align-items:center">
         ${viewToggleHtml}
-        <button class="btn btn-ghost" onclick="importAirregiCSV()" title="${t('menu_import_airregi')}" style="padding:6px 12px">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        <button class="btn btn-secondary" onclick="importAirregiCSV()" title="${t('menu_import_airregi')}" style="padding:6px 12px;background:var(--bg);color:var(--text);border-color:var(--border)">
+          <span style="font-size:16px;margin-right:6px">📥</span> <span class="nav-label" style="font-size:13px;font-weight:600">Airregi</span>
         </button>
         <button class="btn btn-primary" onclick="openMenuModal()">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
