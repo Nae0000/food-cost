@@ -427,10 +427,11 @@ function renderReceipts(container) {
     var inp = document.getElementById('rcls' + i);
     var dd = document.getElementById('rcdd' + i);
     if (!dd || !inp) return;
-    var rect = inp.getBoundingClientRect();
-    dd.style.top = (rect.bottom + 2 + window.scrollY) + 'px';
-    dd.style.left = rect.left + 'px';
     dd.style.display = 'block';
+
+    // รีเซ็ตการกรองเผื่อว่าถูกซ่อนไป
+    rcFilter(i);
+
     document.querySelectorAll('[id^="rcdd"]').forEach(function (el) { if (el !== dd) el.style.display = 'none'; });
   };
 
