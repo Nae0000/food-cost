@@ -27,6 +27,11 @@ const TRANSLATIONS = {
         nav_recipes: 'สูตรอาหาร',
         nav_webhook: 'Webhook',
         nav_settings: 'ตั้งค่า',
+        nav_receipts: 'ใบเสร็จ',
+        nav_price_history: 'ประวัติราคา',
+        btn_logout: 'ออกจากระบบ',
+        nav_more: 'เพิ่มเติม',
+        nav_more_menu: 'เมนูเพิ่มเติม',
         // Dashboard
         dash_title: 'ภาพรวมระบบ',
         dash_categories: 'หมวดหมู่',
@@ -249,6 +254,8 @@ const TRANSLATIONS = {
         set_menu_title: 'Set Menus',
         nav_dashboard: 'Dashboard', nav_categories: 'Categories', nav_ingredients: 'Ingredients',
         nav_menus: 'Menus', nav_recipes: 'Recipes', nav_webhook: 'Webhook', nav_settings: 'Settings',
+        nav_receipts: 'Receipts', nav_price_history: 'Price History', btn_logout: 'Logout',
+        nav_more: 'More', nav_more_menu: 'More Menu',
         dash_title: 'System Overview', dash_categories: 'Categories', dash_ingredients: 'Ingredients',
         dash_menus: 'Menus', dash_recipes: 'Recipe Items', dash_top_menus: 'Highest Cost Menus',
         dash_latest_prices: 'Latest Ingredient Prices', dash_price_stats: 'Price Mode Stats',
@@ -368,6 +375,8 @@ const TRANSLATIONS = {
         set_menu_title: 'セットメニュー',
         nav_dashboard: 'ダッシュボード', nav_categories: 'カテゴリー', nav_ingredients: '原材料費',
         nav_menus: 'メニュー', nav_recipes: 'レシピ', nav_webhook: 'Webhook', nav_settings: '設定',
+        nav_receipts: 'レシート', nav_price_history: '価格履歴', btn_logout: 'ログアウト',
+        nav_more: 'その他', nav_more_menu: 'その他のメニュー',
         dash_title: 'システム概要', dash_categories: 'カテゴリー', dash_ingredients: '原材料',
         dash_menus: 'メニュー', dash_recipes: 'レシピ件数', dash_top_menus: '高コストメニュー TOP',
         dash_latest_prices: '最新原材料価格', dash_price_stats: '価格モード統計',
@@ -512,9 +521,22 @@ function applyI18n() {
         const page = el.dataset.page;
         const keyMap = {
             dashboard: 'nav_dashboard', categories: 'nav_categories', ingredients: 'nav_ingredients',
-            menus: 'nav_menus', recipes: 'nav_recipes', webhook: 'nav_webhook', settings: 'nav_settings'
+            menus: 'nav_menus', recipes: 'nav_recipes', webhook: 'nav_webhook', settings: 'nav_settings',
+            receipts: 'nav_receipts', 'price-history': 'nav_price_history'
         };
-        const label = el.querySelector('.nav-label');
+        const label = el.querySelector('.nav-label') || el.querySelector('.bottom-nav-label') || el.querySelector('span:not(.more-item-icon)');
         if (label && keyMap[page]) label.textContent = t(keyMap[page]);
     });
+
+    const logoutBtn = document.getElementById('logoutBtn');
+    if (logoutBtn) logoutBtn.lastChild.textContent = ' ' + t('btn_logout');
+
+    const mLogoutBtn = document.getElementById('mobileLogoutBtn');
+    if (mLogoutBtn && mLogoutBtn.lastElementChild) mLogoutBtn.lastElementChild.textContent = t('btn_logout');
+
+    const moreBtn = document.getElementById('moreMenuBtn');
+    if (moreBtn && moreBtn.querySelector('.bottom-nav-label')) moreBtn.querySelector('.bottom-nav-label').textContent = t('nav_more');
+
+    const moreHeader = document.querySelector('.more-overlay-header span');
+    if (moreHeader && !moreHeader.children.length) moreHeader.textContent = t('nav_more_menu');
 }
