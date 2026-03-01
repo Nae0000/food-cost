@@ -93,7 +93,7 @@ function renderSettings(container) {
       <!-- Scanner Key -->
       <div class="card" style="margin-bottom:20px; border-color:var(--accent)">
         <div class="form-group mb-0">
-          <label class="form-label">Key สำหรับใช้งานเครื่องมือสแกนใบเสร็จ</label>
+          <label class="form-label">${t('set_gemini_key') || 'Gemini API Key'}</label>
           <input type="password" id="geminiApiKey" class="form-input" placeholder="..." value="${_settings.geminiApiKey || ''}" />
         </div>
       </div>
@@ -122,9 +122,9 @@ function renderSettings(container) {
   }
 
   container.innerHTML = `
-    < div class= "page-header" >
-    <div><div class="page-title">⚙️ ${t('set_title')}</div><div class="page-subtitle">${t('set_sub')}</div></div>
-    </div >
+    <div class="page-header">
+      <div><div class="page-title">⚙️ ${t('set_title')}</div><div class="page-subtitle">${t('set_sub')}</div></div>
+    </div>
       <div id="settingsContent"></div>`;
 
   draw();
