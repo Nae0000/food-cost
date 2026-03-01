@@ -781,6 +781,11 @@ td {
 
 .form-group {
   margin-bottom: var(--space-5);
+  position: relative;
+}
+
+.form-group:focus-within {
+  z-index: 10;
 }
 
 .form-label {
