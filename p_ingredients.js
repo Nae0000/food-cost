@@ -366,7 +366,22 @@ window.setPriceMode = function (id, mode) {
 
 window.openIngredientModal = function (id = null) {
   const ing = id ? DB.getById('ingredients', id) : null;
-  const groups = DB.getAll('ingGroups').map(g => g.name);
+
+  // Seed default groups if none exist
+  let dGroups = DB.getAll('ingGroups');
+  if (dGroups.length === 0) {
+    const defs = [
+      { name: 'เนื้อสัตว์', bg: '#ef444422', color: '#ef4444', emoji: '🥩' },
+      { name: 'ผัก/สมุนไพร', bg: '#22c55e22', color: '#22c55e', emoji: '🥬' },
+      { name: 'เครื่องปรุง', bg: '#f59e0b22', color: '#f59e0b', emoji: '🧄' },
+      { name: 'ของแห้ง', bg: '#8b5cf622', color: '#8b5cf6', emoji: '🌾' },
+      { name: 'อื่นๆ', bg: '#64748b22', color: '#64748b', emoji: '📦' }
+    ];
+    defs.forEach(g => DB.insert('ingGroups', g));
+    dGroups = DB.getAll('ingGroups');
+  }
+
+  const groups = dGroups.map(g => g.name);
 
   function unitOpts(list, selected) {
     return list.map(u => `<option value="${u}" ${selected === u ? 'selected' : ''}>${u}</option>`).join('');
