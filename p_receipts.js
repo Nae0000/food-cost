@@ -478,22 +478,58 @@ function renderReceipts(container) {
     var receiptNote = document.getElementById('rcNote') ? document.getElementById('rcNote').value : '';
     var receiptTs = new Date(receiptDate).getTime() || Date.now();
     var updated = 0;
+    var added = 0;
+
     active.forEach(function (row) {
-      if (!row.ingredientId) return;
-      var ing = DB.getById('ingredients', row.ingredientId);
-      if (!ing) return;
-      var oldPrice = DB.effectivePrice(ing);
-      var newPpu = row.price / ((row.qty || 1) * (ing.convFactor || 1));
-      DB.update('ingredients', row.ingredientId, { buyPrice: row.price, buyQty: row.qty || 1, buyUnit: row.unit || ing.buyUnit });
-      if (Math.abs(newPpu - oldPrice) > 0.00001) {
-        var hist = DB._get('priceHistory') || [];
-        hist.push({ id: receiptTs + row.ingredientId + Math.floor(Math.random() * 1000), ingredientId: row.ingredientId, price: newPpu, timestamp: receiptTs, note: '🧾 ' + (receiptNote || 'ใบเสร็จ') });
-        DB._set('priceHistory', hist);
+      var ing = null;
+      if (row.ingredientId) {
+        ing = DB.getById('ingredients', row.ingredientId);
+      } else {
+        // Find by name if not explicitly linked
+        ing = ings.find(i => i.name.toLowerCase() === row.name.toLowerCase());
+      }
+
+      if (ing) {
+        // Update existing ingredient
+        var oldPrice = DB.effectivePrice(ing);
+        var newPpu = row.price / ((row.qty || 1) * (ing.convFactor || 1));
+        DB.update('ingredients', ing.id, { buyPrice: row.price, buyQty: row.qty || 1, buyUnit: row.unit || ing.buyUnit });
+
+        // Ensure row has the id for history
+        row.ingredientId = ing.id;
+
+        if (Math.abs(newPpu - oldPrice) > 0.00001) {
+          var hist = DB._get('priceHistory') || [];
+          hist.push({ id: receiptTs + ing.id + Math.floor(Math.random() * 1000), ingredientId: ing.id, price: newPpu, timestamp: receiptTs, note: '🧾 ' + (receiptNote || 'ใบเสร็จ') });
+          DB._set('priceHistory', hist);
+          updated++;
+        }
+      } else {
+        // Insert new ingredient
+        var newIng = DB.insert('ingredients', {
+          name: row.name, group: 'อื่นๆ',
+          buyUnit: row.unit || 'ชิ้น', buyQty: row.qty || 1, buyPrice: row.price || 0,
+          recipeUnit: row.unit || 'ชิ้น', convFactor: 1,
+          customPrice: null, basePrice: 0, priceMode: 'manual',
+          webhookPrice: null, lastUpdated: null
+        });
+        ings.push(newIng); // update local cache array
+        row.ingredientId = newIng.id;
+
+        if (row.price > 0) {
+          DB.recordPriceHistory(newIng.id, row.price / (row.qty || 1), '🧾 New from receipt');
+        }
+        added++;
         updated++;
       }
     });
+
     DB.saveReceipt({ date: receiptDate, note: receiptNote, imageBase64: _imageBase64, items: active.map(function (r) { return Object.assign({}, r); }), createdAt: Date.now() });
-    Toast.show('✅ บันทึกใบเสร็จแล้ว · อัพเดตราคา ' + updated + ' วัตถุดิบ', 'success');
+
+    // Refresh menus if cost changed
+    if (typeof refreshMenus === 'function') refreshMenus();
+
+    Toast.show(`✅ บันทึกใบเสร็จแล้ว · เพิ่มใหม่ ${added} · อัปเดตราคา ${updated - added} รายการ`, 'success');
     rcClear();
   };
 
