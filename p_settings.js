@@ -108,13 +108,19 @@ function renderSettings(container) {
       <div class="card" style="margin-bottom:20px; border-color:var(--primary)">
         <div class="card-header"><div class="card-title">💾 ${t('settings_data')}</div></div>
         <div style="font-size:13px;color:var(--text-muted);margin-bottom:16px">${t('settings_data_desc')}</div>
-        <div style="display:flex;gap:12px;flex-wrap:wrap">
-          <button class="btn btn-secondary" onclick="DataSync.exportCSV()">${t('btn_export_csv')}</button>
-          <button class="btn btn-secondary" onclick="DataSync.exportJSON()">${t('btn_backup_json')}</button>
-          <button class="btn btn-secondary" style="border-color:var(--danger);color:var(--danger)" onclick="document.getElementById('importFile').click()">${t('btn_restore_json')}</button>
-          <input type="file" id="importFile" accept=".json" style="display:none" onchange="handleImportFile(event)" />
-        </div>
-      </div>
+    '        <div style="display:flex;gap:12px;flex-wrap:wrap">',
+    '          <button class="btn btn-secondary" onclick="DataSync.exportCSV()">${t(\'btn_export_csv\')}</button>',
+      '          <button class="btn btn-secondary" onclick="DataSync.exportJSON()">${t(\'btn_backup_json\')}</button>',
+      '          <button class="btn btn-secondary" style="border-color:var(--primary);color:var(--primary)" onclick="document.getElementById(\'importFile\').click()">⬇️ ${t(\'btn_restore_json\')}</button>',
+      '          <input type="file" id="importFile" accept=".json" style="display:none" onchange="handleImportFile(event)" />',
+      '        </div>',
+      '        <hr style="margin:24px 0; border:none; border-top:1px solid var(--border-light)">',
+      '        <div style="font-weight:700; color:var(--danger); margin-bottom:8px">⚠️ ล้างข้อมูลระบบ (Reset Data)</div>',
+      '        <div style="font-size:13px; color:var(--text-muted); margin-bottom:14px">การกระทำนี้จะลบข้อมูลวัตถุดิบ เมนู สูตรอาหาร และประวัติทั้งหมดของคุณทิ้งอย่างถาวร <strong>และไม่สามารถกู้คืนได้</strong></div>',
+      '        <button class="btn btn-secondary" style="border-color:var(--danger); color:var(--danger); background:rgba(239,68,68,0.05)" onclick="if(confirm(\'🚨 คำเตือนขั้นเด็ดขาด: ยืนยันว่าจะลบข้อมูลทั้งหมด? ข้อมูลจะไม่สามารถกู้คืนได้\')) { DB.reset(); if(typeof SEED !== \'undefined\') SEED.run(); Toast.show(\'รีเซ็ตข้อมูลแล้ว\'); if(typeof Router !== \'undefined\') Router.render(); }">',
+      '          🗑️ ล้างข้อมูลทั้งหมด',
+      '        </button>',
+      '      </div>',
 
       <button class="btn btn-primary" onclick="saveSettingsPage()" style="min-width:140px">
         💾 ${t('btn_save')}
@@ -122,10 +128,10 @@ function renderSettings(container) {
   }
 
   container.innerHTML = `
-    <div class="page-header">
-      <div><div class="page-title">⚙️ ${t('set_title')}</div><div class="page-subtitle">${t('set_sub')}</div></div>
-    </div>
-    <div id="settingsContent"></div>`;
+    < div class= "page-header" >
+    <div><div class="page-title">⚙️ ${t('set_title')}</div><div class="page-subtitle">${t('set_sub')}</div></div>
+    </div >
+      <div id="settingsContent"></div>`;
 
   draw();
 
