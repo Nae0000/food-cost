@@ -515,5 +515,4 @@ function applyI18n() {
         const label = el.querySelector('.nav-label');
         if (label && keyMap[page]) label.textContent = t(keyMap[page]);
     });
-});
 }
