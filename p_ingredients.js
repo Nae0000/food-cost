@@ -414,7 +414,7 @@ window.openIngredientModal = function (id = null) {
           </div>
           <div class="form-group mb-0">
             <label class="form-label">${t('ing_unit')} (ซื้อ)</label>
-            <select class="form-select" id="ingBuyUnit" onchange="updateIngPreview()">
+            <select class="form-select" id="ingBuyUnit" onchange="window.handleBuyUnitChange()">
               ${unitOpts(BUY_UNITS, ing?.buyUnit || 'กก.')}
             </select>
           </div>
@@ -498,6 +498,24 @@ window.openIngredientModal = function (id = null) {
       Modal.close(); Toast.show(id ? t('ing_updated') : t('ing_saved')); Router.render();
     }
   });
+
+  // Auto-set conversion depending on buy unit
+  window.handleBuyUnitChange = () => {
+    const buyUnit = document.getElementById('ingBuyUnit')?.value;
+    const rUnitEl = document.getElementById('ingRecipeUnit');
+    const convEl = document.getElementById('ingConvFactor');
+    if (buyUnit === 'กก.') {
+      if (rUnitEl) rUnitEl.value = 'กรัม';
+      if (convEl) convEl.value = 1000;
+    } else if (buyUnit === 'ลิตร') {
+      if (rUnitEl) rUnitEl.value = 'มล.';
+      if (convEl) convEl.value = 1000;
+    } else {
+      if (rUnitEl) rUnitEl.value = buyUnit;
+      if (convEl) convEl.value = 1;
+    }
+    window.updateIngPreview();
+  };
 
   // Live preview calculation — must be defined BEFORE the setTimeout below
   window.updateIngPreview = () => {
