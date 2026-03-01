@@ -486,7 +486,7 @@ function renderReceipts(container) {
         ing = DB.getById('ingredients', row.ingredientId);
       } else {
         // Find by name if not explicitly linked
-        ing = ings.find(i => i.name.toLowerCase() === row.name.toLowerCase());
+        ing = ings.find(i => (i.name || '').toLowerCase() === (row.name || '').toLowerCase());
       }
 
       if (ing) {
