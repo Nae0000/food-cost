@@ -116,45 +116,75 @@ function renderReceipts(container) {
     var tbody = document.getElementById('parsedRows');
     if (!tbody) return;
     if (!_parsed.length) {
-      tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:24px;color:var(--text-muted)">ไม่พบรายการ — ลองปรับแสงรูปให้ชัดขึ้น</td></tr>';
+      tbody.innerHTML = '<div style="text-align:center;padding:32px;color:var(--text-muted);background:var(--bg);border-radius:var(--r-md)">ไม่พบรายการ — ลองปรับแสงรูปให้ชัดขึ้น</div>';
       return;
     }
+
+    // Checkbox master sync
+    const headBar = document.getElementById('parsedSummary');
+    if (headBar && !headBar.dataset.init) {
+      headBar.insertAdjacentHTML('beforebegin', `
+         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; font-size:13px; color:var(--text-muted);">
+            <div>
+              <label style="display:flex; align-items:center; gap:6px; cursor:pointer;">
+                <input type="checkbox" id="rcSelectAll" checked onchange="rcToggleAll(this.checked)" style="accent-color:var(--primary);width:16px;height:16px;" />
+                เลือกทั้งหมด
+              </label>
+            </div>
+            <div id="parsedCountTop">พบ ${_parsed.length} รายการ</div>
+         </div>
+       `);
+      headBar.dataset.init = '1';
+    } else {
+      const cntTop = document.getElementById('parsedCountTop');
+      if (cntTop) cntTop.textContent = `พบ ${_parsed.length} รายการ`;
+    }
+
     var html = '';
     for (var i = 0; i < _parsed.length; i++) {
       var row = _parsed[i];
       var linked = row.ingredientId ? ings.find(function (x) { return x.id === row.ingredientId; }) : null;
       var linkedHtml = '';
       if (linked) {
-        linkedHtml = '<div style="display:flex;align-items:center;gap:6px">'
-          + '<span style="background:var(--success)22;color:var(--success);padding:2px 8px;border-radius:99px;font-size:11px;white-space:nowrap">✔ ' + linked.name + '</span>'
-          + '<button onclick="rcUnlink(' + i + ')" style="background:none;border:none;color:var(--danger);cursor:pointer;font-size:13px">✕</button>'
+        linkedHtml = '<div style="display:flex;align-items:center;justify-content:space-between; background:var(--success)11; padding:8px 12px; border-radius:var(--r-md); margin-top:12px;">'
+          + '<div style="display:flex;align-items:center;gap:6px">'
+          + '<span style="color:var(--success); font-weight:700; font-size:14px;">✔ ' + linked.name + '</span>'
+          + '</div>'
+          + '<button class="btn btn-ghost btn-sm" onclick="rcUnlink(' + i + ')" style="color:var(--danger); padding:4px 8px;">✕ ยกเลิกผูก</button>'
           + '</div>';
       } else {
         var ddItems = '';
         for (var j = 0; j < ings.length; j++) {
-          ddItems += '<div class="dropdown-item" onclick="rcLink(' + i + ',' + ings[j].id + ')" style="padding:7px 12px;cursor:pointer;font-size:12px;border-bottom:1px solid var(--border-light)">'
+          ddItems += '<div class="dropdown-item" onclick="rcLink(' + i + ',' + ings[j].id + ')" style="padding:10px 12px;cursor:pointer;font-size:13px;border-bottom:1px solid var(--border-light)">'
             + '<div style="font-weight:600">' + ings[j].name + '</div>'
             + '<div style="color:var(--text-muted);font-size:11px">' + (ings[j].group || '') + ' · ' + (ings[j].recipeUnit || ings[j].buyUnit) + '</div>'
             + '</div>';
         }
-        ddItems += '<div class="dropdown-item" onclick="rcLinkNew(' + i + ')" style="padding:7px 12px;cursor:pointer;font-size:12px;color:var(--primary);font-weight:600;background:var(--primary)11">'
-          + '➕ เพิ่มวัตถุดิบใหม่'
+        ddItems += '<div class="dropdown-item" onclick="rcLinkNew(' + i + ')" style="padding:12px;cursor:pointer;font-size:13px;color:var(--primary);font-weight:700;background:var(--primary)11">'
+          + '➕ เพิ่มเป็นวัตถุดิบใหม่'
           + '</div>';
-        linkedHtml = '<div style="position:relative">'
-          + '<input class="form-input" style="font-size:12px;min-height:32px" id="rcls' + i + '" placeholder="ค้นหาวัตถุดิบ..." oninput="rcFilter(' + i + ')" onfocus="rcShow(' + i + ')" autocomplete="off" />'
-          + '<div id="rcdd' + i + '" style="display:none;position:fixed;width:210px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-md);max-height:160px;overflow-y:auto;z-index:99999;box-shadow:0 8px 24px rgba(0,0,0,.7)">'
+        linkedHtml = '<div style="position:relative; margin-top:12px;">'
+          + '<div style="font-size:12px; color:var(--text-muted); margin-bottom:6px;">🔗 ผูกกับวัตถุดิบในระบบ:</div>'
+          + '<input class="form-input" style="font-size:14px; width:100%" id="rcls' + i + '" placeholder="ค้นหาวัตถุดิบ..." oninput="rcFilter(' + i + ')" onfocus="rcShow(' + i + ')" autocomplete="off" />'
+          + '<div id="rcdd' + i + '" style="display:none;position:absolute;width:100%; top:65px; background:var(--surface);border:1px solid var(--border);border-radius:var(--r-md);max-height:220px;overflow-y:auto;z-index:99999;box-shadow:0 8px 24px rgba(0,0,0,.3)">'
           + ddItems
           + '</div></div>';
       }
 
-      html += '<tr style="border-bottom:1px solid var(--border-light);' + (!row.keep ? 'opacity:0.4' : '') + '">'
-        + '<td style="text-align:center;padding:6px"><input type="checkbox" class="form-checkbox" ' + (row.keep ? 'checked' : '') + ' onchange="rcToggle(' + i + ',this.checked)" style="accent-color:var(--primary)" /></td>'
-        + '<td style="padding:6px"><input class="form-input" style="font-size:12px;min-height:32px" value="' + row.name + '" oninput="rcName(' + i + ',this.value)" /></td>'
-        + '<td style="padding:6px"><input class="form-input" type="number" style="font-size:12px;min-height:32px;text-align:right" value="' + row.price + '" min="0" step="0.01" oninput="rcPrice(' + i + ',this.value)" /></td>'
-        + '<td style="padding:6px"><input class="form-input" type="number" style="font-size:12px;min-height:32px;text-align:center" value="' + row.qty + '" min="0.001" step="0.001" oninput="rcQty(' + i + ',this.value)" /></td>'
-        + '<td style="padding:6px"><input class="form-input" style="font-size:12px;min-height:32px" value="' + row.unit + '" oninput="rcUnit(' + i + ',this.value)" /></td>'
-        + '<td style="padding:6px;min-width:150px">' + linkedHtml + '</td>'
-        + '</tr>';
+      html += '<div class="card" style="padding:16px; transition:opacity 0.2s; ' + (!row.keep ? 'opacity:0.4' : '') + '">'
+        + '<div style="display:flex; align-items:flex-start; gap:12px;">'
+        + '  <div style="padding-top:4px;"><input type="checkbox" class="form-checkbox" ' + (row.keep ? 'checked' : '') + ' onchange="rcToggle(' + i + ',this.checked)" style="accent-color:var(--primary); width:20px; height:20px;" /></div>'
+        + '  <div style="flex:1; min-width:0; display:flex; flex-direction:column; gap:10px;">'
+        + '    <div><label class="form-label" style="font-size:11px; margin-bottom:2px;">ชื่อสินค้า (แก้ไขได้)</label><input class="form-input" style="font-size:14px; font-weight:600;" value="' + row.name + '" oninput="rcName(' + i + ',this.value)" /></div>'
+        + '    <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px;">'
+        + '      <div><label class="form-label" style="font-size:11px; margin-bottom:2px;">ราคา (฿)</label><input class="form-input" type="number" style="font-size:14px; text-align:right" value="' + row.price + '" min="0" step="0.01" oninput="rcPrice(' + i + ',this.value)" /></div>'
+        + '      <div><label class="form-label" style="font-size:11px; margin-bottom:2px;">จำนวน</label><input class="form-input" type="number" style="font-size:14px; text-align:center" value="' + row.qty + '" min="0.001" step="0.001" oninput="rcQty(' + i + ',this.value)" /></div>'
+        + '      <div><label class="form-label" style="font-size:11px; margin-bottom:2px;">หน่วย</label><input class="form-input" style="font-size:14px;" value="' + row.unit + '" oninput="rcUnit(' + i + ',this.value)" /></div>'
+        + '    </div>'
+        + linkedHtml
+        + '  </div>'
+        + '</div>'
+        + '</div>';
     }
     tbody.innerHTML = html;
     rcUpdateSummary();
@@ -226,31 +256,18 @@ function renderReceipts(container) {
     '  <div class="card">',
     '    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">',
     '      <div style="font-weight:700;font-size:15px;color:var(--primary)">② ตรวจสอบรายการที่อ่านได้</div>',
-    '      <div style="display:flex;gap:8px;align-items:center"><span id="parsedCount" style="font-size:13px;color:var(--text-muted)"></span>',
-    '      <button class="btn btn-ghost btn-sm" onclick="rcToggleAll(false)" title="ติ๊กออกทั้งหมด">☐ ติ๊กออกทั้งหมด</button>',
-    '      <button class="btn btn-ghost btn-sm" onclick="rcToggleAll(true)" title="เลือกทั้งหมด">☑ เลือกทั้งหมด</button>',
-    '      <button class="btn btn-ghost btn-sm" onclick="rcRescan()">🔄 สแกนใหม่</button></div>',
+    '      <div style="display:flex;gap:8px;align-items:center">',
+    '        <button class="btn btn-ghost btn-sm" onclick="rcRescan()">🔄 สแกนใหม่</button>',
+    '      </div>',
     '    </div>',
     '    <div style="display:grid;grid-template-columns:1fr 2fr;gap:20px">',
     '      <div id="previewImgWrap" style="position:sticky;top:20px;align-self:start"></div>',
     '      <div>',
-    '        <div style="overflow-x:auto">',
-    '          <table style="width:100%;border-collapse:collapse;font-size:13px">',
-    '            <thead><tr style="background:var(--bg)">',
-    '              <th style="padding:8px;text-align:center;width:36px"><input type="checkbox" id="rcSelectAll" checked onchange="rcToggleAll(this.checked)" style="accent-color:var(--primary);width:15px;height:15px;cursor:pointer" title="เลือก/ติ๊กออกทั้งหมด" /></th>',
-    '              <th style="padding:8px;text-align:left">ชื่อสินค้า</th>',
-    '              <th style="padding:8px;text-align:right;width:90px">ราคา (฿)</th>',
-    '              <th style="padding:8px;text-align:center;width:70px">จำนวน</th>',
-    '              <th style="padding:8px;text-align:left;width:70px">หน่วย</th>',
-    '              <th style="padding:8px;text-align:left">เชื่อมวัตถุดิบ</th>',
-    '            </tr></thead>',
-    '            <tbody id="parsedRows"></tbody>',
-    '          </table>',
-    '        </div>',
-    '        <div id="parsedSummary" style="margin-top:12px;padding:10px 12px;background:var(--bg);border-radius:var(--r-md);font-size:13px"></div>',
-    '        <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:16px">',
-    '          <button class="btn btn-secondary" onclick="rcClear()">✕ ยกเลิก</button>',
-    '          <button class="btn btn-primary" onclick="rcSave()">✅ บันทึก &amp; อัพเดตวัตถุดิบ</button>',
+    '        <div id="parsedRows" style="display:flex;flex-direction:column;gap:16px;"></div>',
+    '        <div id="parsedSummary" style="margin-top:16px;padding:12px 14px;background:var(--bg);border-radius:var(--r-md);font-size:14px;box-shadow:0 1px 3px rgba(0,0,0,0.1)"></div>',
+    '        <div style="display:flex;flex-wrap:wrap;gap:12px;justify-content:flex-end;margin-top:20px">',
+    '          <button class="btn btn-secondary" style="flex:1;min-width:120px" onclick="rcClear()">✕ ยกเลิก</button>',
+    '          <button class="btn btn-primary" style="flex:2;min-width:200px" onclick="rcSave()">✅ บันทึก &amp; อัพเดตวัตถุดิบ</button>',
     '        </div>',
     '      </div>',
     '    </div>',
