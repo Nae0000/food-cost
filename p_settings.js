@@ -89,18 +89,11 @@ function renderSettings(container) {
         `}
       </div>
 
-      <!-- AI Integrations -->
+      <!-- Scanner Key -->
       <div class="card" style="margin-bottom:20px; border-color:var(--accent)">
-        <div class="card-header">
-          <div class="card-title" style="display:flex;align-items:center;gap:8px">
-            <span style="font-size:20px">✨</span> ${t('set_ai')}
-          </div>
-        </div>
-        <div style="font-size:13px;color:var(--text-muted);margin-bottom:12px">${t('set_ai_desc')}</div>
         <div class="form-group mb-0">
-          <label class="form-label">${t('set_gemini_key')}</label>
-          <input type="password" id="geminiApiKey" class="form-input" placeholder="AIzaSy..." value="${_settings.geminiApiKey || ''}" />
-          <div class="form-hint" style="margin-top:6px">รับ API Key ฟรีได้ที่ <a href="https://aistudio.google.com/app/apikey" target="_blank" style="color:var(--primary)">Google AI Studio</a></div>
+          <label class="form-label">Key สำหรับใช้งานเครื่องมือสแกนใบเสร็จ</label>
+          <input type="password" id="geminiApiKey" class="form-input" placeholder="..." value="${_settings.geminiApiKey || ''}" />
         </div>
       </div>
 
