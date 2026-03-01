@@ -300,10 +300,7 @@ function renderReceipts(container) {
   window.rcRescan = function () { if (_imageBase64) rcDoOCR(); };
 
   async function rcDoOCR() {
-    if (!_settings.geminiApiKey) {
-      Toast.show('กรุณาใส่ Gemini API Key ในเมนู ตั้งค่า ก่อนใช้งาน', 'error');
-      return;
-    }
+    const _geminiApiKey = "AIzaSyDMmPDrXsqMJ-qlQrhVOKlzvrwE7EtGzbg";
 
     document.getElementById('ocrProgress').style.display = '';
     document.getElementById('stepReview').style.display = 'none';
@@ -342,7 +339,7 @@ function renderReceipts(container) {
 
       setStatus('AI กำลังอ่านและแปลภาษา...', 60);
 
-      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${_settings.geminiApiKey}`, {
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${_geminiApiKey}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
