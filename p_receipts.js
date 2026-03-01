@@ -177,7 +177,7 @@ function renderReceipts(container) {
         + '  <div style="flex:1; min-width:0; display:flex; flex-direction:column; gap:10px;">'
         + '    <div><label class="form-label" style="font-size:11px; margin-bottom:2px;">ชื่อสินค้า (แก้ไขได้)</label><input class="form-input" style="font-size:14px; font-weight:600;" value="' + row.name + '" oninput="rcName(' + i + ',this.value)" /></div>'
         + '    <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px;">'
-        + '      <div><label class="form-label" style="font-size:11px; margin-bottom:2px;">ราคา (฿)</label><input class="form-input" type="number" style="font-size:14px; text-align:right" value="' + row.price + '" min="0" step="0.01" oninput="rcPrice(' + i + ',this.value)" /></div>'
+        + '      <div><label class="form-label" style="font-size:11px; margin-bottom:2px;">ราคา (' + (CURRENCIES[_settings.currency]?.symbol || '฿') + ')</label><input class="form-input" type="number" style="font-size:14px; text-align:right" value="' + row.price + '" min="0" step="0.01" oninput="rcPrice(' + i + ',this.value)" /></div>'
         + '      <div><label class="form-label" style="font-size:11px; margin-bottom:2px;">จำนวน</label><input class="form-input" type="number" style="font-size:14px; text-align:center" value="' + row.qty + '" min="0.001" step="0.001" oninput="rcQty(' + i + ',this.value)" /></div>'
         + '      <div><label class="form-label" style="font-size:11px; margin-bottom:2px;">หน่วย</label><input class="form-input" style="font-size:14px;" value="' + row.unit + '" oninput="rcUnit(' + i + ',this.value)" /></div>'
         + '    </div>'
@@ -203,7 +203,7 @@ function renderReceipts(container) {
         ? '<img src="' + r.imageBase64 + '" style="width:72px;height:72px;object-fit:cover;border-radius:var(--r-md);flex-shrink:0;border:1px solid var(--border);cursor:zoom-in" onclick="window.open(this.src,\'_blank\')" />'
         : '<div style="width:72px;height:72px;background:var(--bg);border-radius:var(--r-md);display:flex;align-items:center;justify-content:center;font-size:28px;flex-shrink:0">🧾</div>';
       var pills = items.map(function (item) {
-        return '<span style="font-size:11px;padding:2px 9px;border-radius:99px;background:' + (item.ingredientId ? 'var(--success)22' : 'var(--bg)') + ';color:' + (item.ingredientId ? 'var(--success)' : 'var(--text-muted)') + ';border:1px solid ' + (item.ingredientId ? 'var(--success)44' : 'var(--border)') + '">' + (item.ingredientId ? '✔ ' : '') + item.name + (item.price ? ' ฿' + Number(item.price).toFixed(2) : '') + '</span>';
+        return '<span style="font-size:11px;padding:2px 9px;border-radius:99px;background:' + (item.ingredientId ? 'var(--success)22' : 'var(--bg)') + ';color:' + (item.ingredientId ? 'var(--success)' : 'var(--text-muted)') + ';border:1px solid ' + (item.ingredientId ? 'var(--success)44' : 'var(--border)') + '">' + (item.ingredientId ? '✔ ' : '') + item.name + (item.price ? ' ' + (CURRENCIES[_settings.currency]?.symbol || '฿') + Number(item.price).toFixed(2) : '') + '</span>';
       }).join('');
       html += '<div class="card" style="display:flex;gap:16px;align-items:flex-start;padding:16px">'
         + imgHtml
@@ -468,7 +468,7 @@ function renderReceipts(container) {
     var active = _parsed.filter(function (r) { return r.keep; });
     var linked = active.filter(function (r) { return r.ingredientId; });
     var total = active.reduce(function (s, r) { return s + (r.price || 0); }, 0);
-    el.innerHTML = 'เลือก <strong>' + active.length + '</strong> รายการ · เชื่อมวัตถุดิบ <strong style="color:var(--success)">' + linked.length + '</strong> รายการ · รวม <strong style="color:var(--primary)">฿' + total.toFixed(2) + '</strong>';
+    el.innerHTML = 'เลือก <strong>' + active.length + '</strong> รายการ · เชื่อมวัตถุดิบ <strong style="color:var(--success)">' + linked.length + '</strong> รายการ · รวม <strong style="color:var(--primary)">' + (CURRENCIES[_settings.currency]?.symbol || '฿') + total.toFixed(2) + '</strong>';
   };
 
   window.rcSave = function () {

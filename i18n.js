@@ -478,6 +478,8 @@ const TRANSLATIONS = {
 // ===================================================
 
 const CURRENCIES = {
+    THB: { symbol: '฿', name: 'บาท (THB)', rate: 1, decimals: 2 },
+    USD: { symbol: '$', name: 'Dollar (USD)', rate: 1, decimals: 2 },
     JPY: { symbol: '¥', name: '日本円 (JPY)', rate: 1, decimals: 2 },
 };
 
@@ -489,7 +491,7 @@ function loadSettings() {
 function saveSettings(s) { localStorage.setItem(SETTINGS_KEY, JSON.stringify(s)); }
 
 // Current settings (live)
-let _settings = { lang: 'th', currency: 'JPY', customRate: null, ...loadSettings(), currency: 'JPY' };
+let _settings = { lang: 'th', currency: 'THB', customRate: null, ...loadSettings() };
 
 // t(key) — translate a key
 function t(key) {
@@ -499,7 +501,7 @@ function t(key) {
 
 // formatPrice(val) — format number as currency string
 function formatPrice(val) {
-    const cur = CURRENCIES.JPY;
+    const cur = CURRENCIES[_settings.currency] || CURRENCIES.THB;
     const converted = (val || 0) * cur.rate;
     return cur.symbol + converted.toFixed(cur.decimals).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
 }

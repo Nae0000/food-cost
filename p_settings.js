@@ -24,15 +24,16 @@ function renderSettings(container) {
         </div>
       </div>
 
-      <!-- Currency locked to JPY -->
+      <!-- Currency -->
       <div class="card" style="margin-bottom:20px">
-        <div class="card-header"><div class="card-title">💴 สกุลเงิน</div></div>
-        <div style="display:flex;align-items:center;gap:16px;padding:8px 0">
-          <span style="font-size:32px;font-weight:800;color:var(--primary)">¥</span>
-          <div>
-            <div style="font-weight:600;font-size:15px">日本円 (JPY)</div>
-            <div style="font-size:12px;color:var(--text-muted)">ระบบใช้เงินเยนเป็นหลัก</div>
-          </div>
+        <div class="card-header"><div class="card-title">💵 ${t('set_currency') || 'สกุลเงิน'}</div></div>
+        <div style="display:flex;gap:12px;flex-wrap:wrap">
+          ${Object.keys(CURRENCIES).map(c => `
+            <button class="lang-btn cur-btn ${_settings.currency === c ? ' lang-active cur-active' : ''}"
+              onclick="selectCurrency('${c}')" id="cur-${c}">
+              <span style="font-size:24px">${CURRENCIES[c].symbol}</span>
+              <span>${CURRENCIES[c].name}</span>
+            </button>`).join('')}
         </div>
       </div>
 
