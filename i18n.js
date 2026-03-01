@@ -515,6 +515,5 @@ function applyI18n() {
         const label = el.querySelector('.nav-label');
         if (label && keyMap[page]) label.textContent = t(keyMap[page]);
     });
-    const resetBtn = document.getElementById('resetDataBtn');
-    if (resetBtn) resetBtn.childNodes[1] && (resetBtn.lastChild.textContent = ' ' + t('btn_reset'));
+});
 }
