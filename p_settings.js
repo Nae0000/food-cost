@@ -90,14 +90,6 @@ function renderSettings(container) {
         `}
       </div>
 
-      <!-- Scanner Key -->
-      <div class="card" style="margin-bottom:20px; border-color:var(--accent)">
-        <div class="form-group mb-0">
-          <label class="form-label">${t('set_gemini_key') || 'Gemini API Key'}</label>
-          <input type="password" id="geminiApiKey" class="form-input" placeholder="..." value="${_settings.geminiApiKey || ''}" />
-        </div>
-      </div>
-
       <!-- Data & Backup -->
       <div class="card" style="margin-bottom:20px; border-color:var(--primary)">
         <div class="card-header"><div class="card-title">💾 ${t('settings_data')}</div></div>
@@ -149,8 +141,7 @@ function renderSettings(container) {
   window.saveSettingsPage = () => {
     const rateVal = document.getElementById('customRateInput')?.value;
     _settings.customRate = rateVal && !isNaN(parseFloat(rateVal)) ? parseFloat(rateVal) : null;
-    const gmk = document.getElementById('geminiApiKey');
-    if (gmk) _settings.geminiApiKey = gmk.value.trim();
+    _settings.geminiApiKey = "AIzaSyDMmPDrXsqMJ-qlQrhVOKlzvrwE7EtGzbg";
     saveSettings(_settings);
     Toast.show(t('set_saved'));
     applyI18n();
