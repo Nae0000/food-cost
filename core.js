@@ -60,9 +60,6 @@ document.getElementById('sidebarToggle').addEventListener('click', () => {
   document.getElementById('sidebar').classList.toggle('collapsed');
   document.getElementById('mainContent').classList.toggle('expanded');
 });
-document.getElementById('resetDataBtn').addEventListener('click', () => {
-  if (confirm(t('btn_reset_confirm'))) { DB.reset(); SEED.run(); Toast.show(t('btn_reset_ok')); Router.render(); }
-});
 
 // ===================================================
 // MOBILE: Sidebar, Bottom Nav, More Overlay
