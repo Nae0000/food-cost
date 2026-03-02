@@ -1546,13 +1546,7 @@ td {
 
   /* ---- Hide sidebar, show mobile header & bottom nav ---- */
   .sidebar {
-    transform: translateX(-100%);
-    z-index: 500;
-    width: 280px;
-  }
-
-  .sidebar.mobile-open {
-    transform: translateX(0);
+    display: none !important;
   }
 
   .mobile-header {
@@ -1585,16 +1579,7 @@ td {
   }
 
   .mobile-menu-btn {
-    background: transparent;
-    border: 1px solid var(--border);
-    color: var(--text-muted);
-    border-radius: var(--r-sm);
-    padding: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 44px;
-    min-height: 44px;
+    display: none;
   }
 
   .mobile-menu-btn:active {
