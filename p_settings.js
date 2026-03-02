@@ -11,6 +11,21 @@ function renderSettings(container) {
 
   function draw() {
     document.getElementById('settingsContent').innerHTML = `
+      <!-- Account Info -->
+      <div class="card" style="margin-bottom:20px; border-color:var(--border)">
+        <div class="card-header"><div class="card-title">👤 บัญชีผู้ใช้ (Account)</div></div>
+        <div style="display:flex;align-items:center;gap:14px;padding:12px;background:var(--bg);border-radius:var(--r-md);border:1px solid var(--border)">
+          ${firebase.auth().currentUser?.photoURL ? `<img src="${firebase.auth().currentUser.photoURL}" style="width:40px;height:40px;border-radius:50%;border:2px solid var(--border-light)" alt="avatar">` : '<div style="width:40px;height:40px;border-radius:50%;background:var(--border-light);display:flex;align-items:center;justify-content:center;font-size:20px">👤</div>'}
+          <div style="flex:1">
+            <div style="font-weight:700;font-size:15px;color:var(--text)">${firebase.auth().currentUser?.displayName || 'ผู้ใช้งานระบบ'}</div>
+            <div style="font-size:13px;color:var(--text-muted)">${firebase.auth().currentUser?.email || 'ยังไม่ได้เข้าสู่ระบบ'}</div>
+          </div>
+          <button class="btn btn-sm btn-ghost" style="border-color:var(--danger);color:var(--danger)" onclick="handleLogout()">
+            🚪 ออกจากระบบ
+          </button>
+        </div>
+      </div>
+
       <!-- Language -->
       <div class="card" style="margin-bottom:20px">
         <div class="card-header"><div class="card-title">🌐 ${t('set_lang')}</div></div>
