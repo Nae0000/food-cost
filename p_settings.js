@@ -90,6 +90,16 @@ function renderSettings(container) {
         `}
       </div>
 
+      <!-- Gemini Settings -->
+      <div class="card" style="margin-bottom:20px">
+        <div class="card-header"><div class="card-title">🤖 ตั้งค่า Gemini AI</div></div>
+        <div class="form-group" style="margin-bottom:0">
+          <label class="form-label" style="font-weight:600">Gemini API Key</label>
+          <div style="font-size:13px; color:var(--text-muted); margin-bottom:8px">ใส่กุญแจ API ของคุณเพื่อใช้งานระบบแสกนใบเสร็จ หากไม่มีระบบจะไม่มีการเซฟอัตโนมัติ</div>
+          <input type="password" class="form-input" id="geminiApiInput" value="${_settings.geminiApiKey || ''}" placeholder="AIzaSy..." />
+        </div>
+      </div>
+
       <!-- Data & Backup -->
       <div class="card" style="margin-bottom:20px; border-color:var(--primary)">
         <div class="card-header"><div class="card-title">💾 ${t('settings_data')}</div></div>
