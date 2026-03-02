@@ -141,7 +141,9 @@ function renderSettings(container) {
   window.saveSettingsPage = () => {
     const rateVal = document.getElementById('customRateInput')?.value;
     _settings.customRate = rateVal && !isNaN(parseFloat(rateVal)) ? parseFloat(rateVal) : null;
-    _settings.geminiApiKey = "AIzaSyDMmPDrXsqMJ-qlQrhVOKlzvrwE7EtGzbg";
+    const apiVal = document.getElementById('geminiApiInput')?.value;
+    if (apiVal) _settings.geminiApiKey = apiVal.trim();
+    else _settings.geminiApiKey = '';
     saveSettings(_settings);
     Toast.show(t('set_saved'));
     applyI18n();
