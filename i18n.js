@@ -497,7 +497,17 @@ const SETTINGS_KEY = 'fc_settings';
 function loadSettings() {
     try { return JSON.parse(localStorage.getItem(SETTINGS_KEY)) || {}; } catch { return {}; }
 }
-function saveSettings(s) { localStorage.setItem(SETTINGS_KEY, JSON.stringify(s)); }
+function saveSettings(s) {
+    // 1. Save local
+    localStorage.setItem(SETTINGS_KEY, JSON.stringify(s));
+
+    // 2. Save to Firestore (so it syncs across devices)
+    if (typeof dbFirestore !== 'undefined' && typeof auth !== 'undefined' && auth.currentUser) {
+        dbFirestore.collection('users').doc(auth.currentUser.uid)
+            .set({ settings: s }, { merge: true })
+            .catch(err => console.error("Error saving settings to Firestore", err));
+    }
+}
 
 // Current settings (live)
 let _settings = { lang: 'th', currency: 'JPY', customRate: null, ...loadSettings() };
