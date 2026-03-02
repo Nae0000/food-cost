@@ -300,7 +300,13 @@ function renderReceipts(container) {
   window.rcRescan = function () { if (_imageBase64) rcDoOCR(); };
 
   async function rcDoOCR() {
-    const _geminiApiKey = "AIzaSyDMmPDrXsqMJ-qlQrhVOKlzvrwE7EtGzbg";
+    const _geminiApiKey = _settings.geminiApiKey;
+    if (!_geminiApiKey) {
+      Toast.show('กรุณาใส่ Gemini API Key ในเมนู "ตั้งค่า" ก่อนใช้งานแสกนใบเสร็จ', 'warning', 5000);
+      document.getElementById('stepUpload').style.display = '';
+      document.getElementById('ocrProgress').style.display = 'none';
+      return;
+    }
 
     document.getElementById('ocrProgress').style.display = '';
     document.getElementById('stepReview').style.display = 'none';
