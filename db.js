@@ -37,6 +37,25 @@ const DB = {
       this._listeners.push(unsub);
     });
 
+    // Sync user settings (like Gemini API key, currency, lang)
+    const unsubSettings = dbFirestore.collection('users').doc(uid)
+      .onSnapshot((doc) => {
+        if (doc.exists) {
+          const data = doc.data();
+          if (data && data.settings && typeof _settings !== 'undefined') {
+            Object.assign(_settings, data.settings);
+            localStorage.setItem('fc_settings', JSON.stringify(_settings));
+            if (typeof applyI18n === 'function') applyI18n();
+            // Optional: Re-render if on settings page
+            if (window.location.hash === '#settings' && typeof window.saveSettingsPage !== 'undefined') {
+              // A hacky way to redraw settings without an explicit redraw function reference
+              if (typeof Router !== 'undefined' && Router.render) Router.render();
+            }
+          }
+        }
+      });
+    this._listeners.push(unsubSettings);
+
     this.markInitialized();
   },
 
