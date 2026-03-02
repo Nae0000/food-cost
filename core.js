@@ -234,7 +234,7 @@ function renderDashboard(container) {
               <div style="display:flex; justify-content:space-between; align-items:center; font-size:13px;">
                  <div style="color:var(--text-muted); display:flex; align-items:center; gap:8px;">
                    <span>ราคาขาย: <strong style="color:var(--primary);">${sellingPrice > 0 ? formatPrice(sellingPrice) : '-'}</strong></span>
-                   <span style="font-size:11px; color:var(--text-faint);">(ขั้นต่ำ ${formatPrice(m.cost * 1.7)})</span>
+                   <span style="font-size:11px; color:var(--text-faint);">(ขั้นต่ำ ${formatPrice(m.cost / 0.3)})</span>
                  </div>
                  ${sellingPrice > 0 ? `<div style="color:${gpColor}; font-weight:600; font-size:12px; background:${gpColor}15; padding:2px 6px; border-radius:4px;">กำไร ${gpPct}%</div>` : ''}
               </div>

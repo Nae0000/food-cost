@@ -81,7 +81,7 @@ function renderMenus(container) {
               <div style="font-size:11px;color:var(--text-faint)">${t('menu_selling')}</div>
               <div style="font-weight:600">${m.sellingPrice ? formatPrice(m.sellingPrice) : '-'}</div>
               ${gp ? `<div style="font-size:12px;color:${gpColor};font-weight:700">${t('gp_label')} ${gp}%</div>` : ''}
-              ${cost > 0 ? `<div style="font-size:11px;color:var(--warning);margin-top:2px">${t('suggested_price')} <strong>${formatPrice(cost * 1.7)}</strong></div>` : ''}
+              ${cost > 0 ? `<div style="font-size:11px;color:var(--warning);margin-top:2px">${t('suggested_price')} <strong>${formatPrice(cost / 0.3)}</strong></div>` : ''}
             </div>
             ${m.sellingPrice ? `<div style="text-align:right">
               <div style="font-size:11px;color:var(--text-muted)">Tax 8%: <b style="color:var(--text)">${formatPrice(m.sellingPrice * 1.08)}</b></div>
@@ -130,7 +130,7 @@ function renderMenus(container) {
             <div style="font-size:11px;color:var(--text-faint)">${t('menu_selling')}</div>
             <div style="font-weight:600">${m.sellingPrice ? formatPrice(m.sellingPrice) : '-'}</div>
             ${gp ? `<div style="font-size:12px;color:${gpColor};font-weight:700">${t('gp_label')} ${gp}%</div>` : ''}
-            ${cost > 0 ? `<div style="font-size:11px;color:var(--warning);margin-top:2px">${t('suggested_price')} <strong>${formatPrice(cost * 1.7)}</strong></div>` : ''}
+            ${cost > 0 ? `<div style="font-size:11px;color:var(--warning);margin-top:2px">${t('suggested_price')} <strong>${formatPrice(cost / 0.3)}</strong></div>` : ''}
             ${m.sellingPrice ? `<div style="font-size:11px;color:var(--text-muted);margin-top:2px">Tax 8%: <b style="color:var(--text)">${formatPrice(m.sellingPrice * 1.08)}</b> | 10%: <b style="color:var(--text)">${formatPrice(m.sellingPrice * 1.10)}</b></div>` : ''}
           </div>
         </div>
@@ -271,7 +271,7 @@ window.openMenuModal = function (id = null) {
         html += `${t('gp_label')} <strong style="color:${gpColor}">${gp}%</strong> &nbsp;|&nbsp; Tax 8%: <strong style="color:var(--text)">${formatPrice(sp * 1.08)}</strong> &nbsp;|&nbsp; 10%: <strong style="color:var(--text)">${formatPrice(sp * 1.10)}</strong><br>`;
       }
       if (cost > 0) {
-        html += `<span style="color:var(--warning);font-size:12px">${t('suggested_price')} <strong>${formatPrice(cost * 1.7)}</strong></span>`;
+        html += `<span style="color:var(--warning);font-size:12px">${t('suggested_price')} <strong>${formatPrice(cost / 0.3)}</strong></span>`;
       }
       el.innerHTML = html;
     }
@@ -363,7 +363,7 @@ window.openMenuModal = function (id = null) {
         html += `${t('gp_label')} <strong style="color:${gpColor}">${gp}%</strong> &nbsp;|&nbsp; Tax 8%: <strong style="color:var(--text)">${formatPrice(sp * 1.08)}</strong> &nbsp;|&nbsp; 10%: <strong style="color:var(--text)">${formatPrice(sp * 1.10)}</strong><br>`;
       }
       if (setCost > 0) {
-        html += `<span style="color:var(--warning);font-size:12px">${t('suggested_price')} <strong>${formatPrice(setCost * 1.7)}</strong></span>`;
+        html += `<span style="color:var(--warning);font-size:12px">${t('suggested_price')} <strong>${formatPrice(setCost / 0.3)}</strong></span>`;
       }
       el.innerHTML = html;
     }
