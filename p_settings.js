@@ -66,10 +66,10 @@ function renderSettings(container) {
           </button>
           <button class="lang-btn calc-btn ${_settings.calcMethod === 'markup' ? 'lang-active cur-active' : ''}"
             onclick="selectCalcMethod('markup')" id="calc-markup"
-            title="Markup (จุดบวกเพิ่มจากทุน): คิดกำไรเป็น % จาก 'ต้นทุน'&#10;สูตร: ((ราคาขาย - ต้นทุน) / ต้นทุน) × 100&#10;ตัวอย่าง: ทุน 40 ขาย 100 = กำไร 60 (Markup 150%)">
+            title="Cost % (สัดส่วนต้นทุน): คิดต้นทุนเป็น % จาก 'ราคาขาย'&#10;สูตร: (ต้นทุน / ราคาขาย) × 100&#10;ตัวอย่าง: ทุน 40 ขาย 100 = ต้นทุน 40%">
             <div style="text-align:left">
-              <div style="font-weight:bold">${t('set_calc_markup') || 'Markup'}</div>
-              <div style="font-size:11px;color:var(--text-muted);margin-top:2px">((ราคาขาย - ต้นทุน) / ต้นทุน) × 100</div>
+              <div style="font-weight:bold">${t('set_calc_markup') || 'Cost %'}</div>
+              <div style="font-size:11px;color:var(--text-muted);margin-top:2px">(ต้นทุน / ราคาขาย) × 100</div>
             </div>
           </button>
         </div>
