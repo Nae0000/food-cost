@@ -21,13 +21,14 @@ function renderRecipes(container) {
     const recipes = DB.getAll('recipes').filter(r => r.menuId === _recipeMenuId);
     const menu = DB.getById('menus', _recipeMenuId);
     const cost = DB.menuCost(_recipeMenuId);
-    const gp = menu?.sellingPrice ? (((menu.sellingPrice - cost) / menu.sellingPrice) * 100).toFixed(1) : null;
+    const gp = menu?.sellingPrice ? (_settings.calcMethod === 'markup' ? (cost > 0 ? ((menu.sellingPrice - cost) / cost * 100).toFixed(1) : 0) : (((menu.sellingPrice - cost) / menu.sellingPrice) * 100).toFixed(1)) : null;
+    const gpLabel = _settings.calcMethod === 'markup' ? 'Markup' : 'Margin';
     document.getElementById('recipeSummary').innerHTML = `
       <div class="cost-summary">
         <div>
           <div class="cost-summary-label">${t('rec_total_cost')}</div>
           <div class="cost-summary-value">${formatPrice(cost)}</div>
-          ${gp ? `<div class="cost-summary-margin">${t('rec_selling')} ${formatPrice(menu.sellingPrice)} &nbsp;|&nbsp; ${t('gp_label')} ${gp}%</div>` : ''}
+          ${gp ? `<div class="cost-summary-margin">${t('rec_selling')} ${formatPrice(menu.sellingPrice)} &nbsp;|&nbsp; ${gpLabel} ${gp}%</div>` : ''}
         </div>
         <span style="font-size:56px;opacity:0.25">🍳</span>
       </div>`;

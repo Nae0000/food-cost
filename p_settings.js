@@ -52,6 +52,30 @@ function renderSettings(container) {
         </div>
       </div>
 
+      <!-- Calculation Method -->
+      <div class="card" style="margin-bottom:20px">
+        <div class="card-header"><div class="card-title">🧮 ${t('set_calc_method') || 'วิธีการคำนวณกำไร'}</div></div>
+        <div style="display:flex;gap:12px;flex-wrap:wrap">
+          <button class="lang-btn calc-btn ${_settings.calcMethod !== 'markup' ? 'lang-active cur-active' : ''}"
+            onclick="selectCalcMethod('margin')" id="calc-margin" 
+            title="Margin (อัตรากำไรขั้นต้น): คิดกำไรเป็น % จาก 'ราคาขาย'&#10;สูตร: ((ราคาขาย - ต้นทุน) / ราคาขาย) × 100&#10;ตัวอย่าง: ทุน 40 ขาย 100 = กำไร 60 (Margin 60%)">
+            <div style="text-align:left">
+              <div style="font-weight:bold">${t('set_calc_margin') || 'Margin'}</div>
+              <div style="font-size:11px;color:var(--text-muted);margin-top:2px">((ราคาขาย - ต้นทุน) / ราคาขาย) × 100</div>
+            </div>
+          </button>
+          <button class="lang-btn calc-btn ${_settings.calcMethod === 'markup' ? 'lang-active cur-active' : ''}"
+            onclick="selectCalcMethod('markup')" id="calc-markup"
+            title="Markup (จุดบวกเพิ่มจากทุน): คิดกำไรเป็น % จาก 'ต้นทุน'&#10;สูตร: ((ราคาขาย - ต้นทุน) / ต้นทุน) × 100&#10;ตัวอย่าง: ทุน 40 ขาย 100 = กำไร 60 (Markup 150%)">
+            <div style="text-align:left">
+              <div style="font-weight:bold">${t('set_calc_markup') || 'Markup'}</div>
+              <div style="font-size:11px;color:var(--text-muted);margin-top:2px">((ราคาขาย - ต้นทุน) / ต้นทุน) × 100</div>
+            </div>
+          </button>
+        </div>
+      </div>
+
+
       <!-- Google Account & Drive Sync -->
       <div class="card" style="margin-bottom:20px; border-color:#4285f4">
         <div class="card-header">
@@ -161,6 +185,16 @@ function renderSettings(container) {
     document.getElementById('cur-' + code)?.classList.add('cur-active');
     _settings.customRate = null;
     draw();
+  };
+
+  window.selectCalcMethod = (method) => {
+    _settings.calcMethod = method;
+    document.querySelectorAll('.calc-btn').forEach(b => {
+      b.classList.remove('cur-active');
+      b.classList.remove('lang-active');
+    });
+    document.getElementById('calc-' + method)?.classList.add('cur-active');
+    document.getElementById('calc-' + method)?.classList.add('lang-active');
   };
 
   window.saveSettingsPage = () => {

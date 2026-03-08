@@ -53,8 +53,9 @@ function renderMenus(container) {
     gridEl.innerHTML = menus.map(m => {
       const cat = cats.find(c => c.id === m.categoryId);
       const cost = DB.menuCost(m.id);
-      const gp = m.sellingPrice ? (((m.sellingPrice - cost) / m.sellingPrice) * 100).toFixed(1) : null;
+      const gp = m.sellingPrice ? (_settings.calcMethod === 'markup' ? (cost > 0 ? ((m.sellingPrice - cost) / cost * 100).toFixed(1) : 0) : (((m.sellingPrice - cost) / m.sellingPrice) * 100).toFixed(1)) : null;
       const gpColor = gp ? (gp >= 60 ? 'var(--success)' : gp >= 40 ? 'var(--warning)' : 'var(--danger)') : 'var(--text-muted)';
+      const gpLabel = _settings.calcMethod === 'markup' ? 'Markup' : 'Margin';
 
       if (viewMode === 'list') {
         return `<div class="menu-list-row ${selectedMenus.has(m.id) ? 'selected-row' : ''}" id="mcard-${m.id}" style="position:relative; padding-left:45px">
@@ -80,7 +81,7 @@ function renderMenus(container) {
             <div style="text-align:right">
               <div style="font-size:11px;color:var(--text-faint)">${t('menu_selling')}</div>
               <div style="font-weight:600">${m.sellingPrice ? formatPrice(m.sellingPrice) : '-'}</div>
-              ${gp ? `<div style="font-size:12px;color:${gpColor};font-weight:700">${t('gp_label')} ${gp}%</div>` : ''}
+              ${gp ? `<div style="font-size:12px;color:${gpColor};font-weight:700">${gpLabel} ${gp}%</div>` : ''}
               ${cost > 0 ? `<div style="font-size:11px;color:var(--warning);margin-top:2px">${t('suggested_price')} <strong>${formatPrice(cost / 0.3)}</strong></div>` : ''}
             </div>
             ${m.sellingPrice ? `<div style="text-align:right">
@@ -129,7 +130,7 @@ function renderMenus(container) {
           <div style="text-align:right">
             <div style="font-size:11px;color:var(--text-faint)">${t('menu_selling')}</div>
             <div style="font-weight:600">${m.sellingPrice ? formatPrice(m.sellingPrice) : '-'}</div>
-            ${gp ? `<div style="font-size:12px;color:${gpColor};font-weight:700">${t('gp_label')} ${gp}%</div>` : ''}
+            ${gp ? `<div style="font-size:12px;color:${gpColor};font-weight:700">${gpLabel} ${gp}%</div>` : ''}
             ${cost > 0 ? `<div style="font-size:11px;color:var(--warning);margin-top:2px">${t('suggested_price')} <strong>${formatPrice(cost / 0.3)}</strong></div>` : ''}
             ${m.sellingPrice ? `<div style="font-size:11px;color:var(--text-muted);margin-top:2px">Tax 8%: <b style="color:var(--text)">${formatPrice(m.sellingPrice * 1.08)}</b> | 10%: <b style="color:var(--text)">${formatPrice(m.sellingPrice * 1.10)}</b></div>` : ''}
           </div>
@@ -266,9 +267,10 @@ window.openMenuModal = function (id = null) {
     if (el) {
       let html = '';
       if (sp > 0) {
-        const gp = (((sp - cost) / sp) * 100).toFixed(1);
+        const gp = _settings.calcMethod === 'markup' ? (cost > 0 ? ((sp - cost) / cost * 100).toFixed(1) : 0) : (((sp - cost) / sp) * 100).toFixed(1);
         const gpColor = gp >= 60 ? 'var(--success)' : gp >= 40 ? 'var(--warning)' : 'var(--danger)';
-        html += `${t('gp_label')} <strong style="color:${gpColor}">${gp}%</strong> &nbsp;|&nbsp; Tax 8%: <strong style="color:var(--text)">${formatPrice(sp * 1.08)}</strong> &nbsp;|&nbsp; 10%: <strong style="color:var(--text)">${formatPrice(sp * 1.10)}</strong><br>`;
+        const gpLabel = _settings.calcMethod === 'markup' ? 'Markup' : 'Margin';
+        html += `${gpLabel} <strong style="color:${gpColor}">${gp}%</strong> &nbsp;|&nbsp; Tax 8%: <strong style="color:var(--text)">${formatPrice(sp * 1.08)}</strong> &nbsp;|&nbsp; 10%: <strong style="color:var(--text)">${formatPrice(sp * 1.10)}</strong><br>`;
       }
       if (cost > 0) {
         html += `<span style="color:var(--warning);font-size:12px">${t('suggested_price')} <strong>${formatPrice(cost / 0.3)}</strong></span>`;
@@ -358,9 +360,10 @@ window.openMenuModal = function (id = null) {
     if (el) {
       let html = '';
       if (sp > 0) {
-        const gp = (((sp - setCost) / sp) * 100).toFixed(1);
+        const gp = _settings.calcMethod === 'markup' ? (setCost > 0 ? ((sp - setCost) / setCost * 100).toFixed(1) : 0) : (((sp - setCost) / sp) * 100).toFixed(1);
         const gpColor = gp >= 60 ? 'var(--success)' : gp >= 40 ? 'var(--warning)' : 'var(--danger)';
-        html += `${t('gp_label')} <strong style="color:${gpColor}">${gp}%</strong> &nbsp;|&nbsp; Tax 8%: <strong style="color:var(--text)">${formatPrice(sp * 1.08)}</strong> &nbsp;|&nbsp; 10%: <strong style="color:var(--text)">${formatPrice(sp * 1.10)}</strong><br>`;
+        const gpLabel = _settings.calcMethod === 'markup' ? 'Markup' : 'Margin';
+        html += `${gpLabel} <strong style="color:${gpColor}">${gp}%</strong> &nbsp;|&nbsp; Tax 8%: <strong style="color:var(--text)">${formatPrice(sp * 1.08)}</strong> &nbsp;|&nbsp; 10%: <strong style="color:var(--text)">${formatPrice(sp * 1.10)}</strong><br>`;
       }
       if (setCost > 0) {
         html += `<span style="color:var(--warning);font-size:12px">${t('suggested_price')} <strong>${formatPrice(setCost / 0.3)}</strong></span>`;
