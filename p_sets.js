@@ -23,9 +23,16 @@ function renderSets(container) {
       : sets.map(s => {
         const setMenus = (s.menuIds || []).map(id => menus.find(m => m.id === id)).filter(Boolean);
         const cost = setMenus.reduce((sum, m) => sum + DB.menuCost(m.id), 0);
-        const gp = s.sellingPrice ? (_settings.calcMethod === 'markup' ? (cost > 0 ? ((s.sellingPrice - cost) / cost * 100).toFixed(1) : 0) : (((s.sellingPrice - cost) / s.sellingPrice) * 100).toFixed(1)) : null;
-        const gpColor = gp ? (gp >= 60 ? 'var(--success)' : gp >= 40 ? 'var(--warning)' : 'var(--danger)') : 'var(--text-muted)';
-        const gpLabel = _settings.calcMethod === 'markup' ? 'Markup' : 'Margin';
+        const gp = s.sellingPrice ? (_settings.calcMethod === 'markup' ? (s.sellingPrice > 0 ? ((cost / s.sellingPrice) * 100).toFixed(1) : 0) : (((s.sellingPrice - cost) / s.sellingPrice) * 100).toFixed(1)) : null;
+        let gpColor = 'var(--text-muted)';
+        if (gp) {
+          if (_settings.calcMethod === 'markup') {
+            gpColor = gp <= 40 ? 'var(--success)' : gp <= 60 ? 'var(--warning)' : 'var(--danger)';
+          } else {
+            gpColor = gp >= 60 ? 'var(--success)' : gp >= 40 ? 'var(--warning)' : 'var(--danger)';
+          }
+        }
+        const gpLabel = _settings.calcMethod === 'markup' ? 'Cost' : 'Margin';
 
         if (viewMode === 'list') {
           return `<div class="menu-list-row" style="align-items:flex-start">
@@ -200,8 +207,16 @@ window.openSetModal = function (id = null) {
       return sum + (m ? DB.menuCost(m.id) : 0);
     }, 0);
     const sp = parseFloat(document.getElementById('setPrice')?.value) || 0;
-    const gp = sp > 0 ? (_settings.calcMethod === 'markup' ? (c > 0 ? ((sp - c) / c * 100).toFixed(1) : 0) : (((sp - c) / sp) * 100).toFixed(1)) : '-';
-    const gpLabel = _settings.calcMethod === 'markup' ? 'Markup' : 'Margin';
+    const gp = sp > 0 ? (_settings.calcMethod === 'markup' ? (sp > 0 ? ((c / sp) * 100).toFixed(1) : 0) : (((sp - c) / sp) * 100).toFixed(1)) : '-';
+    let gpColor = 'var(--success)';
+    if (gp !== '-') {
+      if (_settings.calcMethod === 'markup') {
+        gpColor = gp <= 40 ? 'var(--success)' : gp <= 60 ? 'var(--warning)' : 'var(--danger)';
+      } else {
+        gpColor = gp >= 60 ? 'var(--success)' : gp >= 40 ? 'var(--warning)' : 'var(--danger)';
+      }
+    }
+    const gpLabel = _settings.calcMethod === 'markup' ? 'Cost' : 'Margin';
 
     // Tax string for 8% and 10%
     const taxHtml = sp > 0
@@ -211,7 +226,7 @@ window.openSetModal = function (id = null) {
     const suggestHtml = c > 0 ? `<br><span style="color:var(--warning);font-size:12px;margin-top:4px;display:inline-block">${_settings.calcMethod === 'markup' ? t('suggested_price_markup') : t('suggested_price')} <strong>${formatPrice(_settings.calcMethod === 'markup' ? c * 3 : c / 0.3)}</strong></span>` : '';
 
     const el = document.getElementById('setPreview');
-    if (el) el.innerHTML = `${t('menu_cost')}: <strong style="color:var(--primary)">${formatPrice(c)}</strong> &nbsp;|&nbsp; ${gpLabel}: <strong style="color:var(--success)">${gp !== '-' ? gp + '%' : '-'}</strong>${taxHtml}${suggestHtml}`;
+    if (el) el.innerHTML = `${t('menu_cost')}: <strong style="color:var(--primary)">${formatPrice(c)}</strong> &nbsp;|&nbsp; ${gpLabel}: <strong style="color:${gpColor}">${gp !== '-' ? gp + '%' : '-'}</strong>${taxHtml}${suggestHtml}`;
   }
 
   Modal.open({

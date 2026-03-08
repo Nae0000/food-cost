@@ -21,8 +21,8 @@ function renderRecipes(container) {
     const recipes = DB.getAll('recipes').filter(r => r.menuId === _recipeMenuId);
     const menu = DB.getById('menus', _recipeMenuId);
     const cost = DB.menuCost(_recipeMenuId);
-    const gp = menu?.sellingPrice ? (_settings.calcMethod === 'markup' ? (cost > 0 ? ((menu.sellingPrice - cost) / cost * 100).toFixed(1) : 0) : (((menu.sellingPrice - cost) / menu.sellingPrice) * 100).toFixed(1)) : null;
-    const gpLabel = _settings.calcMethod === 'markup' ? 'Markup' : 'Margin';
+    const gp = menu?.sellingPrice ? (_settings.calcMethod === 'markup' ? (menu.sellingPrice > 0 ? ((cost / menu.sellingPrice) * 100).toFixed(1) : 0) : (((menu.sellingPrice - cost) / menu.sellingPrice) * 100).toFixed(1)) : null;
+    const gpLabel = _settings.calcMethod === 'markup' ? 'Cost' : 'Margin';
     document.getElementById('recipeSummary').innerHTML = `
       <div class="cost-summary">
         <div>
