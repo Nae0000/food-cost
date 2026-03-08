@@ -223,7 +223,7 @@ window.openSetModal = function (id = null) {
       ? ` &nbsp;|&nbsp; Tax 8%: <strong style="color:var(--text)">${formatPrice(sp * 1.08)}</strong> &nbsp;|&nbsp; 10%: <strong style="color:var(--text)">${formatPrice(sp * 1.10)}</strong>`
       : '';
 
-    const suggestHtml = c > 0 ? `<br><span style="color:var(--warning);font-size:12px;margin-top:4px;display:inline-block">${_settings.calcMethod === 'markup' ? t('suggested_price_markup') : t('suggested_price')} <strong>${formatPrice(_settings.calcMethod === 'markup' ? c * 3 : c / 0.3)}</strong></span>` : '';
+    const suggestHtml = c > 0 ? `<br><span style="color:var(--warning);font-size:12px;margin-top:4px;display:inline-block">${_settings.calcMethod === 'markup' ? t('suggested_price_markup') : t('suggested_price')} <strong>${formatPrice(c / 0.3)}</strong></span>` : '';
 
     const el = document.getElementById('setPreview');
     if (el) el.innerHTML = `${t('menu_cost')}: <strong style="color:var(--primary)">${formatPrice(c)}</strong> &nbsp;|&nbsp; ${gpLabel}: <strong style="color:${gpColor}">${gp !== '-' ? gp + '%' : '-'}</strong>${taxHtml}${suggestHtml}`;
