@@ -6,6 +6,7 @@ const TRANSLATIONS = {
     th: {
         // Nav
         suggested_price: '💡 ราคาขายขั้นต่ำที่ควรเป็น (GP 70%):',
+        suggested_price_markup: '💡 ราคาขายขั้นต่ำที่ควรเป็น (Markup 200%):',
         settings_data: 'ข้อมูลและการสำรอง',
         settings_data_desc: 'จัดการข้อมูลทั้งหมดในระบบ ส่งออกเป็นไฟล์ CSV หรือสำรองข้อมูลทั้งหมด (Backup/Restore)',
         btn_export_csv: '📊 โหลดไฟล์ CSV (ดูใน Excel)',
@@ -241,6 +242,7 @@ const TRANSLATIONS = {
 
     en: {
         suggested_price: '💡 Minimum Selling Price (70% GP):',
+        suggested_price_markup: '💡 Minimum Selling Price (200% Markup):',
         settings_data: 'Data & Backup',
         settings_data_desc: 'Manage all database data, export to CSV for reporting, or Backup/Restore everything.',
         btn_export_csv: '📊 Download CSV (Excel Report)',
@@ -363,6 +365,7 @@ const TRANSLATIONS = {
 
     ja: {
         suggested_price: '💡 最低推奨販売価格 (粗利70%):',
+        suggested_price_markup: '💡 最低推奨販売価格 (マークアップ200%):',
         settings_data: 'データとバックアップ',
         settings_data_desc: '全データを管理し、CSVでエクスポートしたり、すべてのデータをバックアップ/復元したりできます。',
         btn_export_csv: '📊 CSVダウンロード (Excel用)',
