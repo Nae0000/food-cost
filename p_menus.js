@@ -53,9 +53,16 @@ function renderMenus(container) {
     gridEl.innerHTML = menus.map(m => {
       const cat = cats.find(c => c.id === m.categoryId);
       const cost = DB.menuCost(m.id);
-      const gp = m.sellingPrice ? (_settings.calcMethod === 'markup' ? (cost > 0 ? ((m.sellingPrice - cost) / cost * 100).toFixed(1) : 0) : (((m.sellingPrice - cost) / m.sellingPrice) * 100).toFixed(1)) : null;
-      const gpColor = gp ? (gp >= 60 ? 'var(--success)' : gp >= 40 ? 'var(--warning)' : 'var(--danger)') : 'var(--text-muted)';
-      const gpLabel = _settings.calcMethod === 'markup' ? 'Markup' : 'Margin';
+      const gp = m.sellingPrice ? (_settings.calcMethod === 'markup' ? (m.sellingPrice > 0 ? ((cost / m.sellingPrice) * 100).toFixed(1) : 0) : (((m.sellingPrice - cost) / m.sellingPrice) * 100).toFixed(1)) : null;
+      let gpColor = 'var(--text-muted)';
+      if (gp) {
+        if (_settings.calcMethod === 'markup') {
+          gpColor = gp <= 40 ? 'var(--success)' : gp <= 60 ? 'var(--warning)' : 'var(--danger)';
+        } else {
+          gpColor = gp >= 60 ? 'var(--success)' : gp >= 40 ? 'var(--warning)' : 'var(--danger)';
+        }
+      }
+      const gpLabel = _settings.calcMethod === 'markup' ? 'Cost' : 'Margin';
 
       if (viewMode === 'list') {
         return `<div class="menu-list-row ${selectedMenus.has(m.id) ? 'selected-row' : ''}" id="mcard-${m.id}" style="position:relative; padding-left:45px">
@@ -267,9 +274,14 @@ window.openMenuModal = function (id = null) {
     if (el) {
       let html = '';
       if (sp > 0) {
-        const gp = _settings.calcMethod === 'markup' ? (cost > 0 ? ((sp - cost) / cost * 100).toFixed(1) : 0) : (((sp - cost) / sp) * 100).toFixed(1);
-        const gpColor = gp >= 60 ? 'var(--success)' : gp >= 40 ? 'var(--warning)' : 'var(--danger)';
-        const gpLabel = _settings.calcMethod === 'markup' ? 'Markup' : 'Margin';
+        const gp = _settings.calcMethod === 'markup' ? (sp > 0 ? ((cost / sp) * 100).toFixed(1) : 0) : (((sp - cost) / sp) * 100).toFixed(1);
+        let gpColor = 'var(--text-muted)';
+        if (_settings.calcMethod === 'markup') {
+          gpColor = gp <= 40 ? 'var(--success)' : gp <= 60 ? 'var(--warning)' : 'var(--danger)';
+        } else {
+          gpColor = gp >= 60 ? 'var(--success)' : gp >= 40 ? 'var(--warning)' : 'var(--danger)';
+        }
+        const gpLabel = _settings.calcMethod === 'markup' ? 'Cost' : 'Margin';
         html += `${gpLabel} <strong style="color:${gpColor}">${gp}%</strong> &nbsp;|&nbsp; Tax 8%: <strong style="color:var(--text)">${formatPrice(sp * 1.08)}</strong> &nbsp;|&nbsp; 10%: <strong style="color:var(--text)">${formatPrice(sp * 1.10)}</strong><br>`;
       }
       if (cost > 0) {
@@ -360,9 +372,14 @@ window.openMenuModal = function (id = null) {
     if (el) {
       let html = '';
       if (sp > 0) {
-        const gp = _settings.calcMethod === 'markup' ? (setCost > 0 ? ((sp - setCost) / setCost * 100).toFixed(1) : 0) : (((sp - setCost) / sp) * 100).toFixed(1);
-        const gpColor = gp >= 60 ? 'var(--success)' : gp >= 40 ? 'var(--warning)' : 'var(--danger)';
-        const gpLabel = _settings.calcMethod === 'markup' ? 'Markup' : 'Margin';
+        const gp = _settings.calcMethod === 'markup' ? (sp > 0 ? ((setCost / sp) * 100).toFixed(1) : 0) : (((sp - setCost) / sp) * 100).toFixed(1);
+        let gpColor = 'var(--text-muted)';
+        if (_settings.calcMethod === 'markup') {
+          gpColor = gp <= 40 ? 'var(--success)' : gp <= 60 ? 'var(--warning)' : 'var(--danger)';
+        } else {
+          gpColor = gp >= 60 ? 'var(--success)' : gp >= 40 ? 'var(--warning)' : 'var(--danger)';
+        }
+        const gpLabel = _settings.calcMethod === 'markup' ? 'Cost' : 'Margin';
         html += `${gpLabel} <strong style="color:${gpColor}">${gp}%</strong> &nbsp;|&nbsp; Tax 8%: <strong style="color:var(--text)">${formatPrice(sp * 1.08)}</strong> &nbsp;|&nbsp; 10%: <strong style="color:var(--text)">${formatPrice(sp * 1.10)}</strong><br>`;
       }
       if (setCost > 0) {
