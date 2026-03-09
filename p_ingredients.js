@@ -439,7 +439,8 @@ window.openIngredientModal = function (id = null) {
             <label class="form-label">${t('ing_conversion')}</label>
             <input class="form-input" id="ingConvFactor" type="number" step="0.001" min="0.001"
               value="${ing?.convFactor || 1}" placeholder="1" oninput="updateIngPreview()" />
-            <div class="form-hint">${t('ing_conversion_hint')}</div>
+            <div class="form-hint" id="totalYieldHint" style="color:var(--primary); font-weight:600; margin-top:6px;"></div>
+            <div class="form-hint" style="margin-top:4px;">* นี่คืออัตราส่วนต่อ 1 หน่วยซื้อ (เช่น 1 กก. = 1000 กรัม เสมอ)</div>
           </div>
         </div>
       </div>
@@ -524,6 +525,17 @@ window.openIngredientModal = function (id = null) {
     const cf = parseFloat(document.getElementById('ingConvFactor')?.value) || 1;
     const rUnit = document.getElementById('ingRecipeUnit')?.value || '';
     const pricePerUnit = bp > 0 ? bp / (bq * cf) : 0;
+
+    // Total Yield Calculation
+    const totalYieldHint = document.getElementById('totalYieldHint');
+    if (totalYieldHint) {
+      if (cf > 1 || bq > 1) {
+        totalYieldHint.innerHTML = `ปริมาณใช้ได้ทั้งหมด: <strong>${(bq * cf).toLocaleString()}</strong> ${rUnit}`;
+      } else {
+        totalYieldHint.innerHTML = '';
+      }
+    }
+
     const el = document.getElementById('ingPriceVal');
     if (el) el.textContent = `${formatPrice(pricePerUnit)} / ${rUnit}`;
   };
