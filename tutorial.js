@@ -22,6 +22,19 @@ const Tutorial = {
         this.createBackdrop();
         this.createPopover();
         this.showStep();
+
+        if (!this._resizeHandler) {
+            this._resizeHandler = () => {
+                if (this.isActive && this.steps[this.currentStepIndex]) {
+                    const step = this.steps[this.currentStepIndex];
+                    const targetEl = document.querySelector(step.target);
+                    if (targetEl) this.positionPopover(targetEl, step.position || 'bottom');
+                }
+            };
+            window.addEventListener('resize', this._resizeHandler);
+            // Throttle scroll slightly? Passive is okay for simple CSS transforms.
+            window.addEventListener('scroll', this._resizeHandler, { passive: true, capture: true });
+        }
     },
 
     createBackdrop: function () {
@@ -107,6 +120,8 @@ const Tutorial = {
                 el.style.position = el.dataset.origPos || '';
                 el.style.zIndex = el.dataset.origZ || '';
                 el.style.background = el.dataset.origBg || '';
+                el.style.boxShadow = el.dataset.origShadow || '';
+                el.style.transition = el.dataset.origTrans || '';
             });
 
             // Highlight new target
@@ -114,12 +129,16 @@ const Tutorial = {
             targetEl.dataset.origPos = computedStyle.position;
             targetEl.dataset.origZ = computedStyle.zIndex;
             targetEl.dataset.origBg = computedStyle.backgroundColor;
+            targetEl.dataset.origShadow = computedStyle.boxShadow;
+            targetEl.dataset.origTrans = computedStyle.transition;
 
             if (computedStyle.position === 'static') targetEl.style.position = 'relative';
             targetEl.style.zIndex = '10002'; // Above backdrop
             if (computedStyle.backgroundColor === 'rgba(0, 0, 0, 0)' || computedStyle.backgroundColor === 'transparent') {
                 targetEl.style.background = 'var(--bg)';
             }
+            targetEl.style.transition = 'all 0.3s ease';
+            targetEl.style.boxShadow = '0 0 0 4px var(--primary), 0 4px 12px rgba(0,0,0,0.3)';
             targetEl.classList.add('tutorial-highlight');
 
             // Ensure target is somewhat visible (scroll into view if needed gently)
@@ -239,9 +258,13 @@ const Tutorial = {
             el.style.position = el.dataset.origPos || '';
             el.style.zIndex = el.dataset.origZ || '';
             el.style.background = el.dataset.origBg || '';
+            el.style.boxShadow = el.dataset.origShadow || '';
+            el.style.transition = el.dataset.origTrans || '';
             delete el.dataset.origPos;
             delete el.dataset.origZ;
             delete el.dataset.origBg;
+            delete el.dataset.origShadow;
+            delete el.dataset.origTrans;
         });
 
         const backdrop = document.getElementById('tutorial-backdrop');
