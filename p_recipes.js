@@ -116,6 +116,15 @@ function renderRecipes(container) {
         if (d1) d1.style.display = 'none';
         if (d2) d2.style.display = 'none';
       }, { passive: true });
+
+      if (_settings.tutorialMode) {
+        setTimeout(() => {
+          Tutorial.start([
+            { target: '#addIngSearch', title: '2. เลือกวัตถุดิบ', text: 'ค้นหาและเลือกวัตถุดิบที่ใช้ทำเมนูนี้', position: 'top' },
+            { target: '#addIngQty', title: '3. ปริมาณที่ใช้', text: 'ใส่ปริมาณที่ใช้จริง (ตามหน่วยที่แสดง)', position: 'top' }
+          ]);
+        }, 400);
+      }
     }, 100);
   }
 
@@ -235,7 +244,15 @@ function renderRecipes(container) {
 
   window.changeRecipeMenu = (v) => { _recipeMenuId = v ? parseInt(v) : null; drawRows(); };
   _drawRowsFn = drawRows; // expose for use in global action handlers
-  if (_recipeMenuId) drawRows();
+  if (_recipeMenuId) {
+    drawRows();
+  } else if (_settings.tutorialMode) {
+    setTimeout(() => {
+      Tutorial.start([
+        { target: '#recipeMenuSearch', title: '1. เลือกเมนูอาหาร', text: 'ค้นหาหรือเลือกเมนูที่คุณต้องการจะทำสูตรราคา', position: 'bottom' }
+      ]);
+    }, 300);
+  }
 }
 
 window.addRecipeItem = function () {
