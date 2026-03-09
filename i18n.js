@@ -213,6 +213,9 @@ const TRANSLATIONS = {
         set_calc_method: 'วิธีการคำนวณกำไร / สัดส่วนต้นทุน',
         set_calc_margin: 'Margin (Gross Profit Margin)',
         set_calc_markup: 'Markup (Cost-Plus Pricing)',
+        set_tax: 'ตั้งค่าภาษี',
+        set_tax_takeout: 'ภาษี Take Out (%)',
+        set_tax_dinein: 'ภาษี Dine In (%)',
         set_saved: 'บันทึกการตั้งค่าแล้ว',
         set_preview: 'ตัวอย่างราคา',
         set_gdrive: 'บัญชี Google & Google Drive Sync',
@@ -346,6 +349,7 @@ const TRANSLATIONS = {
         set_lang: 'Language', set_lang_th: 'ภาษาไทย (Thai)', set_lang_en: 'English', set_lang_ja: '日本語 (Japanese)',
         set_currency: 'Currency', set_currency_rate: 'Exchange Rate (1 THB =)',
         set_calc_method: 'Calculation Method', set_calc_margin: 'Margin (Gross Profit)', set_calc_markup: 'Markup (Cost-Plus Pricing)',
+        set_tax: 'Tax Settings', set_tax_takeout: 'Take Out Tax (%)', set_tax_dinein: 'Dine In Tax (%)',
         set_saved: 'Settings saved', set_preview: 'Price Preview',
         set_gdrive: 'Google Account & Drive Sync',
         set_gdrive_desc: 'Sign in with Google to backup and restore your data from your personal Google Drive. Data is stored per account.',
@@ -472,6 +476,7 @@ const TRANSLATIONS = {
         set_lang: '言語 / Language', set_lang_th: 'ภาษาไทย (タイ語)', set_lang_en: 'English（英語）', set_lang_ja: '日本語',
         set_currency: '通貨', set_currency_rate: '為替レート（1 THB =）',
         set_calc_method: '利益計算方法', set_calc_margin: 'マージン (粗利益率)', set_calc_markup: 'Markup (Cost-Plus Pricing)',
+        set_tax: '税金設定', set_tax_takeout: 'テイクアウト税 (%)', set_tax_dinein: 'イートイン税 (%)',
         set_saved: '設定を保存しました', set_preview: '価格プレビュー',
         set_gdrive: 'Googleアカウント & Drive同期',
         set_gdrive_desc: 'Googleでサインインして、個人のGoogle Driveにデータをバックアップ・復元できます。データはアカウントごとに管理されます。',
@@ -518,7 +523,7 @@ function saveSettings(s) {
 }
 
 // Current settings (live)
-let _settings = { lang: 'th', currency: 'JPY', customRate: null, calcMethod: 'margin', ...loadSettings() };
+let _settings = { lang: 'th', currency: 'JPY', customRate: null, calcMethod: 'margin', taxTakeOut: 8, taxDineIn: 10, ...loadSettings() };
 
 // t(key) — translate a key
 function t(key) {
