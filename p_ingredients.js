@@ -139,7 +139,7 @@ function renderIngredients(container) {
       </div>
       <button class="btn btn-ghost btn-sm" style="margin-left:12px; white-space:nowrap; color:var(--text-muted);" onclick="openManageGroupsModal()">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg> 
-        จัดการหมวดหมู่
+        ${t('sys_manage_groups')}
       </button>
     </div>
 
@@ -248,19 +248,19 @@ function renderIngredients(container) {
     };
 
     Modal.open({
-      title: '📁 จัดการหมวดหมู่วัตถุดิบ',
+      title: t('sys_manage_groups_title'),
       body: `
         <div style="margin-bottom:16px; display:flex; gap:8px;">
-          <input type="text" id="newGroupName" class="form-input" placeholder="ชื่อหมวดหมู่ใหม่..." style="flex:1;" oninput="autoSuggestGroupEmoji(this.value)" />
-          <input type="text" id="newGroupEmoji" class="form-input" placeholder="อีโมจิ (เช่น 🥩)" style="width:100px; text-align:center;" />
+          <input type="text" id="newGroupName" class="form-input" placeholder="${t('sys_manage_groups_new')}" style="flex:1;" oninput="autoSuggestGroupEmoji(this.value)" />
+          <input type="text" id="newGroupEmoji" class="form-input" placeholder="${t('sys_manage_groups_emoji')}" style="width:100px; text-align:center;" />
           <input type="color" id="newGroupColor" class="form-input" value="#0ea5e9" style="width:40px; padding:2px; height:40px; cursor:pointer;" />
         </div>
-        <button class="btn btn-primary" style="width:100%; margin-bottom:16px;" onclick="addIngGroup()">+ เพิ่มหมวดหมู่</button>
+        <button class="btn btn-primary" style="width:100%; margin-bottom:16px;" onclick="addIngGroup()">${t('sys_manage_groups_add')}</button>
         <div id="manageGroupsList" style="max-height:250px; overflow-y:auto; border:1px solid var(--border); border-radius:var(--r-md); background:var(--bg);">
           ${renderGroupRows()}
         </div>
       `,
-      footerHtml: `<button class="btn btn-secondary" onclick="Modal.close(); Router.render();">ปิด</button>`,
+      footerHtml: `<button class="btn btn-secondary" onclick="Modal.close(); Router.render();">${t('sys_close')}</button>`,
       onConfirm: () => { Modal.close(); Router.render(); }
     });
 
