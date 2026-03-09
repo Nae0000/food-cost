@@ -94,7 +94,7 @@ function renderPriceHistory(container) {
         const data = getChartData();
         if (!data.labels.length) {
             canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
-            document.getElementById('phNoData').style.display = 'block';
+            document.getElementById('phNoData').style.display = 'flex';
             return;
         }
         document.getElementById('phNoData').style.display = 'none';
@@ -146,14 +146,14 @@ function renderPriceHistory(container) {
         tbody.innerHTML = hist.map(h => {
             const ing = ings.find(i => i.id === h.ingredientId);
             const noteColor = h.note === 'snapshot' ? '#0ea5e9' : h.note === 'auto' ? '#22c55e' : '#f59e0b';
-            const noteLabel = h.note === 'snapshot' ? '📸 Snapshot' : h.note === 'auto' ? '✏️ แก้ไข' : h.note || '-';
+            const noteLabel = h.note === 'snapshot' ? '📸 Snapshot' : h.note === 'auto' ? '✏️ Edit' : h.note || '-';
             return `<tr>
         <td style="font-size:12px;color:var(--text-muted)">${fmtDateTime(h.timestamp)}</td>
         <td><strong>${ing ? ing.name : `ID:${h.ingredientId}`}</strong>${ing ? `<br><small class="text-muted">${ing.group || ''}</small>` : ''}</td>
         <td><span style="font-weight:700;color:var(--primary)">${formatPrice(h.price)}</span><small class="text-muted"> /${ing ? (ing.recipeUnit || ing.buyUnit) : ''}</small></td>
         <td><span style="font-size:11px;padding:2px 8px;border-radius:99px;background:${noteColor}22;color:${noteColor}">${noteLabel}</span></td>
       </tr>`;
-        }).join('') || `<tr><td colspan="4" style="text-align:center;padding:24px;color:var(--text-muted)">ยังไม่มีประวัติราคา</td></tr>`;
+        }).join('') || `<tr><td colspan="4" style="text-align:center;padding:24px;color:var(--text-muted)">${t('sys_ph_no_data')}</td></tr>`;
     }
 
     function redraw() {
@@ -174,11 +174,11 @@ function renderPriceHistory(container) {
             const changeColor = change > 0 ? 'var(--danger)' : change < 0 ? 'var(--success)' : 'var(--text-muted)';
             statsEl.innerHTML = `
         <div style="display:flex;gap:20px;flex-wrap:wrap;font-size:13px">
-          <div><span style="color:var(--text-muted)">จำนวนข้อมูล</span> <strong>${hist.length}</strong></div>
-          <div><span style="color:var(--text-muted)">ต่ำสุด</span> <strong style="color:var(--success)">${formatPrice(min)}</strong></div>
-          <div><span style="color:var(--text-muted)">สูงสุด</span> <strong style="color:var(--danger)">${formatPrice(max)}</strong></div>
-          <div><span style="color:var(--text-muted)">ปัจจุบัน</span> <strong style="color:var(--primary)">${formatPrice(last)}</strong></div>
-          ${change !== null ? `<div><span style="color:var(--text-muted)">เปลี่ยนแปลง</span> <strong style="color:${changeColor}">${change > 0 ? '+' : ''}${change}%</strong></div>` : ''}
+          <div><span style="color:var(--text-muted)">${t('sys_ph_data_count')}</span> <strong>${hist.length}</strong></div>
+          <div><span style="color:var(--text-muted)">${t('sys_ph_min')}</span> <strong style="color:var(--success)">${formatPrice(min)}</strong></div>
+          <div><span style="color:var(--text-muted)">${t('sys_ph_max')}</span> <strong style="color:var(--danger)">${formatPrice(max)}</strong></div>
+          <div><span style="color:var(--text-muted)">${t('sys_ph_current')}</span> <strong style="color:var(--primary)">${formatPrice(last)}</strong></div>
+          ${change !== null ? `<div><span style="color:var(--text-muted)">${t('sys_ph_change')}</span> <strong style="color:${changeColor}">${change > 0 ? '+' : ''}${change}%</strong></div>` : ''}
         </div>`;
         } else if (statsEl) {
             statsEl.innerHTML = '';
@@ -188,19 +188,19 @@ function renderPriceHistory(container) {
     // Render main layout
     container.innerHTML = `
     <div class="page-header">
-      <div><div class="page-title">📈 ประวัติราคาต้นทุน</div><div class="page-subtitle">ติดตามการเปลี่ยนแปลงราคาวัตถุดิบในแต่ละช่วงเวลา</div></div>
+      <div><div class="page-title">${t('sys_price_history_title')}</div><div class="page-subtitle">${t('sys_price_history_sub')}</div></div>
       <div style="display:flex;gap:10px;align-items:center">
         <button class="btn btn-secondary" onclick="phSnapshotAll()" id="phSnapBtn">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/></svg>
-          📸 บันทึกราคาทั้งหมด
+          ${t('sys_save_all_prices')}
         </button>
       </div>
     </div>
 
     <!-- Ingredient filter pills -->
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px;align-items:center">
-      <span style="font-size:12px;color:var(--text-muted);white-space:nowrap">เลือกวัตถุดิบ:</span>
-      <button class="ph-ing-btn filter-tab active" data-id="0" onclick="phSelectIng(0)">ทั้งหมด</button>
+      <span style="font-size:12px;color:var(--text-muted);white-space:nowrap">${t('sys_ph_select_ing')}</span>
+      <button class="ph-ing-btn filter-tab active" data-id="0" onclick="phSelectIng(0)">${t('ing_group_all')}</button>
       ${ings.map(i => `<button class="ph-ing-btn filter-tab" data-id="${i.id}" onclick="phSelectIng(${i.id})">${i.name}</button>`).join('')}
     </div>
 
@@ -209,24 +209,24 @@ function renderPriceHistory(container) {
 
     <!-- Chart -->
     <div class="card" style="margin-bottom:24px">
-      <div class="card-header"><div class="card-title">📊 กราฟราคาต้นทุน</div></div>
+      <div class="card-header"><div class="card-title">${t('sys_ph_chart_title')}</div></div>
       <div style="position:relative;height:360px;padding:8px 0">
         <canvas id="phChart"></canvas>
-        <div id="phNoData" style="display:none;position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:12px;color:var(--text-muted)">
+        <div id="phNoData" style="display:none;position:absolute;inset:0;flex-direction:column;align-items:center;justify-content:center;gap:12px;color:var(--text-muted)">
           <span style="font-size:48px">📭</span>
-          <div style="font-size:14px">ยังไม่มีข้อมูลประวัติราคา</div>
-          <button class="btn btn-primary btn-sm" onclick="phSnapshotAll()">📸 บันทึกราคาปัจจุบันเป็นจุดเริ่มต้น</button>
+          <div style="font-size:14px">${t('sys_ph_no_data')}</div>
+          <button class="btn btn-primary btn-sm" onclick="phSnapshotAll()">${t('sys_ph_snapshot')}</button>
         </div>
       </div>
     </div>
 
     <!-- History Table -->
     <div class="card">
-      <div class="card-header"><div class="card-title">🗓️ ตารางประวัติราคา</div></div>
+      <div class="card-header"><div class="card-title">${t('sys_ph_table_title')}</div></div>
       <div style="overflow-x:auto">
         <table style="width:100%">
           <thead><tr>
-            <th>วันที่/เวลา</th><th>วัตถุดิบ</th><th>ราคา/หน่วย</th><th>ที่มา</th>
+            <th>${t('sys_ph_col_date')}</th><th>${t('sys_ph_col_ing')}</th><th>${t('sys_ph_col_price')}</th><th>${t('sys_ph_col_src')}</th>
           </tr></thead>
           <tbody id="phTableBody"></tbody>
         </table>
