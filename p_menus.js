@@ -532,7 +532,19 @@ window.openMenuModal = function (id = null) {
     const type = document.getElementById('mMenuType')?.value || 'single';
     if (type === 'set') calcSetPreview(); else calcPreview();
   };
-  setTimeout(() => window.calcMenuPreview(), 50);
+  setTimeout(() => {
+    window.calcMenuPreview();
+    if (!m && _settings.tutorialMode) {
+      setTimeout(() => {
+        Tutorial.start([
+          { target: '#mName', title: '1. ชื่อเมนู', text: 'ใส่ชื่ออาหาร เช่น ผัดกะเพราหมูสับ', position: 'bottom' },
+          { target: '#mTypeBtn_single', title: '2. ประเภทเมนู', text: 'เลือกว่าเป็นเมนูปกติ หรือ เมนูเซต (รวมหลายเมนู)', position: 'bottom' },
+          { target: '#mPrice', title: '3. ราคาขาย', text: 'ใส่ราคาที่คุณขายหน้าร้าน (ถ้ายังไม่ทราบ ข้ามได้)', position: 'bottom' },
+          { target: '#modalConfirmBtn', title: '4. บันทึกและทำสูตร', text: 'เมื่อกรอกเสร็จ กดปุ่มนี้เพื่อไปหน้าจัดทำสูตรวัตถุดิบต่อ', position: 'top' }
+        ]);
+      }, 300);
+    }
+  }, 50);
 
   // Inline recipe/sub-menu editing functions
   if (m) {
