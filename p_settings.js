@@ -75,6 +75,26 @@ function renderSettings(container) {
         </div>
       </div>
 
+      <!-- Tax Rates -->
+      <div class="card" style="margin-bottom:20px">
+        <div class="card-header"><div class="card-title">🧾 ${t('set_tax') || 'ตั้งค่าภาษี'}</div></div>
+        <div style="display:flex;gap:12px;flex-wrap:wrap">
+          <div class="form-group" style="flex:1;min-width:150px;margin-bottom:0">
+            <label class="form-label" style="font-weight:600">${t('set_tax_takeout') || 'ภาษี Take Out (%)'}</label>
+            <div style="display:flex;align-items:center;">
+              <input type="number" class="form-input" id="taxTakeOut" value="${_settings.taxTakeOut !== undefined ? _settings.taxTakeOut : 8}" step="0.1" min="0" style="text-align:right" />
+              <div style="padding-left:8px">%</div>
+            </div>
+          </div>
+          <div class="form-group" style="flex:1;min-width:150px;margin-bottom:0">
+            <label class="form-label" style="font-weight:600">${t('set_tax_dinein') || 'ภาษี Dine In (%)'}</label>
+            <div style="display:flex;align-items:center;">
+              <input type="number" class="form-input" id="taxDineIn" value="${_settings.taxDineIn !== undefined ? _settings.taxDineIn : 10}" step="0.1" min="0" style="text-align:right" />
+              <div style="padding-left:8px">%</div>
+            </div>
+          </div>
+        </div>
+      </div>
 
       <!-- Google Account & Drive Sync -->
       <div class="card" style="margin-bottom:20px; border-color:#4285f4">
