@@ -149,6 +149,21 @@ function renderSettings(container) {
         `}
       </div>
 
+      <!-- Features -->
+      <div class="card" style="margin-bottom:20px">
+        <div class="card-header"><div class="card-title">✨ ${t('set_features') || 'ตั้งค่าการใช้งานเพิ่มเติม'}</div></div>
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:12px;background:var(--bg);border-radius:var(--r-md);border:1px solid var(--border)">
+          <div>
+            <div style="font-weight:600">${t('set_tutorial') || 'โหมดช่วยสอน (Tutorial Mode)'}</div>
+            <div style="font-size:12px;color:var(--text-muted)">${t('set_tutorial_desc') || 'แสดงคำแนะนำการกรอกข้อมูลแบบจับมือทำทีละขั้นตอน เมื่อเพิ่มวัตถุดิบหรือเมนู'}</div>
+          </div>
+          <label class="toggle-switch">
+            <input type="checkbox" id="tutorialModeToggle" ${_settings.tutorialMode ? 'checked' : ''}>
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+      </div>
+
       <!-- Gemini Settings -->
       <div class="card" style="margin-bottom:20px">
         <div class="card-header"><div class="card-title">🤖 ตั้งค่า Gemini AI</div></div>
@@ -229,6 +244,11 @@ function renderSettings(container) {
 
     const taxDineInVal = document.getElementById('taxDineIn')?.value;
     _settings.taxDineIn = taxDineInVal && !isNaN(parseFloat(taxDineInVal)) ? parseFloat(taxDineInVal) : 10;
+
+    const tutToggle = document.getElementById('tutorialModeToggle');
+    if (tutToggle) {
+      _settings.tutorialMode = tutToggle.checked;
+    }
 
     saveSettings(_settings);
     Toast.show(t('set_saved'));
