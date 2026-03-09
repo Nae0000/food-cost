@@ -145,11 +145,11 @@ function renderSettings(container) {
 
         <!-- Features -->
         <div class="card" style="margin-bottom:0; height:100%">
-          <div class="card-header"><div class="card-title">✨ ${t('set_features') || 'ตั้งค่าเพิ่มเติม'}</div></div>
+          <div class="card-header"><div class="card-title">${t('set_features')}</div></div>
           <div style="display:flex;align-items:center;justify-content:space-between;padding:10px;background:var(--bg);border-radius:var(--r-md);border:1px solid var(--border)">
             <div>
-              <div style="font-weight:600;font-size:13px">${t('set_tutorial') || 'โหมดช่วยสอนแบบจับมือทำ'}</div>
-              <div style="font-size:11px;color:var(--text-muted)">คำแนะนำเมื่อเริ่มกรอกข้อมูล</div>
+              <div style="font-weight:600;font-size:13px">${t('set_tutorial')}</div>
+              <div style="font-size:11px;color:var(--text-muted);margin-top:2px;">${t('set_tutorial_desc')}</div>
             </div>
             <label class="toggle-switch" style="transform:scale(0.85);margin-right:-8px">
               <input type="checkbox" id="tutorialModeToggle" ${_settings.tutorialMode ? 'checked' : ''}>
