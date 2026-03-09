@@ -529,7 +529,22 @@ window.openIngredientModal = function (id = null) {
   };
 
   // Trigger initial price preview after modal DOM is ready
-  setTimeout(window.updateIngPreview, 80);
+  setTimeout(() => {
+    window.updateIngPreview();
+    if (!id && _settings.tutorialMode) {
+      setTimeout(() => {
+        Tutorial.start([
+          { target: '#ingName', title: '1. ชื่อวัตถุดิบ', text: 'ใส่ชื่อของวัตถุดิบ เช่น หมูสับ, กะหล่ำปลี', position: 'bottom' },
+          { target: '#ingBuyQty', title: '2. ปริมาณที่ซื้อ', text: 'ใส่จำนวนที่ซื้อมาตามบิล เช่น ซื้อมา 1 กิโลกรัม ให้ใส่ 1', position: 'bottom' },
+          { target: '#ingBuyUnit', title: '3. หน่วยที่ซื้อ', text: 'เลือกหน่วยตามบิล เช่น กก.', position: 'bottom' },
+          { target: '#ingBuyPrice', title: '4. ราคาที่ซื้อมา', text: 'ใส่ราคาที่จ่ายไปทั้งหมดสำหรับวัตถุดิบก้อนนี้', position: 'bottom' },
+          { target: '#ingRecipeUnit', title: '5. หน่วยที่ใช้ในสูตร', text: 'เลือกหน่วยที่จะตอนทำสูตรอาหาร เช่น กรัม', position: 'top' },
+          { target: '#ingConvFactor', title: '6. สัดส่วนแปลงหน่วย', text: 'ระบบจะช่วยแปลงให้ เช่น 1 กก. = 1000 กรัม', position: 'top' },
+          { target: '#ingPricePreview', title: '7. สรุปต้นทุนจริง', text: 'นี่คือต้นทุนต่อ 1 หน่วยทำสูตร ที่ระบบคำนวณให้คุณอัตโนมัติ!', position: 'top' }
+        ]);
+      }, 300);
+    }
+  }, 80);
 };
 
 window.deleteIngredient = function (id) {
