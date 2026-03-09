@@ -92,8 +92,8 @@ function renderMenus(container) {
               ${cost > 0 ? `<div style="font-size:11px;color:var(--warning);margin-top:2px">${_settings.calcMethod === 'markup' ? t('suggested_price_markup') : t('suggested_price')} <strong>${formatPrice(cost / 0.3)}</strong></div>` : ''}
             </div>
             ${m.sellingPrice ? `<div style="text-align:right">
-              <div style="font-size:11px;color:var(--text-muted)">Tax 8%: <b style="color:var(--text)">${formatPrice(m.sellingPrice * 1.08)}</b></div>
-              <div style="font-size:11px;color:var(--text-muted)">10%: <b style="color:var(--text)">${formatPrice(m.sellingPrice * 1.10)}</b></div>
+              <div style="font-size:11px;color:var(--text-muted)">Tax ${_settings.taxTakeOut}%: <b style="color:var(--text)">${formatPrice(m.sellingPrice * (1 + _settings.taxTakeOut / 100))}</b></div>
+              <div style="font-size:11px;color:var(--text-muted)">${_settings.taxDineIn}%: <b style="color:var(--text)">${formatPrice(m.sellingPrice * (1 + _settings.taxDineIn / 100))}</b></div>
             </div>` : ''}
           </div>
           <div class="menu-list-actions">
@@ -139,7 +139,7 @@ function renderMenus(container) {
             <div style="font-weight:600">${m.sellingPrice ? formatPrice(m.sellingPrice) : '-'}</div>
 
             ${cost > 0 ? `<div style="font-size:11px;color:var(--warning);margin-top:2px">${_settings.calcMethod === 'markup' ? t('suggested_price_markup') : t('suggested_price')} <strong>${formatPrice(cost / 0.3)}</strong></div>` : ''}
-            ${m.sellingPrice ? `<div style="font-size:11px;color:var(--text-muted);margin-top:2px">Tax 8%: <b style="color:var(--text)">${formatPrice(m.sellingPrice * 1.08)}</b> | 10%: <b style="color:var(--text)">${formatPrice(m.sellingPrice * 1.10)}</b></div>` : ''}
+            ${m.sellingPrice ? `<div style="font-size:11px;color:var(--text-muted);margin-top:2px">Tax ${_settings.taxTakeOut}%: <b style="color:var(--text)">${formatPrice(m.sellingPrice * (1 + _settings.taxTakeOut / 100))}</b> | ${_settings.taxDineIn}%: <b style="color:var(--text)">${formatPrice(m.sellingPrice * (1 + _settings.taxDineIn / 100))}</b></div>` : ''}
           </div>
         </div>
         <button class="btn btn-ghost btn-sm w-full mt-4" onclick="Router.navigate('recipes');setTimeout(()=>setRecipeMenu(${m.id}),80)">
@@ -282,7 +282,7 @@ window.openMenuModal = function (id = null) {
           gpColor = gp >= 60 ? 'var(--success)' : gp >= 40 ? 'var(--warning)' : 'var(--danger)';
         }
         const gpLabel = _settings.calcMethod === 'markup' ? 'Cost' : 'Margin';
-        html += `${gpLabel} <strong style="color:${gpColor}">${gp}%</strong> &nbsp;|&nbsp; Tax 8%: <strong style="color:var(--text)">${formatPrice(sp * 1.08)}</strong> &nbsp;|&nbsp; 10%: <strong style="color:var(--text)">${formatPrice(sp * 1.10)}</strong><br>`;
+        html += `${gpLabel} <strong style="color:${gpColor}">${gp}%</strong> &nbsp;|&nbsp; Tax ${_settings.taxTakeOut}%: <strong style="color:var(--text)">${formatPrice(sp * (1 + _settings.taxTakeOut / 100))}</strong> &nbsp;|&nbsp; ${_settings.taxDineIn}%: <strong style="color:var(--text)">${formatPrice(sp * (1 + _settings.taxDineIn / 100))}</strong><br>`;
       }
       if (cost > 0) {
         html += `<span style="color:var(--warning);font-size:12px">${_settings.calcMethod === 'markup' ? t('suggested_price_markup') : t('suggested_price')} <strong>${formatPrice(cost / 0.3)}</strong></span>`;
@@ -380,7 +380,7 @@ window.openMenuModal = function (id = null) {
           gpColor = gp >= 60 ? 'var(--success)' : gp >= 40 ? 'var(--warning)' : 'var(--danger)';
         }
         const gpLabel = _settings.calcMethod === 'markup' ? 'Cost' : 'Margin';
-        html += `${gpLabel} <strong style="color:${gpColor}">${gp}%</strong> &nbsp;|&nbsp; Tax 8%: <strong style="color:var(--text)">${formatPrice(sp * 1.08)}</strong> &nbsp;|&nbsp; 10%: <strong style="color:var(--text)">${formatPrice(sp * 1.10)}</strong><br>`;
+        html += `${gpLabel} <strong style="color:${gpColor}">${gp}%</strong> &nbsp;|&nbsp; Tax ${_settings.taxTakeOut}%: <strong style="color:var(--text)">${formatPrice(sp * (1 + _settings.taxTakeOut / 100))}</strong> &nbsp;|&nbsp; ${_settings.taxDineIn}%: <strong style="color:var(--text)">${formatPrice(sp * (1 + _settings.taxDineIn / 100))}</strong><br>`;
       }
       if (setCost > 0) {
         html += `<span style="color:var(--warning);font-size:12px">${_settings.calcMethod === 'markup' ? t('suggested_price_markup') : t('suggested_price')} <strong>${formatPrice(setCost / 0.3)}</strong></span>`;
