@@ -71,8 +71,8 @@ function renderSets(container) {
                 ${gp ? `<div style="font-size:12px;color:${gpColor};font-weight:700">${gpLabel} ${gp}%</div>` : ''}
               </div>
               ${s.sellingPrice ? `<div style="text-align:right">
-                <div style="font-size:11px;color:var(--text-muted)">Tax 8%: <b style="color:var(--text)">${formatPrice(s.sellingPrice * 1.08)}</b></div>
-                <div style="font-size:11px;color:var(--text-muted)">10%: <b style="color:var(--text)">${formatPrice(s.sellingPrice * 1.10)}</b></div>
+                <div style="font-size:11px;color:var(--text-muted)">Tax ${_settings.taxTakeOut}%: <b style="color:var(--text)">${formatPrice(s.sellingPrice * (1 + _settings.taxTakeOut / 100))}</b></div>
+                <div style="font-size:11px;color:var(--text-muted)">${_settings.taxDineIn}%: <b style="color:var(--text)">${formatPrice(s.sellingPrice * (1 + _settings.taxDineIn / 100))}</b></div>
               </div>` : ''}
             </div>
             <div class="menu-list-actions">
@@ -133,7 +133,7 @@ function renderSets(container) {
                 <div style="font-size:11px;color:var(--text-faint)">${t('menu_selling')}</div>
                 <div style="font-weight:600">${s.sellingPrice ? formatPrice(s.sellingPrice) : '-'}</div>
                 ${gp ? `<div style="font-size:12px;color:${gpColor};font-weight:700">${gpLabel} ${gp}%</div>` : ''}
-                ${s.sellingPrice ? `<div style="font-size:11px;color:var(--text-muted);margin-top:2px">Tax 8%: <b style="color:var(--text)">${formatPrice(s.sellingPrice * 1.08)}</b> | 10%: <b style="color:var(--text)">${formatPrice(s.sellingPrice * 1.10)}</b></div>` : ''}
+                ${s.sellingPrice ? `<div style="font-size:11px;color:var(--text-muted);margin-top:2px">Tax ${_settings.taxTakeOut}%: <b style="color:var(--text)">${formatPrice(s.sellingPrice * (1 + _settings.taxTakeOut / 100))}</b> | ${_settings.taxDineIn}%: <b style="color:var(--text)">${formatPrice(s.sellingPrice * (1 + _settings.taxDineIn / 100))}</b></div>` : ''}
               </div>
             </div>
           </div>`;
@@ -220,7 +220,7 @@ window.openSetModal = function (id = null) {
 
     // Tax string for 8% and 10%
     const taxHtml = sp > 0
-      ? ` &nbsp;|&nbsp; Tax 8%: <strong style="color:var(--text)">${formatPrice(sp * 1.08)}</strong> &nbsp;|&nbsp; 10%: <strong style="color:var(--text)">${formatPrice(sp * 1.10)}</strong>`
+      ? ` &nbsp;|&nbsp; Tax ${_settings.taxTakeOut}%: <strong style="color:var(--text)">${formatPrice(sp * (1 + _settings.taxTakeOut / 100))}</strong> &nbsp;|&nbsp; ${_settings.taxDineIn}%: <strong style="color:var(--text)">${formatPrice(sp * (1 + _settings.taxDineIn / 100))}</strong>`
       : '';
 
     const suggestHtml = c > 0 ? `<br><span style="color:var(--warning);font-size:12px;margin-top:4px;display:inline-block">${_settings.calcMethod === 'markup' ? t('suggested_price_markup') : t('suggested_price')} <strong>${formatPrice(c / 0.3)}</strong></span>` : '';
