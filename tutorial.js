@@ -128,133 +128,133 @@ const Tutorial = {
             // Update Popover content
             document.getElementById('tutorial-title').innerHTML = step.title;
             document.getElementById('tutorial-text').innerHTML = step.text;
-            document.getElementById('tutorial-counter').innerText = \`\${this.currentStepIndex + 1} / \${this.steps.length}\`;
-      
-      const nextBtn = document.getElementById('tutorial-next-btn');
-      if (this.currentStepIndex === this.steps.length - 1) {
-        nextBtn.innerText = t('tut_finish') || 'เสร็จสิ้น';
-      } else {
-        nextBtn.innerText = t('tut_next') || 'ถัดไป';
-      }
+            document.getElementById('tutorial-counter').innerText = `${this.currentStepIndex + 1} / ${this.steps.length}`;
 
-      // Position Popover
-      this.positionPopover(targetEl, step.position || 'bottom');
-    }, 150); // Small delay to allow Modals to open
-  },
+            const nextBtn = document.getElementById('tutorial-next-btn');
+            if (this.currentStepIndex === this.steps.length - 1) {
+                nextBtn.innerText = t('tut_finish') || 'เสร็จสิ้น';
+            } else {
+                nextBtn.innerText = t('tut_next') || 'ถัดไป';
+            }
 
-  positionPopover: function (targetEl, placement) {
-    const popover = document.getElementById('tutorial-popover');
-    const arrow = document.getElementById('tutorial-arrow');
-    const targetRect = targetEl.getBoundingClientRect();
-    const scrollY = window.scrollY || window.pageYOffset;
-    const scrollX = window.scrollX || window.pageXOffset;
-    
-    // Quick sizing read
-    popover.style.opacity = '0';
-    popover.style.transform = 'translateY(0)';
-    
-    const popRect = popover.getBoundingClientRect();
-    const margin = 12;
-    let top = 0;
-    let left = 0;
-    
-    // Calculate position
-    switch (placement) {
-      case 'top':
-        top = targetRect.top + scrollY - popRect.height - margin;
-        left = targetRect.left + scrollX + (targetRect.width / 2) - (popRect.width / 2);
-        // Arrow
-        arrow.style.borderWidth = '10px 10px 0 10px';
-        arrow.style.borderTopColor = 'var(--bg)';
-        arrow.style.bottom = '-10px';
-        arrow.style.top = 'auto';
-        arrow.style.left = 'calc(50% - 10px)';
-        break;
-      case 'bottom':
-        top = targetRect.bottom + scrollY + margin;
-        left = targetRect.left + scrollX + (targetRect.width / 2) - (popRect.width / 2);
-        // Arrow
-        arrow.style.borderWidth = '0 10px 10px 10px';
-        arrow.style.borderBottomColor = 'var(--bg)';
-        arrow.style.top = '-10px';
-        arrow.style.bottom = 'auto';
-        arrow.style.left = 'calc(50% - 10px)';
-        break;
-      case 'left':
-        top = targetRect.top + scrollY + (targetRect.height / 2) - (popRect.height / 2);
-        left = targetRect.left + scrollX - popRect.width - margin;
-        // Arrow
-        arrow.style.borderWidth = '10px 0 10px 10px';
-        arrow.style.borderLeftColor = 'var(--bg)';
-        arrow.style.right = '-10px';
-        arrow.style.left = 'auto';
-        arrow.style.top = 'calc(50% - 10px)';
-        break;
-      case 'right':
-        top = targetRect.top + scrollY + (targetRect.height / 2) - (popRect.height / 2);
-        left = targetRect.right + scrollX + margin;
-        // Arrow
-        arrow.style.borderWidth = '10px 10px 10px 0';
-        arrow.style.borderRightColor = 'var(--bg)';
-        arrow.style.left = '-10px';
-        arrow.style.right = 'auto';
-        arrow.style.top = 'calc(50% - 10px)';
-        break;
+            // Position Popover
+            this.positionPopover(targetEl, step.position || 'bottom');
+        }, 150); // Small delay to allow Modals to open
+    },
+
+    positionPopover: function (targetEl, placement) {
+        const popover = document.getElementById('tutorial-popover');
+        const arrow = document.getElementById('tutorial-arrow');
+        const targetRect = targetEl.getBoundingClientRect();
+        const scrollY = window.scrollY || window.pageYOffset;
+        const scrollX = window.scrollX || window.pageXOffset;
+
+        // Quick sizing read
+        popover.style.opacity = '0';
+        popover.style.transform = 'translateY(0)';
+
+        const popRect = popover.getBoundingClientRect();
+        const margin = 12;
+        let top = 0;
+        let left = 0;
+
+        // Calculate position
+        switch (placement) {
+            case 'top':
+                top = targetRect.top + scrollY - popRect.height - margin;
+                left = targetRect.left + scrollX + (targetRect.width / 2) - (popRect.width / 2);
+                // Arrow
+                arrow.style.borderWidth = '10px 10px 0 10px';
+                arrow.style.borderTopColor = 'var(--bg)';
+                arrow.style.bottom = '-10px';
+                arrow.style.top = 'auto';
+                arrow.style.left = 'calc(50% - 10px)';
+                break;
+            case 'bottom':
+                top = targetRect.bottom + scrollY + margin;
+                left = targetRect.left + scrollX + (targetRect.width / 2) - (popRect.width / 2);
+                // Arrow
+                arrow.style.borderWidth = '0 10px 10px 10px';
+                arrow.style.borderBottomColor = 'var(--bg)';
+                arrow.style.top = '-10px';
+                arrow.style.bottom = 'auto';
+                arrow.style.left = 'calc(50% - 10px)';
+                break;
+            case 'left':
+                top = targetRect.top + scrollY + (targetRect.height / 2) - (popRect.height / 2);
+                left = targetRect.left + scrollX - popRect.width - margin;
+                // Arrow
+                arrow.style.borderWidth = '10px 0 10px 10px';
+                arrow.style.borderLeftColor = 'var(--bg)';
+                arrow.style.right = '-10px';
+                arrow.style.left = 'auto';
+                arrow.style.top = 'calc(50% - 10px)';
+                break;
+            case 'right':
+                top = targetRect.top + scrollY + (targetRect.height / 2) - (popRect.height / 2);
+                left = targetRect.right + scrollX + margin;
+                // Arrow
+                arrow.style.borderWidth = '10px 10px 10px 0';
+                arrow.style.borderRightColor = 'var(--bg)';
+                arrow.style.left = '-10px';
+                arrow.style.right = 'auto';
+                arrow.style.top = 'calc(50% - 10px)';
+                break;
+        }
+
+        // Keep within bounds
+        if (left < 10) left = 10;
+        if (left + popRect.width > window.innerWidth - 10) left = window.innerWidth - popRect.width - 10;
+        if (top < scrollY + 10) top = scrollY + 10;
+
+        // Only adjust top if it bleeds out bottom on mobile
+        if (top + popRect.height > scrollY + window.innerHeight - 10) {
+            top = Math.max(scrollY + 10, scrollY + window.innerHeight - popRect.height - 10);
+        }
+
+        popover.style.top = `${top}px`;
+        popover.style.left = `${left}px`;
+
+        // Show with animation
+        requestAnimationFrame(() => {
+            popover.style.opacity = '1';
+        });
+    },
+
+    next: function () {
+        this.currentStepIndex++;
+        if (this.currentStepIndex >= this.steps.length) {
+            this.stop();
+        } else {
+            this.showStep();
+        }
+    },
+
+    stop: function () {
+        this.isActive = false;
+
+        // Clean up highlights
+        document.querySelectorAll('.tutorial-highlight').forEach(el => {
+            el.classList.remove('tutorial-highlight');
+            el.style.position = el.dataset.origPos || '';
+            el.style.zIndex = el.dataset.origZ || '';
+            el.style.background = el.dataset.origBg || '';
+            delete el.dataset.origPos;
+            delete el.dataset.origZ;
+            delete el.dataset.origBg;
+        });
+
+        const backdrop = document.getElementById('tutorial-backdrop');
+        const popover = document.getElementById('tutorial-popover');
+
+        if (backdrop) {
+            backdrop.style.opacity = '0';
+            setTimeout(() => backdrop.style.display = 'none', 300);
+        }
+        if (popover) {
+            popover.style.opacity = '0';
+            popover.style.transform = 'translateY(10px)';
+            setTimeout(() => popover.style.display = 'none', 300);
+        }
     }
-
-    // Keep within bounds
-    if (left < 10) left = 10;
-    if (left + popRect.width > window.innerWidth - 10) left = window.innerWidth - popRect.width - 10;
-    if (top < scrollY + 10) top = scrollY + 10;
-    
-    // Only adjust top if it bleeds out bottom on mobile
-    if (top + popRect.height > scrollY + window.innerHeight - 10) {
-       top = Math.max(scrollY + 10, scrollY + window.innerHeight - popRect.height - 10);
-    }
-
-    popover.style.top = \`\${top}px\`;
-    popover.style.left = \`\${left}px\`;
-    
-    // Show with animation
-    requestAnimationFrame(() => {
-      popover.style.opacity = '1';
-    });
-  },
-
-  next: function () {
-    this.currentStepIndex++;
-    if (this.currentStepIndex >= this.steps.length) {
-      this.stop();
-    } else {
-      this.showStep();
-    }
-  },
-
-  stop: function () {
-    this.isActive = false;
-    
-    // Clean up highlights
-    document.querySelectorAll('.tutorial-highlight').forEach(el => {
-      el.classList.remove('tutorial-highlight');
-      el.style.position = el.dataset.origPos || '';
-      el.style.zIndex = el.dataset.origZ || '';
-      el.style.background = el.dataset.origBg || '';
-      delete el.dataset.origPos;
-      delete el.dataset.origZ;
-      delete el.dataset.origBg;
-    });
-
-    const backdrop = document.getElementById('tutorial-backdrop');
-    const popover = document.getElementById('tutorial-popover');
-    
-    if (backdrop) {
-      backdrop.style.opacity = '0';
-      setTimeout(() => backdrop.style.display = 'none', 300);
-    }
-    if (popover) {
-      popover.style.opacity = '0';
-      popover.style.transform = 'translateY(10px)';
-      setTimeout(() => popover.style.display = 'none', 300);
-    }
-  }
 };
