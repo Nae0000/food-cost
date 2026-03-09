@@ -128,10 +128,10 @@ function renderReceipts(container) {
             <div>
               <label style="display:flex; align-items:center; gap:6px; cursor:pointer;">
                 <input type="checkbox" id="rcSelectAll" checked onchange="rcToggleAll(this.checked)" style="accent-color:var(--primary);width:16px;height:16px;" />
-                เลือกทั้งหมด
+                ${t('sys_rc_select_all')}
               </label>
             </div>
-            <div id="parsedCountTop">พบ ${_parsed.length} รายการ</div>
+            <div id="parsedCountTop">${t('sys_rc_found').replace('{n}', _parsed.length)}</div>
          </div>
        `);
       headBar.dataset.init = '1';
@@ -220,28 +220,28 @@ function renderReceipts(container) {
   // ---- Render page HTML ----
   container.innerHTML = [
     '<div class="page-header">',
-    '  <div><div class="page-title">🧾 สแกนใบเสร็จ (OCR)</div>',
-    '  <div class="page-subtitle">ถ่ายรูปหรืออัพโหลดใบเสร็จ — ระบบอ่านชื่อสินค้าและราคาอัตโนมัติ</div></div>',
+    '  <div><div class="page-title">${t("sys_rc_title")}</div>',
+    '  <div class="page-subtitle">${t("sys_rc_sub")}</div></div>',
     '</div>',
 
     '<div class="card" style="margin-bottom:20px" id="stepUpload">',
-    '  <div style="font-weight:700;font-size:15px;margin-bottom:16px;color:var(--primary)">① อัพโหลดรูปใบเสร็จ</div>',
+    '  <div style="font-weight:700;font-size:15px;margin-bottom:16px;color:var(--primary)">${t("sys_rc_step1")}</div>',
     '  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">',
     '    <div id="imgArea" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;height:240px;">',
     '      <label for="rcFileCam" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;border:2px dashed var(--border);border-radius:var(--r-lg);cursor:pointer;color:var(--text-muted);background:var(--bg);transition:all 0.2s" onmouseenter="this.style.borderColor=\'var(--primary)\'" onmouseleave="this.style.borderColor=\'var(--border)\'">',
     '        <span style="font-size:42px">📷</span>',
-    '        <div style="text-align:center"><div style="font-size:14px;font-weight:700">ถ่ายรูป</div><div style="font-size:12px;margin-top:4px">เปิดกล้องมือถือ</div></div>',
+    '        <div style="text-align:center"><div style="font-size:14px;font-weight:700">${t("sys_rc_camera")}</div><div style="font-size:12px;margin-top:4px">${t("sys_rc_camera_sub")}</div></div>',
     '        <input type="file" id="rcFileCam" accept="image/*" capture="environment" style="display:none" onchange="rcOnImg(event)" />',
     '      </label>',
     '      <label for="rcFile" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;border:2px dashed var(--border);border-radius:var(--r-lg);cursor:pointer;color:var(--text-muted);background:var(--bg);transition:all 0.2s" onmouseenter="this.style.borderColor=\'var(--primary)\'" onmouseleave="this.style.borderColor=\'var(--border)\'">',
     '        <span style="font-size:42px">🖼️</span>',
-    '        <div style="text-align:center"><div style="font-size:14px;font-weight:700">อัพโหลดรูป</div><div style="font-size:12px;margin-top:4px">เลือกจากอัลบั้ม</div></div>',
+    '        <div style="text-align:center"><div style="font-size:14px;font-weight:700">${t("sys_rc_upload")}</div><div style="font-size:12px;margin-top:4px">${t("sys_rc_upload_sub")}</div></div>',
     '        <input type="file" id="rcFile" accept="image/*" style="display:none" onchange="rcOnImg(event)" />',
     '      </label>',
     '    </div>',
     '    <div style="display:flex;flex-direction:column;gap:14px">',
-    '      <div><label class="form-label">📅 วันที่ซื้อ</label><input class="form-input" type="date" id="rcDate" value="' + _receiptDate + '" oninput="window._rcDate=this.value" /></div>',
-    '      <div><label class="form-label">🏪 ชื่อร้าน / ตลาด</label><input class="form-input" id="rcNote" placeholder="เช่น ตลาดสดท่าเรือ, Makro" oninput="window._rcNote=this.value" /></div>',
+    '      <div><label class="form-label">${t("sys_rc_date")}</label><input class="form-input" type="date" id="rcDate" value="' + _receiptDate + '" oninput="window._rcDate=this.value" /></div>',
+    '      <div><label class="form-label">${t("sys_rc_store")}</label><input class="form-input" id="rcNote" placeholder="${t(\'sys_rc_store_ph\')}" oninput="window._rcNote=this.value" /></div>',
     '    </div>',
     '  </div>',
     '</div>',
@@ -249,8 +249,8 @@ function renderReceipts(container) {
     '<div id="ocrProgress" style="display:none;margin-bottom:20px">',
     '  <div class="card" style="text-align:center;padding:36px">',
     '    <div style="font-size:40px;margin-bottom:12px">🔍</div>',
-    '    <div style="font-weight:700;font-size:16px;margin-bottom:8px">กำลังอ่านข้อความจากใบเสร็จ...</div>',
-    '    <div id="ocrStatus" style="font-size:13px;color:var(--text-muted);margin-bottom:16px">กำลังโหลด OCR engine...</div>',
+    '    <div style="font-weight:700;font-size:16px;margin-bottom:8px">${t("sys_rc_reading")}</div>',
+    '    <div id="ocrStatus" style="font-size:13px;color:var(--text-muted);margin-bottom:16px">Loading OCR engine...</div>',
     '    <div style="background:var(--bg);border-radius:99px;height:8px;overflow:hidden;max-width:300px;margin:0 auto">',
     '      <div id="ocrBar" style="height:100%;background:var(--primary);width:0%;transition:width 0.3s;border-radius:99px"></div>',
     '    </div>',
@@ -260,9 +260,9 @@ function renderReceipts(container) {
     '<div id="stepReview" style="display:none;margin-bottom:20px">',
     '  <div class="card">',
     '    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">',
-    '      <div style="font-weight:700;font-size:15px;color:var(--primary)">② ตรวจสอบรายการที่อ่านได้</div>',
+    '      <div style="font-weight:700;font-size:15px;color:var(--primary)">${t("sys_rc_step2")}</div>',
     '      <div style="display:flex;gap:8px;align-items:center">',
-    '        <button class="btn btn-ghost btn-sm" onclick="rcRescan()">🔄 สแกนใหม่</button>',
+    '        <button class="btn btn-ghost btn-sm" onclick="rcRescan()">🔄 ${t("sys_rc_rescan")}</button>',
     '      </div>',
     '    </div>',
     '    <div style="display:grid;grid-template-columns:1fr 2fr;gap:20px">',
@@ -271,15 +271,15 @@ function renderReceipts(container) {
     '        <div id="parsedRows" style="display:flex;flex-direction:column;gap:16px;"></div>',
     '        <div id="parsedSummary" style="margin-top:16px;padding:12px 14px;background:var(--bg);border-radius:var(--r-md);font-size:14px;box-shadow:0 1px 3px rgba(0,0,0,0.1)"></div>',
     '        <div style="display:flex;flex-wrap:wrap;gap:12px;justify-content:flex-end;margin-top:20px">',
-    '          <button class="btn btn-secondary" style="flex:1;min-width:120px" onclick="rcClear()">✕ ยกเลิก</button>',
-    '          <button class="btn btn-primary" style="flex:2;min-width:200px" onclick="rcSave()">✅ บันทึก &amp; อัพเดตวัตถุดิบ</button>',
+    '          <button class="btn btn-secondary" style="flex:1;min-width:120px" onclick="rcClear()">${t("sys_rc_cancel")}</button>',
+    '          <button class="btn btn-primary" style="flex:2;min-width:200px" onclick="rcSave()">${t("sys_rc_save")}</button>',
     '        </div>',
     '      </div>',
     '    </div>',
     '  </div>',
     '</div>',
 
-    '<div style="font-weight:700;font-size:16px;margin-bottom:14px;padding-top:8px;border-top:1px solid var(--border)">🗂 ประวัติใบเสร็จ</div>',
+    '<div style="font-weight:700;font-size:16px;margin-bottom:14px;padding-top:8px;border-top:1px solid var(--border)">${t("sys_rc_history")}</div>',
     '<div id="receiptHistory" style="display:flex;flex-direction:column;gap:12px"></div>'
   ].join('\n');
 
