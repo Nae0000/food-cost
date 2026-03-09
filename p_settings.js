@@ -203,6 +203,13 @@ function renderSettings(container) {
     const apiVal = document.getElementById('geminiApiInput')?.value;
     if (apiVal) _settings.geminiApiKey = apiVal.trim();
     else _settings.geminiApiKey = '';
+
+    const taxTakeOutVal = document.getElementById('taxTakeOut')?.value;
+    _settings.taxTakeOut = taxTakeOutVal && !isNaN(parseFloat(taxTakeOutVal)) ? parseFloat(taxTakeOutVal) : 8;
+
+    const taxDineInVal = document.getElementById('taxDineIn')?.value;
+    _settings.taxDineIn = taxDineInVal && !isNaN(parseFloat(taxDineInVal)) ? parseFloat(taxDineInVal) : 10;
+
     saveSettings(_settings);
     Toast.show(t('set_saved'));
     applyI18n();
