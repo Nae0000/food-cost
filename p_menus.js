@@ -88,7 +88,7 @@ function renderMenus(container) {
             <div style="text-align:right">
               <div style="font-size:11px;color:var(--text-faint)">${t('menu_selling')}</div>
               <div style="font-weight:600">${m.sellingPrice ? formatPrice(m.sellingPrice) : '-'}</div>
-              ${gp ? `<div style="font-size:12px;color:${gpColor};font-weight:700">${gpLabel} ${gp}%</div>` : ''}
+
               ${cost > 0 ? `<div style="font-size:11px;color:var(--warning);margin-top:2px">${_settings.calcMethod === 'markup' ? t('suggested_price_markup') : t('suggested_price')} <strong>${formatPrice(cost / 0.3)}</strong></div>` : ''}
             </div>
             ${m.sellingPrice ? `<div style="text-align:right">
@@ -137,7 +137,7 @@ function renderMenus(container) {
           <div style="text-align:right">
             <div style="font-size:11px;color:var(--text-faint)">${t('menu_selling')}</div>
             <div style="font-weight:600">${m.sellingPrice ? formatPrice(m.sellingPrice) : '-'}</div>
-            ${gp ? `<div style="font-size:12px;color:${gpColor};font-weight:700">${gpLabel} ${gp}%</div>` : ''}
+
             ${cost > 0 ? `<div style="font-size:11px;color:var(--warning);margin-top:2px">${_settings.calcMethod === 'markup' ? t('suggested_price_markup') : t('suggested_price')} <strong>${formatPrice(cost / 0.3)}</strong></div>` : ''}
             ${m.sellingPrice ? `<div style="font-size:11px;color:var(--text-muted);margin-top:2px">Tax 8%: <b style="color:var(--text)">${formatPrice(m.sellingPrice * 1.08)}</b> | 10%: <b style="color:var(--text)">${formatPrice(m.sellingPrice * 1.10)}</b></div>` : ''}
           </div>
