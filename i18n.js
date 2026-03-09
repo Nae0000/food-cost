@@ -227,6 +227,7 @@ const TRANSLATIONS = {
         set_ai: 'AI สแกนและแปลใบเสร็จ',
         set_ai_desc: 'ใช้ปัญญาประดิษฐ์จาก Google Gemini ทายชื่อวัตถุดิบเป็นภาษาไทย ราคา และจำนวนอัตโนมัติ',
         set_gemini_key: 'Gemini API Key',
+        tut_skip: 'ข้าม', tut_next: 'ต่อไป', tut_finish: 'เสร็จสิ้น',
         // Common
         btn_save: 'บันทึก',
         btn_cancel: 'ยกเลิก',
@@ -360,6 +361,7 @@ const TRANSLATIONS = {
         set_ai: 'AI OCR & Translation',
         set_ai_desc: 'Use Google Gemini to automatically read receipts and translate ingredient names to Thai.',
         set_gemini_key: 'Gemini API Key',
+        tut_skip: 'Skip', tut_next: 'Next', tut_finish: 'Finish',
         btn_save: 'Save', btn_cancel: 'Cancel', btn_delete: 'Delete', btn_edit: 'Edit', btn_add: 'Add',
         btn_reset: 'Reset Data', btn_reset_confirm: '⚠️ Reset all data and reload sample data?',
         btn_reset_ok: 'Data reset successfully', page_not_found: 'Page not found',
@@ -487,6 +489,7 @@ const TRANSLATIONS = {
         set_ai: 'AI OCRと翻訳',
         set_ai_desc: 'Google Geminiを使用して、レシートを自動的に読み取り、原材料名をタイ語に翻訳します。',
         set_gemini_key: 'Gemini API Key',
+        tut_skip: 'スキップ', tut_next: '次へ', tut_finish: '完了',
         btn_save: '保存', btn_cancel: 'キャンセル', btn_delete: '削除', btn_edit: '編集', btn_add: '追加',
         btn_reset: 'データをリセット', btn_reset_confirm: '⚠️ すべてのデータをリセットしてサンプルデータを再読み込みしますか？',
         btn_reset_ok: 'データをリセットしました', page_not_found: 'ページが見つかりません',
