@@ -1,4 +1,4 @@
-﻿// ===================================================
+// ===================================================
 // i18n.js — Translations: Thai / English / Japanese
 // ===================================================
 
@@ -287,6 +287,16 @@ const TRANSLATIONS = {
         sys_rc_cancel: '✕ ยกเลิก',
         sys_rc_select_all: 'เลือกทั้งหมด',
         sys_rc_found: 'พบ {n} รายการ',
+        // Login
+        login_title_system: 'ระบบคิดต้นทุนอาหาร',
+        login_email_placeholder: 'อีเมล',
+        login_password_placeholder: 'รหัสผ่าน',
+        login_btn: 'เข้าสู่ระบบ',
+        login_or: 'หรือ',
+        login_google: 'เข้าสู่ระบบด้วย Google',
+        login_forgot_pwd: 'ลืมรหัสผ่าน?',
+        login_reset_pwd_msg: 'ระบบได้ทำการส่งลิงก์สำหรับรีเซ็ตรหัสผ่านไปยังอีเมลของคุณแล้ว กรุณาตรวจสอบกล่องจดหมาย',
+        login_reset_pwd_err_empty: 'กรุณากรอกอีเมลของคุณเพื่อทำการรีเซ็ตรหัสผ่าน',
     },
 
     en: {
@@ -456,6 +466,16 @@ const TRANSLATIONS = {
         sys_rc_cancel: '✕ Cancel',
         sys_rc_select_all: 'Select All',
         sys_rc_found: 'Found {n} items',
+        // Login
+        login_title_system: 'Food Cost System',
+        login_email_placeholder: 'Email',
+        login_password_placeholder: 'Password',
+        login_btn: 'Login',
+        login_or: 'OR',
+        login_google: 'Sign in with Google',
+        login_forgot_pwd: 'Forgot Password?',
+        login_reset_pwd_msg: 'A password reset link has been sent to your email. Please check your inbox.',
+        login_reset_pwd_err_empty: 'Please enter your email to reset the password.',
     },
 
     ja: {
@@ -628,6 +648,16 @@ const TRANSLATIONS = {
         sys_rc_cancel: '✕ キャンセル',
         sys_rc_select_all: 'すべて選択',
         sys_rc_found: '{n}件の項目が見つかりました',
+        // Login
+        login_title_system: 'フードコストシステム',
+        login_email_placeholder: 'Eメール',
+        login_password_placeholder: 'パスワード',
+        login_btn: 'ログイン',
+        login_or: 'または',
+        login_google: 'Googleでログイン',
+        login_forgot_pwd: 'パスワードをお忘れですか？',
+        login_reset_pwd_msg: 'パスワードリセットリンクを送信しました。受信トレイをご確認ください。',
+        login_reset_pwd_err_empty: 'パスワードをリセットするにはメールアドレスを入力してください。',
     }
 };
 
