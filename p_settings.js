@@ -13,12 +13,12 @@ function renderSettings(container) {
     document.getElementById('settingsContent').innerHTML = `
       <!-- Account Info -->
       <div class="card" style="margin-bottom:16px; border-color:var(--border)">
-        <div class="card-header"><div class="card-title">👤 บัญชีผู้ใช้ (Account)</div></div>
+        <div class="card-header"><div class="card-title">👤 ${t('set_account_title')}</div></div>
         <div style="display:flex;align-items:center;gap:14px;padding:12px;background:var(--bg);border-radius:var(--r-md);border:1px solid var(--border)">
           ${firebase.auth().currentUser?.photoURL ? `<img src="${firebase.auth().currentUser.photoURL}" style="width:40px;height:40px;border-radius:50%;border:2px solid var(--border-light)" alt="avatar">` : '<div style="width:40px;height:40px;border-radius:50%;background:var(--border-light);display:flex;align-items:center;justify-content:center;font-size:20px">👤</div>'}
           <div style="flex:1">
-            <div style="font-weight:700;font-size:15px;color:var(--text)">${firebase.auth().currentUser?.displayName || 'ผู้ใช้งานระบบ'}</div>
-            <div style="font-size:13px;color:var(--text-muted)">${firebase.auth().currentUser?.email || 'ยังไม่ได้เข้าสู่ระบบ'}</div>
+            <div style="font-weight:700;font-size:15px;color:var(--text)">${firebase.auth().currentUser?.displayName || t('set_account_guest')}</div>
+            <div style="font-size:13px;color:var(--text-muted)">${firebase.auth().currentUser?.email || ''}</div>
           </div>
           <button class="btn btn-sm btn-ghost" style="border-color:var(--danger);color:var(--danger)" onclick="handleLogout()">
             🚪 ออกจากระบบ
@@ -62,13 +62,13 @@ function renderSettings(container) {
               onclick="selectCalcMethod('margin')" id="calc-margin" style="width:100%;text-align:left;padding:8px 12px"
               title="Margin: ((ราคาขาย - ต้นทุน) / ราคาขาย) × 100">
               <div style="font-weight:bold;font-size:13px">${t('set_calc_margin') || 'Margin'}</div>
-              <div style="font-size:10px;color:var(--text-muted);margin-top:2px">((ราคาขาย-ทุน) / ราคาขาย) × 100</div>
+              <div style="font-size:10px;color:var(--text-muted);margin-top:2px">${t('set_calc_margin_desc')}</div>
             </button>
             <button class="lang-btn calc-btn ${_settings.calcMethod === 'markup' ? 'lang-active cur-active' : ''}"
               onclick="selectCalcMethod('markup')" id="calc-markup" style="width:100%;text-align:left;padding:8px 12px"
               title="Markup: (ต้นทุน / ราคาขาย) × 100">
               <div style="font-weight:bold;font-size:13px">${t('set_calc_markup') || 'Markup'}</div>
-              <div style="font-size:10px;color:var(--text-muted);margin-top:2px">(ต้นทุน / ราคาขาย) × 100</div>
+              <div style="font-size:10px;color:var(--text-muted);margin-top:2px">${t('set_calc_markup_desc')}</div>
             </button>
           </div>
         </div>
@@ -162,25 +162,25 @@ function renderSettings(container) {
         <div class="card" style="margin-bottom:0; height:100%">
           <div class="card-header"><div class="card-title">🤖 Gemini AI</div></div>
           <div class="form-group" style="margin-bottom:0">
-            <label class="form-label" style="font-weight:600;font-size:12px">API Key (แสกนใบเสร็จ)</label>
+            <label class="form-label" style="font-weight:600;font-size:12px">${t('set_gemini_api')}</label>
             <input type="password" class="form-input" id="geminiApiInput" value="${_settings.geminiApiKey || ''}" placeholder="AIzaSy..." style="height:32px;font-size:13px" />
           </div>
         </div>
 
         <!-- Data & Backup -->
         <div class="card" style="margin-bottom:0; height:100%; border-color:var(--primary)">
-          <div class="card-header" style="margin-bottom:12px"><div class="card-title">💾 ${t('settings_data')}</div></div>
+          <div class="card-header" style="margin-bottom:12px"><div class="card-title">💾 ${t('settings_data') || 'Data and Backup'}</div></div>
           <div style="display:flex;gap:8px;flex-wrap:wrap">
             <button class="btn btn-sm btn-secondary" style="flex:1;min-width:80px;padding:4px" onclick="DataSync.exportCSV()">📋 CSV</button>
-            <button class="btn btn-sm btn-secondary" style="flex:1;min-width:80px;padding:4px" onclick="DataSync.exportJSON()">📤 ทำสำรอง</button>
-            <button class="btn btn-sm btn-secondary" style="border-color:var(--primary);color:var(--primary);flex:1;min-width:80px;padding:4px" onclick="document.getElementById('importFile').click()">📥 นำเข้า</button>
+            <button class="btn btn-sm btn-secondary" style="flex:1;min-width:80px;padding:4px" onclick="DataSync.exportJSON()">${t('set_data_backup')}</button>
+            <button class="btn btn-sm btn-secondary" style="border-color:var(--primary);color:var(--primary);flex:1;min-width:80px;padding:4px" onclick="document.getElementById('importFile').click()">${t('set_data_import')}</button>
             <input type="file" id="importFile" accept=".json" style="display:none" onchange="handleImportFile(event)" />
           </div>
           <hr style="margin:12px 0; border:none; border-top:1px solid var(--border-light)">
           <div style="display:flex;align-items:center;justify-content:space-between">
-            <div style="font-size:12px; color:var(--text-muted);">ลบสูตร/ราคาเริ่มใหม่</div>
+            <div style="font-size:12px; color:var(--text-muted);">${t('set_data_erase_desc')}</div>
             <button class="btn btn-sm btn-secondary" style="border-color:var(--danger); color:var(--danger); background:rgba(239,68,68,0.05); padding:4px 8px" onclick="if(confirm('🚨 ยืนยันว่าจะลบข้อมูลทั้งหมด? ข้อมูลจะไม่สามารถกู้คืนได้')) { DB.reset(); if(typeof SEED !== 'undefined') SEED.run(); Toast.show('รีเซ็ตข้อมูลแล้ว'); if(typeof Router !== 'undefined') Router.render(); }">
-              🗑️ ล้างข้อมูล
+              ${t('set_data_erase_btn')}
             </button>
           </div>
         </div>
