@@ -155,18 +155,18 @@ function renderReceipts(container) {
       } else {
         var ddItems = '';
         for (var j = 0; j < ings.length; j++) {
-          ddItems += '<div class="dropdown-item" onclick="rcLink(' + i + ',' + ings[j].id + ')" style="padding:10px 12px;cursor:pointer;font-size:13px;border-bottom:1px solid var(--border-light)">'
-            + '<div style="font-weight:600">' + ings[j].name + '</div>'
-            + '<div style="color:var(--text-muted);font-size:11px">' + (ings[j].group || '') + ' · ' + (ings[j].recipeUnit || ings[j].buyUnit) + '</div>'
+          ddItems += '<div class="dropdown-item" onclick="rcLink(' + i + ',' + ings[j].id + ')" style="padding:10px 12px;cursor:pointer;font-size:13px;border-bottom:1px solid rgba(255,255,255,0.07);background:transparent;transition:background 0.15s" onmouseenter="this.style.background=\'rgba(255,255,255,0.08)\'" onmouseleave="this.style.background=\'transparent\'">'
+            + '<div style="font-weight:600;color:var(--text)">' + ings[j].name + '</div>'
+            + '<div style="color:var(--text-muted);font-size:11px;margin-top:2px">' + (ings[j].group || '') + ' · ' + (ings[j].recipeUnit || ings[j].buyUnit) + '</div>'
             + '</div>';
         }
-        ddItems += '<div class="dropdown-item" onclick="rcLinkNew(' + i + ')" style="padding:12px;cursor:pointer;font-size:13px;color:var(--primary);font-weight:700;background:var(--primary)11">'
+        ddItems += '<div class="dropdown-item" onclick="rcLinkNew(' + i + ')" style="padding:12px;cursor:pointer;font-size:13px;color:var(--primary);font-weight:700;border-top:1px solid rgba(255,255,255,0.07);transition:background 0.15s" onmouseenter="this.style.background=\'rgba(255,255,255,0.08)\'" onmouseleave="this.style.background=\'transparent\'">'
           + '➕ เพิ่มเป็นวัตถุดิบใหม่'
           + '</div>';
         linkedHtml = '<div style="position:relative; margin-top:12px;">'
           + '<div style="font-size:12px; color:var(--text-muted); margin-bottom:6px;">🔗 ผูกกับวัตถุดิบในระบบ:</div>'
           + '<input class="form-input" style="font-size:14px; width:100%" id="rcls' + i + '" placeholder="ค้นหาวัตถุดิบ..." oninput="rcFilter(' + i + ')" onfocus="rcShow(' + i + ')" autocomplete="off" />'
-          + '<div id="rcdd' + i + '" style="display:none;position:absolute;width:100%; top:65px; background:var(--surface);border:1px solid var(--border);border-radius:var(--r-md);max-height:220px;overflow-y:auto;z-index:99999;box-shadow:0 8px 24px rgba(0,0,0,.3)">'
+          + '<div id="rcdd' + i + '" style="display:none;position:absolute;width:100%; top:65px; background:#1e2536;border:1px solid rgba(255,255,255,0.15);border-radius:var(--r-md);max-height:220px;overflow-y:auto;z-index:99999;box-shadow:0 12px 40px rgba(0,0,0,0.6)">'
           + ddItems
           + '</div></div>';
       }
