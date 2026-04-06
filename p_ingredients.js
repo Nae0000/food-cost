@@ -48,64 +48,108 @@ function renderIngredients(container) {
     const body = document.getElementById('ingCardBody');
     if (!body) return;
 
-    if (!ings.length) {
-      body.innerHTML = `<div class="empty-state"><div class="empty-icon">🧂</div><div class="empty-title">${t('ing_empty')}</div></div>`;
+    if (!ings.length && !search && filterGroup === 'ทั้งหมด') {
+      body.innerHTML = `
+        <div class="empty-state">
+          <div class="empty-icon">📝</div>
+          <div class="empty-title">เริ่มต้นเพิ่มวัตถุดิบง่ายๆ</div>
+          <div style="color:var(--text-muted);font-size:13px;max-width:300px;margin:8px auto;line-height:1.5;">
+            พิมพ์ที่ช่องด้านบนได้เลย เช่น <br/><b>"หมูสามชั้น 1 กก. 200"</b> แล้วกด Enter
+          </div>
+        </div>`;
       return;
     }
 
-    body.innerHTML = ings.map(ing => {
+    let html = `
+      <div style="overflow-x:auto; background:var(--surface); border:1px solid var(--border); border-radius:var(--r-md);">
+      <table style="width:100%; border-collapse:collapse; min-width:800px; font-size:14px; text-align:left;">
+        <thead>
+          <tr style="border-bottom:1px solid var(--border); background:var(--bg);">
+            <th style="padding:12px; width:40px; text-align:center;">
+              <input type="checkbox" id="selectAllCb" onchange="toggleSelectAll(this.checked)" style="accent-color:var(--primary);cursor:pointer;width:15px;height:15px" />
+            </th>
+            <th style="padding:12px 8px; width:25%;">ชื่อวัตถุดิบ</th>
+            <th style="padding:12px 8px; width:12%;">หมวดหมู่</th>
+            <th style="padding:12px 8px; width:22%;">ปริมาณ / ซื้อ/ ใช้</th>
+            <th style="padding:12px 8px; width:13%;">ราคารวม</th>
+            <th style="padding:12px 8px; width:16%;">เฉลี่ยต่อหน่วย</th>
+            <th style="padding:12px 8px; width:10%; text-align:center;">⋮</th>
+          </tr>
+        </thead>
+        <tbody>
+    `;
+
+    if (ings.length === 0) {
+      html += `<tr><td colspan="7" style="padding:24px;text-align:center;color:var(--text-faint);">ไม่พบข้อมูล</td></tr>`;
+    }
+
+    ings.forEach(ing => {
       const price = DB.effectivePrice(ing);
-      const gc = GROUP_COLORS[ing.group] || { bg: '#33415522', color: '#64748b', emoji: '🧂' };
-      const modeColor = ing.priceMode === 'webhook' ? '#8b5cf6' : ing.priceMode === 'custom' ? '#22c55e' : ing.priceMode === 'sub_recipe' ? '#7c3aed' : '#f59e0b';
-      const modeLabel = ing.priceMode === 'webhook' ? '🔗 Webhook' : ing.priceMode === 'custom' ? '🎯 Custom' : ing.priceMode === 'sub_recipe' ? '🧪 Sub-Recipe' : '✏️ Manual';
-      const buyInfo = ing.priceMode === 'sub_recipe'
-        ? `<span style="color:#7c3aed;font-size:11px">🧪 → ${formatPrice(price)}/${ing.subYieldUnit || ing.recipeUnit || ing.buyUnit}</span>`
-        : (ing.buyQty && ing.buyPrice)
-          ? `<span style="color:var(--text-faint);font-size:11px">ซื้อ ${ing.buyQty}${ing.buyUnit} ${formatPrice(ing.buyPrice)} → ${formatPrice(price)}/${ing.recipeUnit || ing.buyUnit}</span>`
-          : '';
       const isSelected = selectedIds.has(ing.id);
-
-      // Suggested min price
-      const suggestHtml = price > 0
-        ? `<span style="font-size:10px;color:var(--text-faint);margin-top:2px">💡 ขายขั้นต่ำ ${formatPrice(price / 0.3)}</span>`
-        : '';
-
-      return `<div class="ing-card${isSelected ? ' ing-card--selected' : ''}" onclick="ingCardClick(event,${ing.id})">
-        <div class="ing-card__left">
-          <input type="checkbox" class="ing-select-cb" value="${ing.id}" ${isSelected ? 'checked' : ''} onchange="toggleSelectIng(${ing.id})" style="accent-color:var(--primary);cursor:pointer;width:16px;height:16px;flex-shrink:0" onclick="event.stopPropagation()" />
-          <div class="ing-card__avatar" style="background:${gc.bg};color:${gc.color}">${gc.emoji}</div>
-          <div class="ing-card__info">
-            <div class="ing-card__name">${ing.name}</div>
-            <div class="ing-card__meta">
-              <span class="ing-card__group" style="background:${gc.bg};color:${gc.color}">${ing.group || 'อื่นๆ'}</span>
-              <span class="ing-card__mode" style="background:${modeColor}22;color:${modeColor}">${modeLabel}</span>
-              <span style="color:var(--text-faint);font-size:11px">${ing.recipeUnit || ing.buyUnit || ''}</span>
+      const gc = GROUP_COLORS[ing.group] || { bg: '#33415522', color: '#64748b', emoji: '🧂' };
+      
+      const modeIndicator = ing.priceMode === 'webhook' ? '🟣' : ing.priceMode === 'sub_recipe' ? '🧪' : ing.priceMode === 'custom' ? '🎯' : '';
+      
+      html += `
+        <tr style="border-bottom:1px solid var(--border-light); background:${isSelected ? 'rgba(14,165,233,0.05)' : 'transparent'}; transition:background 0.2s;">
+          <td style="padding:12px; text-align:center;">
+            <input type="checkbox" class="ing-select-cb" value="${ing.id}" ${isSelected ? 'checked' : ''} onchange="toggleSelectIng(${ing.id})" style="accent-color:var(--primary);cursor:pointer;width:15px;height:15px" />
+          </td>
+          <td style="padding:8px;">
+            <div style="display:flex; align-items:center; gap:8px;">
+              <span style="font-size:16px;">${gc.emoji}</span>
+              <input type="text" class="inline-input" value="${ing.name}" onchange="inlineEditIng(${ing.id}, 'name', this.value)" style="width:100%; font-weight:600;"/>
+              ${modeIndicator ? `<span style="font-size:12px;" title="${ing.priceMode}">${modeIndicator}</span>` : ''}
             </div>
-            ${buyInfo ? `<div style="margin-top:3px">${buyInfo}</div>` : ''}
-          </div>
-        </div>
-        <div class="ing-card__right">
-          <div class="ing-card__price">${formatPrice(price)}<span class="ing-card__unit">/${ing.recipeUnit || ing.buyUnit}</span></div>
-          ${suggestHtml}
-          <div class="ing-card__actions">
-            <button class="ing-action-btn" onclick="event.stopPropagation();duplicateIngredient(${ing.id})" title="คัดลอก" style="color:var(--accent)">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          </td>
+          <td style="padding:8px;">
+            <select class="inline-select" onchange="inlineEditIng(${ing.id}, 'group', this.value)" style="color:${gc.color};">
+              ${customGroups.map(g => `<option value="${g.name}" ${ing.group === g.name ? 'selected' : ''}>${g.name}</option>`).join('')}
+              <option value="อื่นๆ" ${!customGroups.find(g=>g.name===ing.group)?'selected':''}>อื่นๆ</option>
+            </select>
+          </td>
+          <td style="padding:8px;">
+            <div style="display:flex; align-items:center; gap:4px; max-width:180px;">
+              <input type="number" class="inline-input" value="${ing.buyQty || 1}" onchange="inlineEditIng(${ing.id}, 'buyQty', this.value)" style="width:50px; text-align:right;" step="0.01"/>
+              <select class="inline-select" onchange="inlineEditIng(${ing.id}, 'buyUnit', this.value)" style="width:65px;">
+                ${BUY_UNITS.map(u => `<option value="${u}" ${ing.buyUnit === u ? 'selected' : ''}>${u}</option>`).join('')}
+              </select>
+              <span style="color:var(--text-faint);">→</span>
+              <select class="inline-select" onchange="inlineEditIng(${ing.id}, 'recipeUnit', this.value)" style="width:65px; color:var(--text-muted);">
+                ${RECIPE_UNITS.map(u => `<option value="${u}" ${(ing.recipeUnit || ing.buyUnit) === u ? 'selected' : ''}>${u}</option>`).join('')}
+              </select>
+            </div>
+            ${ing.convFactor && ing.convFactor !== 1 ? `<div style="font-size:10px;color:var(--primary);margin-top:2px;">* 1 ${ing.buyUnit} = ${ing.convFactor} ${ing.recipeUnit}</div>` : ''}
+          </td>
+          <td style="padding:8px;">
+            <input type="number" class="inline-input" value="${ing.buyPrice || 0}" onchange="inlineEditIng(${ing.id}, 'buyPrice', this.value)" style="width:80px; text-align:right; font-weight:600;" step="0.01"/>
+          </td>
+          <td style="padding:12px 8px; font-weight:700; color:var(--primary);">
+            ${formatPrice(price)}<span style="font-size:11px; color:var(--text-muted); font-weight:400;"> /${ing.recipeUnit || ing.buyUnit}</span>
+          </td>
+          <td style="padding:12px 8px; text-align:center; position:relative;">
+            <button class="btn btn-icon btn-ghost btn-sm" onclick="toggleIngMenu(event, ${ing.id})" style="color:var(--text-muted);">
+              ⋮
             </button>
-            <button class="ing-action-btn" onclick="event.stopPropagation();openIngredientModal(${ing.id})" title="แก้ไข" style="color:var(--primary)">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-            </button>
-            <button class="ing-action-btn" onclick="event.stopPropagation();deleteIngredient(${ing.id})" title="ลบ" style="color:var(--danger)">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>
-            </button>
-          </div>
-        </div>
-      </div>`;
-    }).join('');
+            <div id="ingMenu-${ing.id}" class="ing-context-menu" style="display:none;">
+              <div class="menu-item" onclick="openIngredientModal(${ing.id})">⚙️ ตั้งค่าขั้นสูง</div>
+              ${ing.priceMode === 'sub_recipe' ? `<div class="menu-item" onclick="openSubRecipeModal(${ing.id})">🧪 แก้ไขสูตรย่อย</div>` : `<div class="menu-item" onclick="setPriceMode(${ing.id}, 'sub_recipe')">🧪 แปลงเป็นสูตรย่อย</div>`}
+              <div class="menu-item" onclick="duplicateIngredient(${ing.id})">📑 คัดลอก</div>
+              <div class="menu-item" style="color:var(--danger);" onclick="deleteIngredient(${ing.id})">🗑 ลบ</div>
+            </div>
+          </td>
+        </tr>
+      `;
+    });
 
-    const bulkBtn = document.getElementById('bulkDeleteBtn');
+    html += `</tbody></table></div>`;
+    body.innerHTML = html;
+
     const isAllSelected = ings.length > 0 && ings.every(i => selectedIds.has(i.id));
     const selectAllCb = document.getElementById('selectAllCb');
     if (selectAllCb) selectAllCb.checked = isAllSelected;
+
+    const bulkBtn = document.getElementById('bulkDeleteBtn');
     if (bulkBtn) {
       if (selectedIds.size > 0) {
         bulkBtn.style.display = 'inline-flex';
@@ -125,11 +169,17 @@ function renderIngredients(container) {
       <div style="display:flex;gap:10px;align-items:center">
         <span id="ingCount" style="font-size:13px;color:var(--text-muted)"></span>
         <button id="bulkDeleteBtn" class="btn btn-sm" style="display:none;background:var(--danger);color:white;border:none" onclick="deleteSelectedIngredients()"></button>
-        <button class="btn btn-primary" onclick="openIngredientModal()">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          ${t('ing_add')}
-        </button>
       </div>
+    </div>
+
+    <!-- Smart Quick-Add Bar -->
+    <div style="background:linear-gradient(135deg,rgba(14,165,233,0.1),rgba(14,165,233,0.02)); border:1px solid var(--primary); border-radius:var(--r-md); padding:12px; margin-bottom:16px;">
+      <div style="font-size:12px; color:var(--primary); font-weight:600; margin-bottom:6px;">⚡️ Quick Add (กรอกบรรทัดเดียว)</div>
+      <div style="display:flex; gap:8px;">
+        <input type="text" id="quickAddInput" class="form-input" placeholder='ตย. หมูสามชั้น 1 กก. 200' style="flex:1; border-color:var(--primary);" onkeydown="if(event.key==='Enter') window.processQuickAdd(this.value)" />
+        <button class="btn btn-primary" onclick="window.processQuickAdd(document.getElementById('quickAddInput').value)">Enter</button>
+      </div>
+      <div style="font-size:11px; color:var(--text-muted); margin-top:6px;">ระบบจะจับ คู่ "ชื่อ ปริมาณ หน่วย ราคา" ให้อัตโนมัติ</div>
     </div>
 
     <!-- Category filter tabs -->
@@ -137,23 +187,23 @@ function renderIngredients(container) {
       <div class="filter-tabs" style="margin-bottom:0; flex:1; overflow-x:auto;">
         ${GROUPS_LIST.map(g => `<button class="filter-tab${g === filterGroup ? ' active' : ''}" onclick="ingFilterGroup('${g}',this)">${g}</button>`).join('')}
       </div>
-      <button class="btn btn-ghost btn-sm" style="margin-left:12px; white-space:nowrap; color:var(--text-muted);" onclick="openManageGroupsModal()">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg> 
-        ${t('sys_manage_groups')}
-      </button>
+      <div style="display:flex; gap:8px;">
+        <button class="btn btn-ghost btn-sm" style="white-space:nowrap; color:var(--text-muted);" onclick="openManageGroupsModal()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg> 
+          ${t('sys_manage_groups')}
+        </button>
+        <button class="btn btn-ghost btn-sm" style="white-space:nowrap; color:var(--primary);" onclick="openIngredientModal()">
+          ⚙️ตั้งค่าขั้นสูง
+        </button>
+      </div>
     </div>
 
-    <!-- Search + select-all bar -->
-    <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
-      <div class="search-wrap" style="flex:1">
+    <!-- Search -->
+    <div style="margin-bottom:12px;">
+      <div class="search-wrap" style="width:100%">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
         <input class="search-input" id="ingSearch" placeholder="${t('ing_search')}" oninput="ingSearch(this.value)" />
       </div>
-      <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--text-muted);cursor:pointer;white-space:nowrap">
-        <input type="checkbox" id="selectAllCb" onchange="toggleSelectAll(this.checked)" style="accent-color:var(--primary);cursor:pointer;width:15px;height:15px" />
-        เลือกทั้งหมด
-      </label>
-    </div>
 
     <!-- Cards -->
     <div id="ingCardBody" style="display:flex;flex-direction:column;gap:10px"></div>`;
