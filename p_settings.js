@@ -17,11 +17,11 @@ function renderSettings(container) {
         <div style="display:flex;align-items:center;gap:14px;padding:12px;background:var(--bg);border-radius:var(--r-md);border:1px solid var(--border)">
           ${firebase.auth().currentUser?.photoURL ? `<img src="${firebase.auth().currentUser.photoURL}" style="width:40px;height:40px;border-radius:50%;border:2px solid var(--border-light)" alt="avatar">` : '<div style="width:40px;height:40px;border-radius:50%;background:var(--border-light);display:flex;align-items:center;justify-content:center;font-size:20px">👤</div>'}
           <div style="flex:1">
-            <div style="font-weight:700;font-size:15px;color:var(--text)">${firebase.auth().currentUser?.displayName || t('set_account_guest')}</div>
+            <div style="font-weight:700;font-size:15px;color:var(--text)">${(!firebase.auth().currentUser?.displayName || firebase.auth().currentUser?.displayName === 'ผู้ใช้งานระบบ') ? t('set_account_guest') : firebase.auth().currentUser.displayName}</div>
             <div style="font-size:13px;color:var(--text-muted)">${firebase.auth().currentUser?.email || ''}</div>
           </div>
           <button class="btn btn-sm btn-ghost" style="border-color:var(--danger);color:var(--danger)" onclick="handleLogout()">
-            🚪 ออกจากระบบ
+            ${t('set_logout')}
           </button>
         </div>
       </div>
