@@ -58,18 +58,36 @@ function renderSettings(container) {
         <div class="card" style="margin-bottom:0; height:100%">
           <div class="card-header"><div class="card-title">🧮 ${t('set_calc_method') || 'วิธีการคำนวณกำไร'}</div></div>
           <div style="display:flex;flex-direction:column;gap:8px">
-            <button class="lang-btn calc-btn ${_settings.calcMethod !== 'markup' ? 'lang-active cur-active' : ''}"
-              onclick="selectCalcMethod('margin')" id="calc-margin" style="width:100%;text-align:left;padding:8px 12px"
-              title="Margin: ((ราคาขาย - ต้นทุน) / ราคาขาย) × 100">
-              <div style="font-weight:bold;font-size:13px">${t('set_calc_margin') || 'Margin'}</div>
-              <div style="font-size:10px;color:var(--text-muted);margin-top:2px">${t('set_calc_margin_desc')}</div>
-            </button>
-            <button class="lang-btn calc-btn ${_settings.calcMethod === 'markup' ? 'lang-active cur-active' : ''}"
-              onclick="selectCalcMethod('markup')" id="calc-markup" style="width:100%;text-align:left;padding:8px 12px"
-              title="Markup: (ต้นทุน / ราคาขาย) × 100">
-              <div style="font-weight:bold;font-size:13px">${t('set_calc_markup') || 'Markup'}</div>
-              <div style="font-size:10px;color:var(--text-muted);margin-top:2px">${t('set_calc_markup_desc')}</div>
-            </button>
+            <div>
+              <button class="lang-btn calc-btn ${_settings.calcMethod !== 'markup' ? 'lang-active cur-active' : ''}"
+                onclick="selectCalcMethod('margin')" id="calc-margin" style="width:100%;text-align:left;padding:8px 12px"
+                title="Margin: ((ราคาขาย - ต้นทุน) / ราคาขาย) × 100">
+                <div style="font-weight:bold;font-size:13px">${t('set_calc_margin') || 'Margin'}</div>
+                <div style="font-size:10px;color:var(--text-muted);margin-top:2px">${t('set_calc_margin_desc')}</div>
+              </button>
+              <div class="form-group mt-2" style="display:${_settings.calcMethod !== 'markup' ? 'block' : 'none'};margin-bottom:0;margin-top:8px;" id="marginTargetGroup">
+                 <label class="form-label" style="font-weight:600;font-size:12px">${t('set_target_margin') || 'เป้าหมาย Margin (%)'}</label>
+                 <div style="display:flex;align-items:center;">
+                   <input type="number" class="form-input" id="targetMargin" value="${_settings.targetMargin || 65}" step="1" min="0" style="text-align:right;height:32px" />
+                   <div style="padding-left:8px;font-size:13px">%</div>
+                 </div>
+              </div>
+            </div>
+            <div>
+              <button class="lang-btn calc-btn ${_settings.calcMethod === 'markup' ? 'lang-active cur-active' : ''}"
+                onclick="selectCalcMethod('markup')" id="calc-markup" style="width:100%;text-align:left;padding:8px 12px"
+                title="Markup: (ต้นทุน / ราคาขาย) × 100">
+                <div style="font-weight:bold;font-size:13px">${t('set_calc_markup') || 'Markup'}</div>
+                <div style="font-size:10px;color:var(--text-muted);margin-top:2px">${t('set_calc_markup_desc')}</div>
+              </button>
+              <div class="form-group mt-2" style="display:${_settings.calcMethod === 'markup' ? 'block' : 'none'};margin-bottom:0;margin-top:8px;" id="markupTargetGroup">
+                 <label class="form-label" style="font-weight:600;font-size:12px">${t('set_target_cost') || 'เป้าหมายต้นทุน (%)'}</label>
+                 <div style="display:flex;align-items:center;">
+                   <input type="number" class="form-input" id="targetCost" value="${_settings.targetCost || 35}" step="1" min="0" style="text-align:right;height:32px" />
+                   <div style="padding-left:8px;font-size:13px">%</div>
+                 </div>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -226,6 +244,12 @@ function renderSettings(container) {
     });
     document.getElementById('calc-' + method)?.classList.add('cur-active');
     document.getElementById('calc-' + method)?.classList.add('lang-active');
+    
+    // Toggle input visibility
+    const marginGrp = document.getElementById('marginTargetGroup');
+    const markupGrp = document.getElementById('markupTargetGroup');
+    if (marginGrp) marginGrp.style.display = method !== 'markup' ? 'block' : 'none';
+    if (markupGrp) markupGrp.style.display = method === 'markup' ? 'block' : 'none';
   };
 
   window.saveSettingsPage = () => {
@@ -234,6 +258,12 @@ function renderSettings(container) {
     const apiVal = document.getElementById('geminiApiInput')?.value;
     if (apiVal) _settings.geminiApiKey = apiVal.trim();
     else _settings.geminiApiKey = '';
+
+    const targetMarginVal = document.getElementById('targetMargin')?.value;
+    _settings.targetMargin = targetMarginVal && !isNaN(parseFloat(targetMarginVal)) ? parseFloat(targetMarginVal) : 65;
+    
+    const targetCostVal = document.getElementById('targetCost')?.value;
+    _settings.targetCost = targetCostVal && !isNaN(parseFloat(targetCostVal)) ? parseFloat(targetCostVal) : 35;
 
     const taxTakeOutVal = document.getElementById('taxTakeOut')?.value;
     _settings.taxTakeOut = taxTakeOutVal && !isNaN(parseFloat(taxTakeOutVal)) ? parseFloat(taxTakeOutVal) : 8;

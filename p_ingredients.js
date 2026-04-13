@@ -6,10 +6,14 @@
 const RECIPE_UNITS = ['กก.', 'กรัม', 'ลิตร', 'มล.', 'กำ', 'ช้อนโต๊ะ', 'ช้อนชา', 'ชิ้น', 'ขวด', 'กล่อง', 'แพ็ค', 'ถุง'];
 const BUY_UNITS = ['กก.', 'กรัม', 'ลิตร', 'มล.', 'กำ', 'ขวด', 'กล่อง', 'แพ็ค', 'ถุง', 'ชิ้น', 'โหล'];
 
+// --- Inline edit re-render suppression ---
+let _ingInlineEditing = false;
+let _ingRenderPending = false;
+
 function renderIngredients(container) {
   let filterGroup = 'ทั้งหมด', search = '';
   // Load dynamic groups
-  let customGroups = DB.getAll('ingGroups');
+  let customGroups = DB.getAll('ingGroups') || [];
   if (customGroups.length === 0) {
     customGroups = [
       { id: 'temp1', name: 'เนื้อสัตว์', bg: '#ef444422', color: '#ef4444', emoji: '🥩' },
@@ -19,7 +23,7 @@ function renderIngredients(container) {
       { id: 'temp5', name: 'อื่นๆ', bg: '#64748b22', color: '#64748b', emoji: '📦' }
     ];
   }
-  const GROUPS_LIST = ['ทั้งหมด', ...customGroups.map(g => g.name)];
+  const GROUPS_LIST = [t('ing_group_all') || 'ทั้งหมด', ...customGroups.map(g => g.name)];
 
   let selectedIds = new Set();
 
@@ -37,24 +41,44 @@ function renderIngredients(container) {
   });
 
   function draw() {
+    // Suppress re-render if user is inline-editing
+    if (_ingInlineEditing) { _ingRenderPending = true; return; }
+
+    // Refresh groups in case they changed
+    customGroups = DB.getAll('ingGroups') || [];
+    if (customGroups.length === 0) {
+      customGroups = [
+        { id: 'temp1', name: 'เนื้อสัตว์', bg: '#ef444422', color: '#ef4444', emoji: '🥩' },
+        { id: 'temp2', name: 'ผัก/สมุนไพร', bg: '#22c55e22', color: '#22c55e', emoji: '🥬' },
+        { id: 'temp3', name: 'เครื่องปรุง', bg: '#f59e0b22', color: '#f59e0b', emoji: '🧄' },
+        { id: 'temp4', name: 'ของแห้ง', bg: '#8b5cf622', color: '#8b5cf6', emoji: '🌾' },
+        { id: 'temp5', name: 'อื่นๆ', bg: '#64748b22', color: '#64748b', emoji: '📦' }
+      ];
+    }
+    // Rebuild color map
+    customGroups.forEach(g => {
+      GROUP_COLORS[g.name] = { bg: g.bg || (g.color + '22'), color: g.color || '#64748b', emoji: g.emoji || '📦' };
+    });
+
     let ings = DB.getAll('ingredients');
-    if (filterGroup !== 'ทั้งหมด') ings = ings.filter(i => i.group === filterGroup);
-    if (search) ings = ings.filter(i => i.name.toLowerCase().includes(search.toLowerCase()) || (i.group || '').includes(search));
+    const allLabel = t('ing_group_all') || 'ทั้งหมด';
+    if (filterGroup !== 'ทั้งหมด' && filterGroup !== allLabel) ings = ings.filter(i => i.group === filterGroup);
+    if (search) ings = ings.filter(i => i.name.toLowerCase().includes(search.toLowerCase()) || (i.group || '').toLowerCase().includes(search.toLowerCase()));
 
     // Update count
     const countEl = document.getElementById('ingCount');
-    if (countEl) countEl.textContent = ings.length + ' รายการ';
+    if (countEl) countEl.textContent = t('ing_items').replace('{n}', ings.length);
 
     const body = document.getElementById('ingCardBody');
     if (!body) return;
 
-    if (!ings.length && !search && filterGroup === 'ทั้งหมด') {
+    if (!ings.length && !search && (filterGroup === 'ทั้งหมด' || filterGroup === allLabel)) {
       body.innerHTML = `
         <div class="empty-state">
           <div class="empty-icon">📝</div>
-          <div class="empty-title">เริ่มต้นเพิ่มวัตถุดิบง่ายๆ</div>
+          <div class="empty-title">${t('ing_empty_state_title')}</div>
           <div style="color:var(--text-muted);font-size:13px;max-width:300px;margin:8px auto;line-height:1.5;">
-            พิมพ์ที่ช่องด้านบนได้เลย เช่น <br/><b>"หมูสามชั้น 1 กก. 200"</b> แล้วกด Enter
+            ${t('ing_empty_state_desc')}
           </div>
         </div>`;
       return;
@@ -68,11 +92,11 @@ function renderIngredients(container) {
             <th style="padding:12px; width:40px; text-align:center;">
               <input type="checkbox" id="selectAllCb" onchange="toggleSelectAll(this.checked)" style="accent-color:var(--primary);cursor:pointer;width:15px;height:15px" />
             </th>
-            <th style="padding:12px 8px; width:25%;">ชื่อวัตถุดิบ</th>
-            <th style="padding:12px 8px; width:12%;">หมวดหมู่</th>
-            <th style="padding:12px 8px; width:22%;">ปริมาณ / ซื้อ/ ใช้</th>
-            <th style="padding:12px 8px; width:13%;">ราคารวม</th>
-            <th style="padding:12px 8px; width:16%;">เฉลี่ยต่อหน่วย</th>
+            <th style="padding:12px 8px; width:25%;">${t('ing_tb_name')}</th>
+            <th style="padding:12px 8px; width:12%;">${t('ing_tb_cat')}</th>
+            <th style="padding:12px 8px; width:22%;">${t('ing_tb_qty')}</th>
+            <th style="padding:12px 8px; width:13%;">${t('ing_tb_price')}</th>
+            <th style="padding:12px 8px; width:16%;">${t('ing_tb_avg')}</th>
             <th style="padding:12px 8px; width:10%; text-align:center;">⋮</th>
           </tr>
         </thead>
@@ -80,7 +104,7 @@ function renderIngredients(container) {
     `;
 
     if (ings.length === 0) {
-      html += `<tr><td colspan="7" style="padding:24px;text-align:center;color:var(--text-faint);">ไม่พบข้อมูล</td></tr>`;
+      html += `<tr><td colspan="7" style="padding:24px;text-align:center;color:var(--text-faint);">${t('ing_empty')}</td></tr>`;
     }
 
     ings.forEach(ing => {
@@ -89,42 +113,57 @@ function renderIngredients(container) {
       const gc = GROUP_COLORS[ing.group] || { bg: '#33415522', color: '#64748b', emoji: '🧂' };
       
       const modeIndicator = ing.priceMode === 'webhook' ? '🟣' : ing.priceMode === 'sub_recipe' ? '🧪' : ing.priceMode === 'custom' ? '🎯' : '';
+
+      // Escape name for safe HTML attribute
+      const escapedName = (ing.name || '').replace(/"/g, '&quot;').replace(/</g, '&lt;');
       
       html += `
-        <tr style="border-bottom:1px solid var(--border-light); background:${isSelected ? 'rgba(14,165,233,0.05)' : 'transparent'}; transition:background 0.2s;">
+        <tr data-ing-id="${ing.id}" style="border-bottom:1px solid var(--border-light); background:${isSelected ? 'rgba(14,165,233,0.05)' : 'transparent'}; transition:background 0.2s;">
           <td style="padding:12px; text-align:center;">
             <input type="checkbox" class="ing-select-cb" value="${ing.id}" ${isSelected ? 'checked' : ''} onchange="toggleSelectIng(${ing.id})" style="accent-color:var(--primary);cursor:pointer;width:15px;height:15px" />
           </td>
           <td style="padding:8px;">
             <div style="display:flex; align-items:center; gap:8px;">
               <span style="font-size:16px;">${gc.emoji}</span>
-              <input type="text" class="inline-input" value="${ing.name}" onchange="inlineEditIng(${ing.id}, 'name', this.value)" style="width:100%; font-weight:600;"/>
+              <input type="text" class="inline-input" value="${escapedName}"
+                onfocus="_ingInlineEditing=true"
+                onblur="setTimeout(()=>{_ingInlineEditing=false;if(_ingRenderPending){_ingRenderPending=false;}},300)"
+                onchange="inlineEditIng(${ing.id}, 'name', this.value)"
+                style="width:100%; font-weight:600;"/>
               ${modeIndicator ? `<span style="font-size:12px;" title="${ing.priceMode}">${modeIndicator}</span>` : ''}
             </div>
           </td>
           <td style="padding:8px;">
             <select class="inline-select" onchange="inlineEditIng(${ing.id}, 'group', this.value)" style="color:${gc.color};">
               ${customGroups.map(g => `<option value="${g.name}" ${ing.group === g.name ? 'selected' : ''}>${g.name}</option>`).join('')}
-              <option value="อื่นๆ" ${!customGroups.find(g=>g.name===ing.group)?'selected':''}>อื่นๆ</option>
+              ${!customGroups.find(g=>g.name===ing.group) ? `<option value="${ing.group || 'อื่นๆ'}" selected>${ing.group || 'อื่นๆ'}</option>` : ''}
             </select>
           </td>
           <td style="padding:8px;">
-            <div style="display:flex; align-items:center; gap:4px; max-width:180px;">
-              <input type="number" class="inline-input" value="${ing.buyQty || 1}" onchange="inlineEditIng(${ing.id}, 'buyQty', this.value)" style="width:50px; text-align:right;" step="0.01"/>
-              <select class="inline-select" onchange="inlineEditIng(${ing.id}, 'buyUnit', this.value)" style="width:65px;">
+            <div style="display:flex; align-items:center; gap:4px; max-width:200px;">
+              <input type="number" class="inline-input" value="${ing.buyQty || 1}"
+                onfocus="_ingInlineEditing=true"
+                onblur="setTimeout(()=>{_ingInlineEditing=false;if(_ingRenderPending){_ingRenderPending=false;}},300)"
+                onchange="inlineEditIng(${ing.id}, 'buyQty', this.value)"
+                style="width:55px; text-align:right;" step="0.01" min="0.001"/>
+              <select class="inline-select" onchange="inlineEditIng(${ing.id}, 'buyUnit', this.value)" style="width:70px;">
                 ${BUY_UNITS.map(u => `<option value="${u}" ${ing.buyUnit === u ? 'selected' : ''}>${u}</option>`).join('')}
               </select>
-              <span style="color:var(--text-faint);">→</span>
-              <select class="inline-select" onchange="inlineEditIng(${ing.id}, 'recipeUnit', this.value)" style="width:65px; color:var(--text-muted);">
+              <span style="color:var(--text-faint);font-size:12px;">→</span>
+              <select class="inline-select" onchange="inlineEditIng(${ing.id}, 'recipeUnit', this.value)" style="width:70px; color:var(--text-muted);">
                 ${RECIPE_UNITS.map(u => `<option value="${u}" ${(ing.recipeUnit || ing.buyUnit) === u ? 'selected' : ''}>${u}</option>`).join('')}
               </select>
             </div>
-            ${ing.convFactor && ing.convFactor !== 1 ? `<div style="font-size:10px;color:var(--primary);margin-top:2px;">* 1 ${ing.buyUnit} = ${ing.convFactor} ${ing.recipeUnit}</div>` : ''}
+            ${ing.convFactor && ing.convFactor !== 1 ? `<div style="font-size:10px;color:var(--primary);margin-top:2px;">×${ing.convFactor}</div>` : ''}
           </td>
           <td style="padding:8px;">
-            <input type="number" class="inline-input" value="${ing.buyPrice || 0}" onchange="inlineEditIng(${ing.id}, 'buyPrice', this.value)" style="width:80px; text-align:right; font-weight:600;" step="0.01"/>
+            <input type="number" class="inline-input" value="${ing.buyPrice || 0}"
+              onfocus="_ingInlineEditing=true"
+              onblur="setTimeout(()=>{_ingInlineEditing=false;if(_ingRenderPending){_ingRenderPending=false;}},300)"
+              onchange="inlineEditIng(${ing.id}, 'buyPrice', this.value)"
+              style="width:85px; text-align:right; font-weight:600;" step="0.01" min="0"/>
           </td>
-          <td style="padding:12px 8px; font-weight:700; color:var(--primary);">
+          <td class="ing-avg-price" style="padding:12px 8px; font-weight:700; color:var(--primary);">
             ${formatPrice(price)}<span style="font-size:11px; color:var(--text-muted); font-weight:400;"> /${ing.recipeUnit || ing.buyUnit}</span>
           </td>
           <td style="padding:12px 8px; text-align:center; position:relative;">
@@ -132,10 +171,10 @@ function renderIngredients(container) {
               ⋮
             </button>
             <div id="ingMenu-${ing.id}" class="ing-context-menu" style="display:none;">
-              <div class="menu-item" onclick="openIngredientModal(${ing.id})">⚙️ ตั้งค่าขั้นสูง</div>
-              ${ing.priceMode === 'sub_recipe' ? `<div class="menu-item" onclick="openSubRecipeModal(${ing.id})">🧪 แก้ไขสูตรย่อย</div>` : `<div class="menu-item" onclick="setPriceMode(${ing.id}, 'sub_recipe')">🧪 แปลงเป็นสูตรย่อย</div>`}
-              <div class="menu-item" onclick="duplicateIngredient(${ing.id})">📑 คัดลอก</div>
-              <div class="menu-item" style="color:var(--danger);" onclick="deleteIngredient(${ing.id})">🗑 ลบ</div>
+              <div class="menu-item" onclick="openIngredientModal(${ing.id})">${t('ing_adv_settings')}</div>
+              ${ing.priceMode === 'sub_recipe' ? `<div class="menu-item" onclick="openSubRecipeModal(${ing.id})">${t('ing_edit_sub')}</div>` : `<div class="menu-item" onclick="setPriceMode(${ing.id}, 'sub_recipe')">${t('ing_convert_sub')}</div>`}
+              <div class="menu-item" onclick="duplicateIngredient(${ing.id})">${t('ing_copy')}</div>
+              <div class="menu-item" style="color:var(--danger);" onclick="deleteIngredient(${ing.id})">${t('ing_del')}</div>
             </div>
           </td>
         </tr>
@@ -153,7 +192,7 @@ function renderIngredients(container) {
     if (bulkBtn) {
       if (selectedIds.size > 0) {
         bulkBtn.style.display = 'inline-flex';
-        bulkBtn.innerHTML = `<span>🗑 ลบที่เลือก (${selectedIds.size})</span>`;
+        bulkBtn.innerHTML = `<span>${t('ing_del_selected')} (${selectedIds.size})</span>`;
       } else {
         bulkBtn.style.display = 'none';
       }
@@ -174,18 +213,18 @@ function renderIngredients(container) {
 
     <!-- Smart Quick-Add Bar -->
     <div style="background:linear-gradient(135deg,rgba(14,165,233,0.1),rgba(14,165,233,0.02)); border:1px solid var(--primary); border-radius:var(--r-md); padding:12px; margin-bottom:16px;">
-      <div style="font-size:12px; color:var(--primary); font-weight:600; margin-bottom:6px;">⚡️ Quick Add (กรอกบรรทัดเดียว)</div>
+      <div style="font-size:12px; color:var(--primary); font-weight:600; margin-bottom:6px;">${t('ing_qa_title')}</div>
       <div style="display:flex; gap:8px;">
-        <input type="text" id="quickAddInput" class="form-input" placeholder='ตย. หมูสามชั้น 1 กก. 200' style="flex:1; border-color:var(--primary);" onkeydown="if(event.key==='Enter') window.processQuickAdd(this.value)" />
+        <input type="text" id="quickAddInput" class="form-input" placeholder="${t('ing_qa_placeholder')}" style="flex:1; border-color:var(--primary);" onkeydown="if(event.key==='Enter') window.processQuickAdd(this.value)" />
         <button class="btn btn-primary" onclick="window.processQuickAdd(document.getElementById('quickAddInput').value)">Enter</button>
       </div>
-      <div style="font-size:11px; color:var(--text-muted); margin-top:6px;">ระบบจะจับ คู่ "ชื่อ ปริมาณ หน่วย ราคา" ให้อัตโนมัติ</div>
+      <div style="font-size:11px; color:var(--text-muted); margin-top:6px;">${t('ing_qa_hint')}</div>
     </div>
 
     <!-- Category filter tabs -->
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
       <div class="filter-tabs" style="margin-bottom:0; flex:1; overflow-x:auto;">
-        ${GROUPS_LIST.map(g => `<button class="filter-tab${g === filterGroup ? ' active' : ''}" onclick="ingFilterGroup('${g}',this)">${g}</button>`).join('')}
+        ${GROUPS_LIST.map((g, i) => `<button class="filter-tab${g === filterGroup || (i===0 && filterGroup==='ทั้งหมด') ? ' active' : ''}" onclick="ingFilterGroup('${i===0 ? 'ทั้งหมด' : g}',this)">${g}</button>`).join('')}
       </div>
       <div style="display:flex; gap:8px;">
         <button class="btn btn-ghost btn-sm" style="white-space:nowrap; color:var(--text-muted);" onclick="openManageGroupsModal()">
@@ -193,7 +232,7 @@ function renderIngredients(container) {
           ${t('sys_manage_groups')}
         </button>
         <button class="btn btn-ghost btn-sm" style="white-space:nowrap; color:var(--primary);" onclick="openIngredientModal()">
-          ⚙️ตั้งค่าขั้นสูง
+          ${t('ing_adv_settings')}
         </button>
       </div>
     </div>
@@ -218,6 +257,189 @@ function renderIngredients(container) {
   };
   window.ingSearch = (v) => { search = v; draw(); };
   window.ingCardClick = (e, id) => { openIngredientModal(id); };
+
+  // ========== INLINE EDIT — Edit ingredient fields directly in the table ==========
+  window.inlineEditIng = (id, field, value) => {
+    const ing = DB.getById('ingredients', id);
+    if (!ing) return;
+
+    // Suppress re-render while saving
+    _ingInlineEditing = true;
+
+    // Build update data
+    const update = {};
+    if (field === 'name') {
+      if (!value.trim()) { _ingInlineEditing = false; return; }
+      update.name = value.trim();
+    } else if (field === 'group') {
+      update.group = value;
+    } else if (field === 'buyQty') {
+      const q = parseFloat(value);
+      if (isNaN(q) || q <= 0) { _ingInlineEditing = false; return; }
+      update.buyQty = q;
+    } else if (field === 'buyUnit') {
+      update.buyUnit = value;
+      // Auto-set recipe unit and conversion factor
+      if (value === 'กก.' && ing.recipeUnit !== 'กก.') {
+        update.recipeUnit = 'กรัม';
+        update.convFactor = 1000;
+      } else if (value === 'ลิตร' && ing.recipeUnit !== 'ลิตร') {
+        update.recipeUnit = 'มล.';
+        update.convFactor = 1000;
+      }
+    } else if (field === 'recipeUnit') {
+      update.recipeUnit = value;
+    } else if (field === 'buyPrice') {
+      const p = parseFloat(value);
+      if (isNaN(p) || p < 0) { _ingInlineEditing = false; return; }
+      update.buyPrice = p;
+    } else {
+      update[field] = value;
+    }
+
+    // Calculate new effective price for history
+    const merged = { ...ing, ...update };
+    const newBuyPrice = Number(merged.buyPrice) || 0;
+    const newBuyQty = Number(merged.buyQty) || 1;
+    const newConvFactor = Number(merged.convFactor) || 1;
+    const newPrice = newBuyPrice > 0 && newBuyQty > 0 ? newBuyPrice / (newBuyQty * newConvFactor) : 0;
+    const oldPrice = DB.effectivePrice(ing);
+
+    // Save to DB
+    DB.update('ingredients', id, update);
+
+    // Record price history if price changed significantly
+    if (newPrice > 0 && Math.abs(newPrice - oldPrice) > 0.0001) {
+      DB.recordPriceHistory(id, newPrice, 'Inline Edit');
+    }
+
+    // Update the avg price cell in-place (no full re-render)
+    const updatedIng = DB.getById('ingredients', id);
+    if (updatedIng) {
+      const priceCell = document.querySelector(`tr[data-ing-id="${id}"] .ing-avg-price`);
+      if (priceCell) {
+        const ep = DB.effectivePrice(updatedIng);
+        priceCell.innerHTML = `${formatPrice(ep)}<span style="font-size:11px; color:var(--text-muted); font-weight:400;"> /${updatedIng.recipeUnit || updatedIng.buyUnit}</span>`;
+      }
+    }
+
+    // Visual save feedback on the row
+    const row = document.querySelector(`tr[data-ing-id="${id}"]`);
+    if (row) {
+      row.classList.add('inline-saved-flash');
+      setTimeout(() => row.classList.remove('inline-saved-flash'), 800);
+    }
+
+    // Release re-render lock after a short delay
+    setTimeout(() => {
+      _ingInlineEditing = false;
+      if (_ingRenderPending) {
+        _ingRenderPending = false;
+        draw();
+      }
+    }, 500);
+  };
+
+  // ========== CONTEXT MENU — Toggle the ⋮ dropdown menu ==========
+  window.toggleIngMenu = (event, id) => {
+    event.stopPropagation();
+    // Close all other menus first
+    document.querySelectorAll('.ing-context-menu').forEach(m => {
+      if (m.id !== `ingMenu-${id}`) m.style.display = 'none';
+    });
+    const menu = document.getElementById(`ingMenu-${id}`);
+    if (!menu) return;
+    menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+
+    // Close menu when clicking outside
+    const closeHandler = (e) => {
+      if (!menu.contains(e.target) && e.target !== event.target) {
+        menu.style.display = 'none';
+        document.removeEventListener('click', closeHandler);
+      }
+    };
+    if (menu.style.display === 'block') {
+      setTimeout(() => document.addEventListener('click', closeHandler), 10);
+    }
+  };
+
+  // ========== QUICK ADD — Parse text to create ingredient fast ==========
+  window.processQuickAdd = (text) => {
+    if (!text || !text.trim()) return;
+    const input = text.trim();
+
+    // Parse format: "name qty unit price" or just "name"
+    // Examples: "หมูสับ 1 กก. 120" or "หมูสับ" or "กุ้งขาว 1กก. 200"
+    let name = input, buyQty = 1, buyUnit = 'กก.', buyPrice = 0;
+    let group = customGroups.length > 0 ? customGroups[customGroups.length - 1].name : 'อื่นๆ';
+
+    // Try to extract price (last number in string)
+    const priceMatch = input.match(/\s+(\d+\.?\d*)\s*$/);
+    let remaining = input;
+    if (priceMatch) {
+      buyPrice = parseFloat(priceMatch[1]);
+      remaining = input.substring(0, priceMatch.index).trim();
+    }
+
+    // Try to extract quantity and unit
+    const qtyUnitMatch = remaining.match(/\s+(\d+\.?\d*)\s*(กก\.|กรัม|ลิตร|มล\.|กำ|ขวด|กล่อง|แพ็ค|ถุง|ชิ้น|โหล)/);
+    if (qtyUnitMatch) {
+      buyQty = parseFloat(qtyUnitMatch[1]);
+      buyUnit = qtyUnitMatch[2];
+      name = remaining.substring(0, qtyUnitMatch.index).trim();
+    } else {
+      // Try just a unit without space  e.g. "หมูสับ 1กก."
+      const qtyUnitMatch2 = remaining.match(/\s+(\d+\.?\d*)(กก\.|กรัม|ลิตร|มล\.|กำ|ขวด|กล่อง|แพ็ค|ถุง|ชิ้น|โหล)/);
+      if (qtyUnitMatch2) {
+        buyQty = parseFloat(qtyUnitMatch2[1]);
+        buyUnit = qtyUnitMatch2[2];
+        name = remaining.substring(0, qtyUnitMatch2.index).trim();
+      } else {
+        name = remaining;
+      }
+    }
+
+    if (!name) { Toast.show(t('ing_name_req') || 'กรุณาใส่ชื่อวัตถุดิบ', 'error'); return; }
+
+    // Auto-detect group from name
+    const groupMap = [
+      { keys: ['หมู', 'ไก่', 'เนื้อ', 'วัว', 'กุ้ง', 'ปลา', 'หมึก', 'หอย', 'ปู', 'ทะเล', 'เป็ด', 'ปีก', 'สะโพก', 'สันคอ', 'สันนอก'], group: 'เนื้อสัตว์' },
+      { keys: ['ผัก', 'ใบ', 'ต้น', 'หัว', 'สมุนไพร', 'กะเพรา', 'โหระพา', 'ตะไคร้', 'มะกรูด', 'ข่า', 'ขิง', 'พริก', 'มะนาว', 'มะเขือ', 'กะหล่ำ', 'แตง', 'ถั่ว', 'เห็ด'], group: 'ผัก/สมุนไพร' },
+      { keys: ['น้ำปลา', 'ซีอิ๊ว', 'ซอส', 'น้ำตาล', 'เกลือ', 'พริกไทย', 'ผงชูรส', 'กะทิ', 'น้ำมัน', 'เครื่องปรุง'], group: 'เครื่องปรุง' },
+      { keys: ['ข้าว', 'เส้น', 'แป้ง', 'วุ้น', 'พริกแกง', 'มาม่า', 'เกี๊ยว', 'ของแห้ง'], group: 'ของแห้ง' }
+    ];
+    for (const gm of groupMap) {
+      if (gm.keys.some(k => name.includes(k))) {
+        // Find the matching group in customGroups
+        const matchedGroup = customGroups.find(g => g.name === gm.group);
+        if (matchedGroup) { group = matchedGroup.name; break; }
+      }
+    }
+
+    // Set default recipe unit and conversion
+    let recipeUnit = buyUnit;
+    let convFactor = 1;
+    if (buyUnit === 'กก.') { recipeUnit = 'กรัม'; convFactor = 1000; }
+    else if (buyUnit === 'ลิตร') { recipeUnit = 'มล.'; convFactor = 1000; }
+
+    const data = {
+      name, group, buyUnit, buyQty, buyPrice,
+      recipeUnit, convFactor,
+      basePrice: 0, priceMode: 'manual',
+      customPrice: null, webhookPrice: null, lastUpdated: null
+    };
+
+    const inserted = DB.insert('ingredients', data);
+    const effectiveP = buyPrice > 0 && buyQty > 0 ? buyPrice / (buyQty * convFactor) : 0;
+    if (effectiveP > 0 && inserted) DB.recordPriceHistory(inserted.id, effectiveP, 'Quick Add');
+
+    // Clear input
+    const inp = document.getElementById('quickAddInput');
+    if (inp) { inp.value = ''; inp.focus(); }
+
+    Toast.show(`✅ เพิ่ม "${name}" สำเร็จ${buyPrice > 0 ? ` (${formatPrice(effectiveP)}/${recipeUnit})` : ''}`, 'success');
+    draw();
+  };
 
 
   window.toggleSelectIng = (id) => {

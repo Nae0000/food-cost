@@ -193,10 +193,68 @@ function renderDashboard(container) {
   const webhookIngs = ings.filter(i => i.priceMode === 'webhook').length;
   const customIngs = ings.filter(i => i.priceMode === 'custom').length;
   const colors = ['#f97316', '#0ea5e9', '#22c55e', '#8b5cf6'];
+
+  // --- Smart Price Adjustment Alert Logic ---
+  const calcMethod = _settings.calcMethod !== 'markup' ? 'margin' : 'markup';
+  const targetMargin = _settings.targetMargin || 65;
+  const targetCost = _settings.targetCost || 35;
+
+  const menusNeedingAdjustment = menusWithCost.filter(m => {
+    if (m.cost <= 0) return false;
+    let suggestedPrice = 0;
+    if (calcMethod === 'margin') {
+      suggestedPrice = m.cost / (1 - targetMargin / 100);
+    } else {
+      suggestedPrice = m.cost / (targetCost / 100);
+    }
+    const currentPrice = m.sellingPrice || 0;
+    // Suggest price if selling price is 0 or less than the target suggested price
+    if (currentPrice < suggestedPrice) {
+      m.suggestedPrice = suggestedPrice;
+      return true;
+    }
+    return false;
+  });
+
+  let alertHtml = '';
+  if (menusNeedingAdjustment.length > 0) {
+    alertHtml = `
+      <div class="alert-box" style="background:var(--danger-light, #fee2e2); color:var(--danger, #ef4444); padding:16px; border-radius:var(--r-md); border-left:4px solid var(--danger, #ef4444); margin-bottom:20px; display:flex; align-items:flex-start; gap:12px;">
+        <div style="font-size:24px; line-height:1;">⚠️</div>
+        <div style="flex:1;">
+          <div style="font-weight:700; font-size:16px; margin-bottom:4px; color:#991b1b;">${t('dash_alert_price_adj')}</div>
+          <div style="font-size:13px; margin-bottom:12px; color:#991b1b;">${t('dash_alert_price_adj_desc').replace('{n}', menusNeedingAdjustment.length)}</div>
+          <div style="display:flex; flex-direction:column; gap:8px;">
+            ${menusNeedingAdjustment.slice(0, 3).map(m => `
+              <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(255,255,255,0.7); padding:10px 14px; border-radius:6px;">
+                <div>
+                  <strong style="font-size:14px; color:var(--text);">${m.name}</strong>
+                  <div style="font-size:11px; color:var(--text-muted); margin-top:2px;">
+                    ${t('cost_label')}: ${formatPrice(m.cost)} | ${t('menu_selling_price')}: ${formatPrice(m.sellingPrice || 0)}
+                  </div>
+                </div>
+                <div style="text-align:right;">
+                  <div style="font-size:11px; color:var(--text-muted);">${t('dash_alert_suggested')}</div>
+                  <strong style="color:var(--danger, #ef4444); font-size:15px;">${formatPrice(m.suggestedPrice)}</strong>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+          ${menusNeedingAdjustment.length > 3 ? `<div style="font-size:12px; color:#991b1b; margin-top:10px; font-weight:600;">+ ${menusNeedingAdjustment.length - 3} เมนูอื่นๆ</div>` : ''}
+          <button class="btn btn-sm" style="margin-top:14px; background:var(--danger, #ef4444); color:white; border:none; font-weight:bold; padding:8px 16px; box-shadow:0 2px 4px rgba(239, 68, 68, 0.3);" onclick="Router.navigate('menus')">
+            👉 ${t('dash_alert_btn')}
+          </button>
+        </div>
+      </div>
+    `;
+  }
+  // ------------------------------------------
+
   container.innerHTML = `
     <div class="page-header">
       <div><div class="page-title">📊 ${t('dash_title')}</div><div class="page-subtitle">Food Cost Dashboard</div></div>
     </div>
+    ${alertHtml}
     <div class="grid-4 dashboard-stats">
       ${[{ l: t('dash_categories'), v: cats.length, i: '🏷️', c: colors[0] }, { l: t('dash_ingredients'), v: ings.length, i: '🧂', c: colors[1] },
     { l: t('dash_menus'), v: menus.length, i: '🍜', c: colors[2] }, { l: t('dash_recipes'), v: recipes.length, i: '📋', c: colors[3] }]

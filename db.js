@@ -29,9 +29,13 @@ const DB = {
           // Update local cache
           this._cache[col] = items;
 
-          // Re-render UI upon data change
+          // Re-render UI upon data change (skip if user is inline-editing)
           if (typeof Router !== 'undefined' && Router.render) {
-            Router.render();
+            if (typeof _ingInlineEditing !== 'undefined' && _ingInlineEditing) {
+              _ingRenderPending = true;
+            } else {
+              Router.render();
+            }
           }
         });
       this._listeners.push(unsub);

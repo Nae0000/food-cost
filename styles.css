@@ -29,6 +29,7 @@
   --bg-input: #0f172a;
   --border: #334155;
   --border-light: #1e293b;
+  --surface: #1e293b;
 
   --text: #f1f5f9;
   --text-muted: #94a3b8;
@@ -2736,5 +2737,301 @@ label,
 
   .ing-card__actions {
     opacity: 1;
+  }
+}
+
+/* ===================================================
+   INLINE EDITING — Ingredients Table
+   =================================================== */
+
+.inline-input {
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--r-sm);
+  padding: 4px 8px;
+  color: var(--text);
+  font-size: 14px;
+  font-family: inherit;
+  transition: all 0.2s ease;
+  outline: none;
+  width: 100%;
+  -moz-appearance: textfield;
+}
+
+.inline-input::-webkit-inner-spin-button,
+.inline-input::-webkit-outer-spin-button {
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.inline-input:hover::-webkit-inner-spin-button,
+.inline-input:hover::-webkit-outer-spin-button,
+.inline-input:focus::-webkit-inner-spin-button,
+.inline-input:focus::-webkit-outer-spin-button {
+  opacity: 1;
+}
+
+.inline-input:hover {
+  border-color: var(--border);
+  background: var(--bg-input);
+}
+
+.inline-input:focus {
+  border-color: var(--primary);
+  background: var(--bg-input);
+  box-shadow: 0 0 0 2px var(--primary-glow);
+}
+
+.inline-input.saving {
+  border-color: var(--success);
+  background: rgba(34, 197, 94, 0.05);
+}
+
+.inline-select {
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--r-sm);
+  padding: 4px 20px 4px 6px;
+  color: var(--text);
+  font-size: 13px;
+  font-family: inherit;
+  transition: all 0.2s ease;
+  outline: none;
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 4px center;
+}
+
+.inline-select:hover {
+  border-color: var(--border);
+  background-color: var(--bg-input);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 4px center;
+}
+
+.inline-select:focus {
+  border-color: var(--primary);
+  background-color: var(--bg-input);
+  box-shadow: 0 0 0 2px var(--primary-glow);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23f97316' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 4px center;
+}
+
+/* Context Menu */
+.ing-context-menu {
+  position: absolute;
+  right: 8px;
+  top: 100%;
+  min-width: 180px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  box-shadow: var(--shadow-lg);
+  z-index: 1000;
+  overflow: hidden;
+  animation: contextMenuIn 0.15s ease;
+}
+
+@keyframes contextMenuIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.ing-context-menu .menu-item {
+  padding: 10px 16px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.15s;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text);
+  white-space: nowrap;
+}
+
+.ing-context-menu .menu-item:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.ing-context-menu .menu-item:active {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* Ingredients table row hover */
+#ingCardBody tr:hover {
+  background: rgba(255, 255, 255, 0.02) !important;
+}
+
+#ingCardBody tr:hover .inline-input,
+#ingCardBody tr:hover .inline-select {
+  border-color: var(--border);
+  background: var(--bg-input);
+}
+
+/* ===================================================
+   INLINE EDITING — Ingredients Table
+   =================================================== */
+
+.inline-input {
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--r-sm);
+  padding: 5px 8px;
+  color: var(--text);
+  font-size: 14px;
+  font-family: inherit;
+  width: 100%;
+  transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
+  outline: none;
+}
+
+.inline-input:hover {
+  border-color: var(--border);
+  background: var(--bg-input);
+}
+
+.inline-input:focus {
+  border-color: var(--primary);
+  background: var(--bg-input);
+  box-shadow: 0 0 0 2px var(--primary-glow);
+}
+
+.inline-input[type="number"] {
+  -moz-appearance: textfield;
+}
+
+.inline-input[type="number"]::-webkit-inner-spin-button,
+.inline-input[type="number"]::-webkit-outer-spin-button {
+  opacity: 0;
+  height: 0;
+}
+
+.inline-input[type="number"]:hover::-webkit-inner-spin-button,
+.inline-input[type="number"]:hover::-webkit-outer-spin-button,
+.inline-input[type="number"]:focus::-webkit-inner-spin-button,
+.inline-input[type="number"]:focus::-webkit-outer-spin-button {
+  opacity: 1;
+  height: auto;
+}
+
+.inline-select {
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--r-sm);
+  padding: 5px 22px 5px 6px;
+  color: var(--text);
+  font-size: 13px;
+  font-family: inherit;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
+  outline: none;
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%2394a3b8' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 6px center;
+}
+
+.inline-select:hover {
+  border-color: var(--border);
+  background-color: var(--bg-input);
+}
+
+.inline-select:focus {
+  border-color: var(--primary);
+  background-color: var(--bg-input);
+  box-shadow: 0 0 0 2px var(--primary-glow);
+}
+
+.inline-select option {
+  background: var(--bg-card);
+  color: var(--text);
+  padding: 8px;
+}
+
+/* ===================================================
+   CONTEXT MENU — Ingredients ⋮ Dropdown
+   =================================================== */
+
+.ing-context-menu {
+  position: absolute;
+  top: 100%;
+  right: 8px;
+  z-index: 999;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  box-shadow: var(--shadow-lg);
+  min-width: 180px;
+  padding: 4px 0;
+  animation: contextMenuIn 0.15s ease;
+}
+
+@keyframes contextMenuIn {
+  from {
+    opacity: 0;
+    transform: translateY(-6px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.ing-context-menu .menu-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 14px;
+  font-size: 13px;
+  color: var(--text);
+  cursor: pointer;
+  transition: background 0.15s;
+  white-space: nowrap;
+}
+
+.ing-context-menu .menu-item:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.ing-context-menu .menu-item:active {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* Save flash animation */
+@keyframes inlineSaveFlash {
+  0% { background: rgba(34, 197, 94, 0.15); }
+  100% { background: transparent; }
+}
+
+.inline-saved-flash {
+  animation: inlineSaveFlash 0.8s ease forwards;
+}
+
+/* Mobile responsiveness for ingredients table */
+@media screen and (max-width: 768px) {
+  #ingCardBody table {
+    font-size: 12px !important;
+    min-width: 600px !important;
+  }
+  
+  .inline-input {
+    font-size: 12px;
+    padding: 3px 5px;
+  }
+  
+  .inline-select {
+    font-size: 11px;
+    padding: 3px 16px 3px 4px;
   }
 }
