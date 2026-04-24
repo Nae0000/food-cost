@@ -195,9 +195,10 @@ function renderMenus(container) {
       <div style="display:flex;align-items:center;gap:8px;margin-right:8px;background:var(--bg);padding:6px 10px;border-radius:var(--r-md)">
         <input type="checkbox" class="form-checkbox" onchange="menuSelectAll(this.checked)" title="Select All" />
       </div>
-      <div class="filter-tabs" style="margin-bottom:0">
+      <div class="filter-tabs" style="margin-bottom:0;flex:1">
         <button class="filter-tab active" onclick="menuFilterCat(0,this)">${t('menu_all')}</button>
         ${cats.map(c => `<button class="filter-tab" onclick="menuFilterCat(${c.id},this)">${c.icon} ${c.name}</button>`).join('')}
+        <button class="btn btn-sm btn-ghost" style="padding:4px 12px;font-size:12px;margin-left:auto;border:1px dashed var(--border);color:var(--text-muted);white-space:nowrap" onclick="openTagManagerModal()">⚙️ จัดการ Tag</button>
       </div>
       <div class="search-wrap" style="max-width:240px">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
@@ -788,3 +789,140 @@ window.importAirregiCSV = function () {
   input.click();
   setTimeout(() => input.remove(), 1000);
 };
+
+// ===================================================
+// TAG MANAGER (Formerly Categories)
+// ===================================================
+const CAT_COLORS = ['#f97316', '#0ea5e9', '#22c55e', '#8b5cf6', '#ef4444', '#f59e0b', '#ec4899', '#14b8a6'];
+
+window.openTagManagerModal = function() {
+  const cats = DB.getAll('categories');
+  const body = `
+    <div class="list-container" style="max-height:60vh;overflow-y:auto;padding-right:8px;margin-top:12px;">
+      ${cats.map(c => {
+        const cnt = DB.getAll('menus').filter(m => m.categoryId === c.id).length;
+        return \`<div class="category-list-row" style="position:relative;border:1px solid var(--border);border-radius:var(--r-md);margin-bottom:8px;padding:12px;background:var(--bg)">
+          <div style="display:flex;align-items:center;gap:12px">
+            <div class="category-list-icon" style="background:\${c.color}22;width:40px;height:40px;display:flex;align-items:center;justify-content:center;border-radius:12px;font-size:20px"><span>\${c.icon}</span></div>
+            <div style="flex:1">
+              <div style="font-weight:700;font-size:15px">\${c.name}</div>
+              <div style="font-size:12px;color:var(--text-muted)">\${cnt} \${t('cat_menus')}</div>
+            </div>
+            <div style="display:flex;gap:4px">
+              <button class="btn btn-icon btn-ghost btn-sm" onclick="openCategoryModal(\${c.id})">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+              </button>
+              <button class="btn btn-icon btn-sm" style="background:transparent;border:none;color:var(--danger)" onclick="deleteCategory(\${c.id})">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>
+              </button>
+            </div>
+          </div>
+        </div>\`;
+      }).join('')}
+      ${cats.length === 0 ? \`<div class="empty-state"><div class="empty-title">ยังไม่มี Tag</div></div>\` : ''}
+    </div>
+  `;
+  
+  Modal.open({
+    title: '🏷️ จัดการ Tag',
+    body: body,
+    footerHtml: `
+      <button class="btn btn-secondary" onclick="Modal.close()">${t('sys_close')}</button>
+      <button class="btn btn-primary" onclick="openCategoryModal()">${t('cat_add')}</button>
+    `
+  });
+};
+
+window.openCategoryModal = function (id = null) {
+  const cat = id ? DB.getById('categories', id) : null;
+  const sw = CAT_COLORS.map(c => \`<div class="color-swatch" style="background:\${c};\${cat?.color === c ? 'border-color:white;transform:scale(1.2)' : ''}"
+    onclick="document.getElementById('catColor').value='\${c}';document.querySelectorAll('.color-swatch').forEach(s=>{s.style.borderColor='var(--border)';s.style.transform=''});this.style.borderColor='white';this.style.transform='scale(1.2)'"></div>\`).join('');
+  Modal.open({
+    title: cat ? \`✏️ \${t('cat_edit')}\` : \`➕ \${t('cat_add_modal')}\`,
+    body: \`<div class="form-group"><label class="form-label">\${t('cat_name')} <span>*</span></label>
+      <input class="form-input" id="catName" value="\${cat?.name || ''}" placeholder="เช่น อาหารจานเดียว, ต้ม, ยำ..." autocomplete="off" /></div>
+      <div class="form-group"><label class="form-label">\${t('cat_icon')} <span style="font-size:12px; font-weight:normal; color:var(--text-muted);">(แนะนำอัตโนมัติตามชื่อ)</span></label>
+      <div style="display:flex; gap:10px; align-items:center;">
+        <input class="form-input" id="catIcon" value="\${cat?.icon || '🏷️'}" maxlength="4" style="font-size:24px;text-align:center;width:80px" />
+        <span style="font-size:12px; color:var(--text-muted); line-height:1.4;">พิมพ์ชื่อ Tag ที่ต้องการ<br>ระบบจะเลือก EMOJI ให้โดยอัตโนมัติ</span>
+      </div></div>
+      <div class="form-group"><label class="form-label">\${t('cat_color')}</label>
+      <input type="hidden" id="catColor" value="\${cat?.color || CAT_COLORS[0]}" /><div class="color-row">\${sw}</div></div>\`,
+    footerHtml: \`
+      <button class="btn btn-secondary" onclick="openTagManagerModal()">${t('btn_cancel')}</button>
+      <button class="btn btn-primary" id="modalConfirmBtn">${t('btn_save')}</button>
+    \`,
+    onConfirm() {
+      const name = document.getElementById('catName').value.trim();
+      if (!name) { Toast.show(t('cat_name_required'), 'error'); return; }
+      const data = { name, icon: document.getElementById('catIcon').value.trim() || '🏷️', color: document.getElementById('catColor').value };
+      if (id) DB.update('categories', id, data); else DB.insert('categories', data);
+      Toast.show(id ? t('cat_updated') : t('cat_saved')); 
+      Router.render(); // update menu page backgrounds
+      openTagManagerModal(); // reopen the tag manager
+    }
+  });
+
+  // Auto-Suggest EMOJI Logic
+  const catNameInput = document.getElementById('catName');
+  const catIconInput = document.getElementById('catIcon');
+  let userChangedIcon = false;
+
+  if (catIconInput) {
+    catIconInput.addEventListener('input', () => { userChangedIcon = true; });
+  }
+
+  if (catNameInput && catIconInput) {
+    catNameInput.addEventListener('input', (e) => {
+      if (userChangedIcon) return;
+      const val = e.target.value.toLowerCase();
+      const emojiMap = [
+        { keys: ['ต้ม', 'ซุป', 'soup'], emoji: '🍲' },
+        { keys: ['ผัด', 'stir'], emoji: '🥘' },
+        { keys: ['แกง', 'curry'], emoji: '🍛' },
+        { keys: ['ทอด', 'fried', 'กรอบ'], emoji: '🍳' },
+        { keys: ['ยำ', 'ตำ', 'สลัด', 'salad'], emoji: '🥗' },
+        { keys: ['น้ำ', 'เครื่องดื่ม', 'drink', 'beverage', 'ชง'], emoji: '🧃' },
+        { keys: ['หวาน', 'ขนม', 'dessert', 'cake', 'เค้ก'], emoji: '🍮' },
+        { keys: ['เนื้อ', 'สเต็ก', 'meat', 'beef'], emoji: '🥩' },
+        { keys: ['หมู', 'pork'], emoji: '🐷' },
+        { keys: ['ไก่', 'chicken'], emoji: '🍗' },
+        { keys: ['ปลา', 'fish'], emoji: '🐟' },
+        { keys: ['ทะเล', 'seafood', 'กุ้ง', 'หมึก', 'หอย', 'ปู'], emoji: '🦐' },
+        { keys: ['เส้น', 'ก๋วยเตี๋ยว', 'noodle', 'พาสต้า', 'สปาเก็ตตี้', 'มาม่า'], emoji: '🍜' },
+        { keys: ['ข้าว', 'rice', 'อาหารจานเดียว'], emoji: '🍚' },
+        { keys: ['ย่าง', 'ปิ้ง', 'grill', 'หมูกระทะ', 'บาร์บีคิว', 'สเต๊ะ'], emoji: '🍢' },
+        { keys: ['ผลไม้', 'fruit'], emoji: '🍉' },
+        { keys: ['กาแฟ', 'coffee'], emoji: '☕' },
+        { keys: ['ชา', 'tea'], emoji: '🍵' },
+        { keys: ['เบียร์', 'เหล้า', 'แอลกอฮอล์', 'alcohol', 'beer', 'wine', 'ค็อกเทล'], emoji: '🍺' },
+        { keys: ['ไอศกรีม', 'ไอติม', 'ice cream', 'บิงซู'], emoji: '🍦' },
+        { keys: ['อบ', 'bake', 'เบเกอรี่', 'ขนมปัง'], emoji: '🥐' },
+        { keys: ['พิซซ่า', 'pizza'], emoji: '🍕' },
+        { keys: ['เบอร์เกอร์', 'burger', 'แฮมเบอร์เกอร์'], emoji: '🍔' },
+        { keys: ['ญี่ปุ่น', 'ซูชิ', 'sushi', 'ซาซิมิ'], emoji: '🍣' },
+        { keys: ['เกาหลี', 'korean'], emoji: '🍱' },
+        { keys: ['มังสวิรัติ', 'เจ', 'vegan', 'vegetarian', 'ผัก'], emoji: '🥦' },
+        { keys: ['พิเศษ', 'แนะนำ', 'special', 'recommend', 'ซิกเนเจอร์'], emoji: '⭐' }
+      ];
+
+      for (const item of emojiMap) {
+        if (item.keys.some(k => val.includes(k))) {
+          catIconInput.value = item.emoji;
+          break;
+        }
+      }
+    });
+  }
+};
+
+window.deleteCategory = function (id) {
+  if (DB.getAll('menus').some(m => m.categoryId === id)) { Toast.show(t('cat_delete_warn'), 'warning'); return; }
+  if (confirm(t('cat_delete_confirm'))) { 
+    DB.delete('categories', id); 
+    Toast.show(t('cat_deleted'), 'info'); 
+    Router.render(); 
+    openTagManagerModal();
+  }
+};
+
