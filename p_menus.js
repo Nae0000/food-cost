@@ -44,8 +44,10 @@ function renderMenus(container) {
     let menus = DB.getAll('menus');
     const viewMode = localStorage.getItem('fc_view_mode_menus') || 'grid';
 
-    if (filterCatId) menus = menus.filter(m => m.categoryId === filterCatId);
-    if (search) menus = menus.filter(m => m.name.includes(search));
+    if (filterCatId && filterCatId !== 0 && filterCatId !== '0') {
+      menus = menus.filter(m => String(m.categoryId) === String(filterCatId));
+    }
+    if (search) menus = menus.filter(m => m.name.toLowerCase().includes(search.toLowerCase()));
 
     const gridEl = document.getElementById('menuGrid');
     gridEl.className = viewMode === 'grid' ? 'grid-3' : 'list-container';
@@ -196,8 +198,8 @@ function renderMenus(container) {
         <input type="checkbox" class="form-checkbox" onchange="menuSelectAll(this.checked)" title="Select All" />
       </div>
       <div class="filter-tabs" style="margin-bottom:0;flex:1">
-        <button class="filter-tab active" onclick="menuFilterCat(0,this)">${t('menu_all')}</button>
-        ${cats.map(c => `<button class="filter-tab" onclick="menuFilterCat(${c.id},this)">${c.icon} ${c.name}</button>`).join('')}
+        <button class="filter-tab active" onclick="menuFilterCat('0',this)">${t('menu_all')}</button>
+        ${cats.map(c => `<button class="filter-tab" onclick="menuFilterCat('${c.id}',this)">${c.icon} ${c.name}</button>`).join('')}
         <button class="btn btn-sm btn-ghost" style="padding:4px 12px;font-size:12px;margin-left:auto;border:1px dashed var(--border);color:var(--text-muted);white-space:nowrap" onclick="openTagManagerModal()">⚙️ จัดการ Tag</button>
       </div>
       <div class="search-wrap" style="max-width:240px">
@@ -809,10 +811,10 @@ window.openTagManagerModal = function() {
               <div style="font-size:12px;color:var(--text-muted)">\${cnt} \${t('cat_menus')}</div>
             </div>
             <div style="display:flex;gap:4px">
-              <button class="btn btn-icon btn-ghost btn-sm" onclick="openCategoryModal(\${c.id})">
+              <button class="btn btn-icon btn-ghost btn-sm" onclick="openCategoryModal('${c.id}')">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
               </button>
-              <button class="btn btn-icon btn-sm" style="background:transparent;border:none;color:var(--danger)" onclick="deleteCategory(\${c.id})">
+              <button class="btn btn-icon btn-sm" style="background:transparent;border:none;color:var(--danger)" onclick="deleteCategory('${c.id}')">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>
               </button>
             </div>
@@ -833,7 +835,8 @@ window.openTagManagerModal = function() {
   });
 };
 
-window.openCategoryModal = function (id = null) {
+window.openCategoryModal = function (idStr = null) {
+  const id = idStr && !isNaN(parseInt(idStr)) ? parseInt(idStr) : idStr;
   const cat = id ? DB.getById('categories', id) : null;
   const sw = CAT_COLORS.map(c => \`<div class="color-swatch" style="background:\${c};\${cat?.color === c ? 'border-color:white;transform:scale(1.2)' : ''}"
     onclick="document.getElementById('catColor').value='\${c}';document.querySelectorAll('.color-swatch').forEach(s=>{s.style.borderColor='var(--border)';s.style.transform=''});this.style.borderColor='white';this.style.transform='scale(1.2)'"></div>\`).join('');
@@ -916,8 +919,9 @@ window.openCategoryModal = function (id = null) {
   }
 };
 
-window.deleteCategory = function (id) {
-  if (DB.getAll('menus').some(m => m.categoryId === id)) { Toast.show(t('cat_delete_warn'), 'warning'); return; }
+window.deleteCategory = function (idStr) {
+  const id = isNaN(parseInt(idStr)) ? idStr : parseInt(idStr);
+  if (DB.getAll('menus').some(m => String(m.categoryId) === String(id))) { Toast.show(t('cat_delete_warn'), 'warning'); return; }
   if (confirm(t('cat_delete_confirm'))) { 
     DB.delete('categories', id); 
     Toast.show(t('cat_deleted'), 'info'); 
