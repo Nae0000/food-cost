@@ -3,7 +3,7 @@
 // ===================================================
 
 Router.register('dashboard', renderDashboard);
-Router.register('categories', renderCategories);
+
 Router.register('ingredients', renderIngredients);
 Router.register('menus', renderMenus);
 Router.register('sets', renderSets);
