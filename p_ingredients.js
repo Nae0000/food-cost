@@ -86,33 +86,37 @@ function renderIngredients(container) {
 
     let html = `
       <div style="overflow-x:auto; background:var(--surface); border:1px solid var(--border); border-radius:var(--r-md);">
-      <table style="width:100%; border-collapse:collapse; min-width:800px; font-size:14px; text-align:left;">
+      <table style="width:100%; border-collapse:collapse; min-width:900px; font-size:14px; text-align:left;">
         <thead>
           <tr style="border-bottom:1px solid var(--border); background:var(--bg);">
             <th style="padding:12px; width:40px; text-align:center;">
               <input type="checkbox" id="selectAllCb" onchange="toggleSelectAll(this.checked)" style="accent-color:var(--primary);cursor:pointer;width:15px;height:15px" />
             </th>
-            <th style="padding:12px 8px; width:25%;">${t('ing_tb_name')}</th>
-            <th style="padding:12px 8px; width:12%;">${t('ing_tb_cat')}</th>
-            <th style="padding:12px 8px; width:22%;">${t('ing_tb_qty')}</th>
-            <th style="padding:12px 8px; width:13%;">${t('ing_tb_price')}</th>
-            <th style="padding:12px 8px; width:16%;">${t('ing_tb_avg')}</th>
-            <th style="padding:12px 8px; width:10%; text-align:center;">⋮</th>
+            <th style="padding:12px 8px; width:23%;">${t('ing_tb_name')}</th>
+            <th style="padding:12px 8px; width:11%;">${t('ing_tb_cat')}</th>
+            <th style="padding:12px 8px; width:21%;">${t('ing_tb_qty')}</th>
+            <th style="padding:12px 8px; width:11%;">${t('ing_tb_price')}</th>
+            <th style="padding:12px 8px; width:13%;">${t('ing_tb_avg')}</th>
+            <th style="padding:12px 8px; width:13%; color:var(--warning);">${t('ing_tb_price_wtax')} <span style="font-size:10px;opacity:0.7">(+${_settings.consumptionTax || 8}%)</span></th>
+            <th style="padding:12px 8px; width:8%; text-align:center;">⋮</th>
           </tr>
         </thead>
         <tbody>
     `;
 
     if (ings.length === 0) {
-      html += `<tr><td colspan="7" style="padding:24px;text-align:center;color:var(--text-faint);">${t('ing_empty')}</td></tr>`;
+      html += `<tr><td colspan="8" style="padding:24px;text-align:center;color:var(--text-faint);">${t('ing_empty')}</td></tr>`;
     }
 
     ings.forEach(ing => {
       const price = DB.effectivePrice(ing);
+      const priceWithTax = DB.effectivePriceWithTax(ing);
+      const ctaxRate = _settings.consumptionTax || 8;
       const isSelected = selectedIds.has(ing.id);
       const gc = GROUP_COLORS[ing.group] || { bg: '#33415522', color: '#64748b', emoji: '🧂' };
       
       const modeIndicator = ing.priceMode === 'webhook' ? '🟣' : ing.priceMode === 'sub_recipe' ? '🧪' : ing.priceMode === 'custom' ? '🎯' : '';
+      const taxBadge = ing.includeConsumptionTax ? `<span style="font-size:9px;background:#f59e0b22;color:#d97706;border:1px solid #f59e0b44;border-radius:3px;padding:1px 4px;margin-left:4px;font-weight:700;" title="${t('ing_include_tax')}">税</span>` : '';
 
       // Escape name for safe HTML attribute
       const escapedName = (ing.name || '').replace(/"/g, '&quot;').replace(/</g, '&lt;');
@@ -131,6 +135,7 @@ function renderIngredients(container) {
                 onchange="inlineEditIng(${ing.id}, 'name', this.value)"
                 style="width:100%; font-weight:600;"/>
               ${modeIndicator ? `<span style="font-size:12px;" title="${ing.priceMode}">${modeIndicator}</span>` : ''}
+              ${taxBadge}
             </div>
           </td>
           <td style="padding:8px;">
@@ -166,6 +171,10 @@ function renderIngredients(container) {
           <td class="ing-avg-price" style="padding:12px 8px; font-weight:700; color:var(--primary);">
             ${formatPrice(price)}<span style="font-size:11px; color:var(--text-muted); font-weight:400;"> /${ing.recipeUnit || ing.buyUnit}</span>
           </td>
+          <td class="ing-avg-price-wtax" style="padding:12px 8px; font-weight:700; color:${ing.includeConsumptionTax ? 'var(--warning)' : 'var(--text-faint)'};">
+            ${formatPrice(price * (1 + ctaxRate / 100))}<span style="font-size:11px; color:var(--text-muted); font-weight:400;"> /${ing.recipeUnit || ing.buyUnit}</span>
+            ${ing.includeConsumptionTax ? `<div style="font-size:10px;color:var(--warning);font-weight:600">✅ ${t('ing_include_tax')}</div>` : ''}
+          </td>
           <td style="padding:12px 8px; text-align:center; position:relative;">
             <button class="btn btn-icon btn-ghost btn-sm" onclick="toggleIngMenu(event, ${ing.id})" style="color:var(--text-muted);">
               ⋮
@@ -173,6 +182,7 @@ function renderIngredients(container) {
             <div id="ingMenu-${ing.id}" class="ing-context-menu" style="display:none;">
               <div class="menu-item" onclick="openIngredientModal(${ing.id})">${t('ing_adv_settings')}</div>
               ${ing.priceMode === 'sub_recipe' ? `<div class="menu-item" onclick="openSubRecipeModal(${ing.id})">${t('ing_edit_sub')}</div>` : `<div class="menu-item" onclick="setPriceMode(${ing.id}, 'sub_recipe')">${t('ing_convert_sub')}</div>`}
+              <div class="menu-item" onclick="toggleIngTax(${ing.id})">${ing.includeConsumptionTax ? t('ing_tax_toggle_on') : t('ing_tax_toggle_off')}</div>
               <div class="menu-item" onclick="duplicateIngredient(${ing.id})">${t('ing_copy')}</div>
               <div class="menu-item" style="color:var(--danger);" onclick="deleteIngredient(${ing.id})">${t('ing_del')}</div>
             </div>
@@ -313,13 +323,18 @@ function renderIngredients(container) {
       DB.recordPriceHistory(id, newPrice, 'Inline Edit');
     }
 
-    // Update the avg price cell in-place (no full re-render)
+    // Update the avg price cells in-place (no full re-render)
     const updatedIng = DB.getById('ingredients', id);
     if (updatedIng) {
+      const ctaxRate = _settings.consumptionTax || 8;
+      const ep = DB.effectivePrice(updatedIng);
       const priceCell = document.querySelector(`tr[data-ing-id="${id}"] .ing-avg-price`);
       if (priceCell) {
-        const ep = DB.effectivePrice(updatedIng);
         priceCell.innerHTML = `${formatPrice(ep)}<span style="font-size:11px; color:var(--text-muted); font-weight:400;"> /${updatedIng.recipeUnit || updatedIng.buyUnit}</span>`;
+      }
+      const priceTaxCell = document.querySelector(`tr[data-ing-id="${id}"] .ing-avg-price-wtax`);
+      if (priceTaxCell) {
+        priceTaxCell.innerHTML = `${formatPrice(ep * (1 + ctaxRate / 100))}<span style="font-size:11px; color:var(--text-muted); font-weight:400;"> /${updatedIng.recipeUnit || updatedIng.buyUnit}</span>${updatedIng.includeConsumptionTax ? `<div style="font-size:10px;color:var(--warning);font-weight:600">✅ ${t('ing_include_tax')}</div>` : ''}`;
       }
     }
 
@@ -637,6 +652,17 @@ window.setPriceMode = function (id, mode) {
   Toast.show(t('ing_mode_updated')); Router.render();
 };
 
+// Toggle consumption tax inclusion per ingredient
+window.toggleIngTax = function(id) {
+  const ing = DB.getById('ingredients', id);
+  if (!ing) return;
+  const newVal = !ing.includeConsumptionTax;
+  DB.update('ingredients', id, { includeConsumptionTax: newVal });
+  const rate = _settings.consumptionTax || 8;
+  Toast.show(newVal ? `✅ รวมภาษีการบริโภค ${rate}% ในต้นทุนแล้ว` : `⬜ ยกเว้นภาษีการบริโภคจากต้นทุนแล้ว`, newVal ? 'success' : 'info');
+  Router.render();
+};
+
 window.openIngredientModal = function (id = null) {
   const ing = id ? DB.getById('ingredients', id) : null;
 
@@ -727,9 +753,27 @@ window.openIngredientModal = function (id = null) {
       </div>` : ''}
 
       <!-- Auto-calculated price preview -->
-      <div id="ingPricePreview" style="background:linear-gradient(135deg,var(--primary)22,var(--accent)22);border:1px solid var(--primary);border-radius:var(--r-md);padding:12px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between">
-        <div style="font-size:13px;color:var(--text-muted)">${t('ing_price_per_unit')}</div>
-        <div style="font-size:20px;font-weight:800;color:var(--primary)" id="ingPriceVal">...</div>
+      <div id="ingPricePreview" style="background:linear-gradient(135deg,var(--primary)22,var(--accent)22);border:1px solid var(--primary);border-radius:var(--r-md);padding:12px;margin-bottom:12px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+          <div style="font-size:13px;color:var(--text-muted)">${t('ing_price_notax')}</div>
+          <div style="font-size:20px;font-weight:800;color:var(--primary)" id="ingPriceVal">...</div>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;padding-top:6px;border-top:1px solid var(--border-light)">
+          <div style="font-size:12px;color:var(--warning)">${t('ing_price_wtax')} (+${_settings.consumptionTax || 8}% 消費税)</div>
+          <div style="font-size:16px;font-weight:700;color:var(--warning)" id="ingPriceValTax">...</div>
+        </div>
+      </div>
+
+      <!-- Consumption Tax Toggle -->
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:${ing?.includeConsumptionTax ? '#f59e0b11' : 'var(--bg)'};border:1px solid ${ing?.includeConsumptionTax ? '#f59e0b66' : 'var(--border)'};border-radius:var(--r-md);margin-bottom:16px">
+        <div>
+          <div style="font-size:13px;font-weight:600">${t('ing_include_tax')}</div>
+          <div style="font-size:11px;color:var(--text-muted);margin-top:2px">ใช้ราคารวมภาษีการบริโภคในการคำนวณต้นทุนเมนู</div>
+        </div>
+        <label class="toggle-switch" style="transform:scale(0.85);margin-right:-8px">
+          <input type="checkbox" id="ingIncludeTax" ${ing?.includeConsumptionTax ? 'checked' : ''} onchange="window.updateIngPreview()">
+          <span class="toggle-slider"></span>
+        </label>
       </div>
 
       <div class="form-group">
@@ -746,6 +790,7 @@ window.openIngredientModal = function (id = null) {
       const convFactor = parseFloat(document.getElementById('ingConvFactor').value) || 1;
       const customVal = document.getElementById('ingCustom').value;
       const customPrice = customVal !== '' ? parseFloat(customVal) : null;
+      const includeTaxEl = document.getElementById('ingIncludeTax');
       const data = {
         name,
         group: document.getElementById('ingGroup').value,
@@ -756,6 +801,7 @@ window.openIngredientModal = function (id = null) {
         customPrice,
         basePrice: 0,
         priceMode: customPrice !== null ? 'custom' : (id ? (DB.getById('ingredients', id)?.priceMode || 'manual') : 'manual'),
+        includeConsumptionTax: includeTaxEl ? includeTaxEl.checked : false,
       };
       // Record price history when price changes
       const newPrice = customPrice !== null ? customPrice : (buyPrice > 0 && buyQty > 0 ? buyPrice / (buyQty * convFactor) : 0);
@@ -798,6 +844,15 @@ window.openIngredientModal = function (id = null) {
     const cf = parseFloat(document.getElementById('ingConvFactor')?.value) || 1;
     const rUnit = document.getElementById('ingRecipeUnit')?.value || '';
     const pricePerUnit = bp > 0 ? bp / (bq * cf) : 0;
+    const ctaxRate = _settings.consumptionTax || 8;
+    const includeTax = document.getElementById('ingIncludeTax')?.checked || false;
+    const priceWithTax = pricePerUnit * (1 + ctaxRate / 100);
+
+    // Update preview panel color based on tax toggle
+    const preview = document.getElementById('ingPricePreview');
+    if (preview) {
+      preview.style.borderColor = includeTax ? '#f59e0b' : 'var(--primary)';
+    }
 
     // Total Yield Calculation
     const totalYieldHint = document.getElementById('totalYieldHint');
@@ -811,6 +866,8 @@ window.openIngredientModal = function (id = null) {
 
     const el = document.getElementById('ingPriceVal');
     if (el) el.textContent = `${formatPrice(pricePerUnit)} / ${rUnit}`;
+    const elTax = document.getElementById('ingPriceValTax');
+    if (elTax) elTax.textContent = `${formatPrice(priceWithTax)} / ${rUnit}`;
   };
 
   // Trigger initial price preview after modal DOM is ready

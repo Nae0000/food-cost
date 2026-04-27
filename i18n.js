@@ -237,6 +237,13 @@ const TRANSLATIONS = {
         set_tax: 'ตั้งค่าภาษี',
         set_tax_takeout: 'ภาษี Take Out (%)',
         set_tax_dinein: 'ภาษี Dine In (%)',
+        set_consumption_tax: 'ภาษีการบริโภค / 消費税 (%)',
+        ing_tb_price_wtax: 'ราคา+ภาษี/หน่วย',
+        ing_include_tax: 'รวมภาษีในต้นทุน',
+        ing_price_wtax: 'ราคาหลังบวกภาษี',
+        ing_price_notax: 'ราคาก่อนบวกภาษี',
+        ing_tax_toggle_on: '✅ รวมภาษีการบริโภคในต้นทุน',
+        ing_tax_toggle_off: '⬜ ไม่รวมภาษีการบริโภค',
         set_saved: 'บันทึกการตั้งค่าแล้ว',
         set_account_title: 'บัญชีผู้ใช้ (Account)',
         set_account_guest: 'ผู้ใช้งานระบบ',
@@ -466,6 +473,13 @@ const TRANSLATIONS = {
         set_tax: 'Tax Rates',
         set_tax_takeout: 'Take Out Tax (%)',
         set_tax_dinein: 'Dine In Tax (%)',
+        set_consumption_tax: 'Consumption Tax / 消費税 (%)',
+        ing_tb_price_wtax: 'Price+Tax/Unit',
+        ing_include_tax: 'Include Tax in Cost',
+        ing_price_wtax: 'Price incl. Tax',
+        ing_price_notax: 'Price excl. Tax',
+        ing_tax_toggle_on: '✅ Include Consumption Tax in Cost',
+        ing_tax_toggle_off: '⬜ Exclude Consumption Tax',
         set_saved: 'Settings saved',
         set_account_title: 'Account',
         set_account_guest: 'System User',
@@ -690,6 +704,13 @@ const TRANSLATIONS = {
         set_tax: '税金設定',
         set_tax_takeout: 'テイクアウト税 (%)',
         set_tax_dinein: 'イートイン税 (%)',
+        set_consumption_tax: '消費税 (%)',
+        ing_tb_price_wtax: '税込単価',
+        ing_include_tax: '税込で計算',
+        ing_price_wtax: '税込価格',
+        ing_price_notax: '税抜価格',
+        ing_tax_toggle_on: '✅ 消費税を原価に含める',
+        ing_tax_toggle_off: '⬜ 消費税を含めない',
         set_saved: '設定を保存しました',
         set_account_title: 'アカウント (Account)',
         set_account_guest: 'システムユーザー',
@@ -800,7 +821,7 @@ function saveSettings(s) {
 }
 
 // Current settings (live)
-let _settings = { lang: 'th', currency: 'JPY', customRate: null, calcMethod: 'margin', taxTakeOut: 8, taxDineIn: 10, ...loadSettings() };
+let _settings = { lang: 'th', currency: 'JPY', customRate: null, calcMethod: 'margin', taxTakeOut: 8, taxDineIn: 10, consumptionTax: 8, ...loadSettings() };
 
 // t(key) — translate a key
 function t(key) {

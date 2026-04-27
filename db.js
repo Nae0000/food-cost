@@ -170,7 +170,15 @@ const DB = {
     return Number(ing.basePrice) || 0;
   },
 
-  // Total cost of a sub-recipe's components (with circular-reference guard)
+  // Price per recipeUnit WITH consumption tax applied (when ing.includeConsumptionTax === true)
+  effectivePriceWithTax(ing, _visited) {
+    const base = this.effectivePrice(ing, _visited);
+    if (!ing || !ing.includeConsumptionTax) return base;
+    const rate = (typeof _settings !== 'undefined' ? (_settings.consumptionTax || 0) : 0);
+    return Math.round(base * (1 + rate / 100) * 10000) / 10000;
+  },
+
+  // Total cost of a sub-recipe’s components (with circular-reference guard)
   subRecipeCost(ingredientId, _visited) {
     const visited = _visited || new Set();
     if (visited.has(ingredientId)) return 0; // prevent infinite loops
@@ -179,7 +187,7 @@ const DB = {
     let total = 0;
     for (const item of items) {
       const child = this.getById('ingredients', item.ingredientId);
-      if (child) total += this.effectivePrice(child, visited) * Number(item.quantity || 0);
+      if (child) total += this.effectivePriceWithTax(child, visited) * Number(item.quantity || 0);
     }
     return Math.round(total * 10000) / 10000;
   },
@@ -206,7 +214,7 @@ const DB = {
     let total = 0;
     for (const r of recipes) {
       const ing = this.getById('ingredients', r.ingredientId);
-      if (ing) total += this.effectivePrice(ing) * Number(r.quantity || 0);
+      if (ing) total += this.effectivePriceWithTax(ing) * Number(r.quantity || 0);
     }
     return Math.round(total * 10000) / 10000;
   },

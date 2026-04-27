@@ -109,6 +109,14 @@ function renderSettings(container) {
                 <div style="padding-left:8px;font-size:13px">%</div>
               </div>
             </div>
+            <div class="form-group" style="margin-bottom:0;border-top:1px solid var(--border-light);padding-top:12px;margin-top:4px">
+              <label class="form-label" style="font-weight:600;font-size:12px">${t('set_consumption_tax') || '消費税 (%)'}</label>
+              <div style="display:flex;align-items:center;">
+                <input type="number" class="form-input" id="consumptionTax" value="${_settings.consumptionTax !== undefined ? _settings.consumptionTax : 8}" step="0.1" min="0" style="text-align:right;height:32px" />
+                <div style="padding-left:8px;font-size:13px">%</div>
+              </div>
+              <div class="form-hint" style="margin-top:4px;font-size:11px">ภาษีการบริโภค (消費税) — ใช้คำนวณต้นทุนวัตถุดิบที่เปิดรวมภาษี</div>
+            </div>
           </div>
         </div>
 
@@ -270,6 +278,9 @@ function renderSettings(container) {
 
     const taxDineInVal = document.getElementById('taxDineIn')?.value;
     _settings.taxDineIn = taxDineInVal && !isNaN(parseFloat(taxDineInVal)) ? parseFloat(taxDineInVal) : 10;
+
+    const consumptionTaxVal = document.getElementById('consumptionTax')?.value;
+    _settings.consumptionTax = consumptionTaxVal && !isNaN(parseFloat(consumptionTaxVal)) ? parseFloat(consumptionTaxVal) : 8;
 
     const tutToggle = document.getElementById('tutorialModeToggle');
     if (tutToggle) {
