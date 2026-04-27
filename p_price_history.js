@@ -258,7 +258,14 @@ function renderPriceHistory(container) {
                 </td>
                 <td style="padding:12px 8px"><span style="font-weight:700;color:var(--primary);font-size:15px">${formatPrice(h.price)}</span><small style="color:var(--text-muted)"> /${ing ? (ing.recipeUnit || ing.buyUnit) : ''}</small></td>
                 <td style="padding:12px 8px;text-align:center">${trendHtml}</td>
-                <td style="padding:12px 8px;text-align:right"><span style="font-size:11px;padding:3px 8px;border-radius:99px;background:${noteColor}15;color:${noteColor};border:1px solid ${noteColor}44">${noteLabel}</span></td>
+                <td style="padding:12px 8px;text-align:right">
+                    <div style="display:flex;align-items:center;justify-content:flex-end;gap:8px">
+                        <span style="font-size:11px;padding:3px 8px;border-radius:99px;background:${noteColor}15;color:${noteColor};border:1px solid ${noteColor}44">${noteLabel}</span>
+                        <button class="btn btn-ghost" style="padding:4px;color:var(--danger);opacity:0.6" onclick="phDeleteRecord(${h.id})" title="ลบข้อมูล">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2M10 11v6M14 11v6"/></svg>
+                        </button>
+                    </div>
+                </td>
             </tr>`;
         }).join('') || `<tr><td colspan="5" style="text-align:center;padding:32px;color:var(--text-muted)"><div style="font-size:32px;margin-bottom:8px">📭</div>${t('sys_ph_no_data')}</td></tr>`;
     }
@@ -439,6 +446,17 @@ function renderPriceHistory(container) {
     window.phSelectIng = function (ingId) {
         selectedIngId = ingId === 0 ? null : ingId;
         redraw();
+    };
+
+    window.phDeleteRecord = function(id) {
+        if(confirm('คุณแน่ใจหรือไม่ว่าต้องการลบประวัติราคารายการนี้?')) {
+            if(DB.delete('priceHistory', id)) {
+                Toast.show('ลบประวัติราคาสำเร็จ', 'info');
+                redraw();
+            } else {
+                Toast.show('เกิดข้อผิดพลาด ไม่สามารถลบได้', 'error');
+            }
+        }
     };
 
     window.phToggleShowAll = function(showAll) {
