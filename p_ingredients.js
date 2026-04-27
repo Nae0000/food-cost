@@ -777,6 +777,11 @@ window.openIngredientModal = function (id = null) {
       </div>
 
       <div class="form-group">
+        <label class="form-label">รายละเอียด / Note (ตัวเลือก)</label>
+        <textarea class="form-input" id="ingNote" rows="2" placeholder="เช่น ชื่อซัพพลายเออร์, เบอร์ติดต่อ, หรือหมายเหตุอื่นๆ">${ing?.note || ''}</textarea>
+      </div>
+
+      <div class="form-group">
         <label class="form-label">${t('ing_custom_price')} — Override</label>
         <input class="form-input" id="ingCustom" type="number" step="0.01"
           value="${ing?.customPrice != null ? ing.customPrice : ''}" placeholder="เว้นว่างถ้าไม่ต้องการ" />
@@ -791,6 +796,7 @@ window.openIngredientModal = function (id = null) {
       const customVal = document.getElementById('ingCustom').value;
       const customPrice = customVal !== '' ? parseFloat(customVal) : null;
       const includeTaxEl = document.getElementById('ingIncludeTax');
+      const noteEl = document.getElementById('ingNote');
       const data = {
         name,
         group: document.getElementById('ingGroup').value,
@@ -799,6 +805,7 @@ window.openIngredientModal = function (id = null) {
         recipeUnit: document.getElementById('ingRecipeUnit').value,
         convFactor,
         customPrice,
+        note: noteEl ? noteEl.value.trim() : '',
         basePrice: 0,
         priceMode: customPrice !== null ? 'custom' : (id ? (DB.getById('ingredients', id)?.priceMode || 'manual') : 'manual'),
         includeConsumptionTax: includeTaxEl ? includeTaxEl.checked : false,
