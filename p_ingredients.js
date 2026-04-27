@@ -137,6 +137,7 @@ function renderIngredients(container) {
               ${modeIndicator ? `<span style="font-size:12px;" title="${ing.priceMode}">${modeIndicator}</span>` : ''}
               ${taxBadge}
             </div>
+            ${ing.note ? `<div style="font-size:11px;color:var(--text-faint);margin-top:2px;margin-left:24px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:200px;" title="${ing.note.replace(/"/g, '&quot;')}">📝 ${ing.note}</div>` : ''}
           </td>
           <td style="padding:8px;">
             <select class="inline-select" onchange="inlineEditIng(${ing.id}, 'group', this.value)" style="color:${gc.color};">
