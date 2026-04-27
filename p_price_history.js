@@ -129,7 +129,7 @@ function renderPriceHistory(container) {
                 });
                 
                 return {
-                    label: ing ? ing.name : \`ID:\${iid}\`,
+                    label: ing ? ing.name : `ID:${iid}`,
                     data,
                     borderColor: PALETTE[idx % PALETTE.length],
                     backgroundColor: 'transparent',
@@ -180,7 +180,7 @@ function renderPriceHistory(container) {
                         padding: 12,
                         boxPadding: 6,
                         callbacks: {
-                            label: ctx => \` \${ctx.dataset.label}: \${formatPrice(ctx.parsed.y)}\`
+            label: ctx => ` ${ctx.dataset.label}: ${formatPrice(ctx.parsed.y)}`
                         }
                     }
                 },
@@ -246,21 +246,21 @@ function renderPriceHistory(container) {
             const noteLabel = h.note === 'snapshot' ? '📸 Snapshot' : h.note === 'auto' ? '✏️ Edit' : h.note || '-';
             
             // Trend Icon
-            let trendHtml = \`<span style="color:var(--text-faint)">➖</span>\`;
-            if (h.trend === 'up') trendHtml = \`<span style="color:var(--danger);font-weight:600" title="+\${h.trendVal.toFixed(1)}%">↗️ <small>+\${h.trendVal.toFixed(1)}%</small></span>\`;
-            if (h.trend === 'down') trendHtml = \`<span style="color:var(--success);font-weight:600" title="\${h.trendVal.toFixed(1)}%">↘️ <small>\${h.trendVal.toFixed(1)}%</small></span>\`;
+            let trendHtml = `<span style="color:var(--text-faint)">➖</span>`;
+            if (h.trend === 'up') trendHtml = `<span style="color:var(--danger);font-weight:600" title="+${h.trendVal.toFixed(1)}%">↗️ <small>+${h.trendVal.toFixed(1)}%</small></span>`;
+            if (h.trend === 'down') trendHtml = `<span style="color:var(--success);font-weight:600" title="${h.trendVal.toFixed(1)}%">↘️ <small>${h.trendVal.toFixed(1)}%</small></span>`;
             
-            return \`<tr style="border-bottom:1px solid var(--border-light)">
-                <td style="font-size:12px;color:var(--text-muted);padding:12px 8px">\${fmtDateTime(h.timestamp)}</td>
+            return `<tr style="border-bottom:1px solid var(--border-light)">
+                <td style="font-size:12px;color:var(--text-muted);padding:12px 8px">${fmtDateTime(h.timestamp)}</td>
                 <td style="padding:12px 8px">
-                    <div style="font-weight:600">\${ing ? ing.name : \`ID:\${h.ingredientId}\`}</div>
-                    \${ing ? \`<div style="font-size:11px;color:var(--text-muted)">\${ing.group || ''}</div>\` : ''}
+                    <div style="font-weight:600">${ing ? ing.name : `ID:${h.ingredientId}`}</div>
+                    ${ing ? `<div style="font-size:11px;color:var(--text-muted)">${ing.group || ''}</div>` : ''}
                 </td>
-                <td style="padding:12px 8px"><span style="font-weight:700;color:var(--primary);font-size:15px">\${formatPrice(h.price)}</span><small style="color:var(--text-muted)"> /\${ing ? (ing.recipeUnit || ing.buyUnit) : ''}</small></td>
-                <td style="padding:12px 8px;text-align:center">\${trendHtml}</td>
-                <td style="padding:12px 8px;text-align:right"><span style="font-size:11px;padding:3px 8px;border-radius:99px;background:\${noteColor}15;color:\${noteColor};border:1px solid \${noteColor}44">\${noteLabel}</span></td>
-            </tr>\`;
-        }).join('') || \`<tr><td colspan="5" style="text-align:center;padding:32px;color:var(--text-muted)"><div style="font-size:32px;margin-bottom:8px">📭</div>\${t('sys_ph_no_data')}</td></tr>\`;
+                <td style="padding:12px 8px"><span style="font-weight:700;color:var(--primary);font-size:15px">${formatPrice(h.price)}</span><small style="color:var(--text-muted)"> /${ing ? (ing.recipeUnit || ing.buyUnit) : ''}</small></td>
+                <td style="padding:12px 8px;text-align:center">${trendHtml}</td>
+                <td style="padding:12px 8px;text-align:right"><span style="font-size:11px;padding:3px 8px;border-radius:99px;background:${noteColor}15;color:${noteColor};border:1px solid ${noteColor}44">${noteLabel}</span></td>
+            </tr>`;
+        }).join('') || `<tr><td colspan="5" style="text-align:center;padding:32px;color:var(--text-muted)"><div style="font-size:32px;margin-bottom:8px">📭</div>${t('sys_ph_no_data')}</td></tr>`;
     }
 
     function renderStats() {
@@ -291,55 +291,55 @@ function renderPriceHistory(container) {
         const minRec = sortedHist.find(h => h.price === min);
         const maxRec = sortedHist.find(h => h.price === max);
 
-        const kpiCard = (title, value, subtitle, icon, color) => \`
+        const kpiCard = (title, value, subtitle, icon, color) => `
             <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r-md);padding:16px;display:flex;flex-direction:column;justify-content:center;position:relative;overflow:hidden;">
                 <div style="font-size:12px;color:var(--text-muted);margin-bottom:8px;font-weight:600;display:flex;justify-content:space-between">
-                    \${title} <span style="opacity:0.5">\${icon}</span>
+                    ${title} <span style="opacity:0.5">${icon}</span>
                 </div>
-                <div style="font-size:24px;font-weight:800;color:\${color};line-height:1.2">\${value}</div>
-                \${subtitle ? \`<div style="font-size:11px;color:var(--text-faint);margin-top:6px">\${subtitle}</div>\` : ''}
+                <div style="font-size:24px;font-weight:800;color:${color};line-height:1.2">${value}</div>
+                ${subtitle ? `<div style="font-size:11px;color:var(--text-faint);margin-top:6px">${subtitle}</div>` : ''}
             </div>
-        \`;
+        `;
 
-        statsEl.innerHTML = \`
-            \${kpiCard(t('sys_ph_data_count'), hist.length, 'บันทึกประวัติทั้งหมด', '📊', 'var(--text)')}
-            \${kpiCard(t('sys_ph_min'), formatPrice(min), minRec ? fmtDate(minRec.timestamp) : '', '📉', 'var(--success)')}
-            \${kpiCard(t('sys_ph_max'), formatPrice(max), maxRec ? fmtDate(maxRec.timestamp) : '', '📈', 'var(--danger)')}
-            \${kpiCard(t('sys_ph_current'), formatPrice(last), sortedHist.length > 0 ? fmtDate(sortedHist[sortedHist.length-1].timestamp) : '', '💰', 'var(--primary)')}
-            <div style="background:\${changeBg};border:1px solid \${changeColor}44;border-radius:var(--r-md);padding:16px;display:flex;flex-direction:column;justify-content:center;">
-                <div style="font-size:12px;color:\${changeColor};margin-bottom:8px;font-weight:600;opacity:0.8">\${t('sys_ph_change')}</div>
-                <div style="font-size:24px;font-weight:800;color:\${changeColor};line-height:1.2;display:flex;align-items:center;gap:6px">
-                    \${changeIcon} \${change !== null ? Math.abs(change) + '%' : '-'}
+        statsEl.innerHTML = `
+            ${kpiCard(t('sys_ph_data_count'), hist.length, 'บันทึกประวัติทั้งหมด', '📊', 'var(--text)')}
+            ${kpiCard(t('sys_ph_min'), formatPrice(min), minRec ? fmtDate(minRec.timestamp) : '', '📉', 'var(--success)')}
+            ${kpiCard(t('sys_ph_max'), formatPrice(max), maxRec ? fmtDate(maxRec.timestamp) : '', '📈', 'var(--danger)')}
+            ${kpiCard(t('sys_ph_current'), formatPrice(last), sortedHist.length > 0 ? fmtDate(sortedHist[sortedHist.length-1].timestamp) : '', '💰', 'var(--primary)')}
+            <div style="background:${changeBg};border:1px solid ${changeColor}44;border-radius:var(--r-md);padding:16px;display:flex;flex-direction:column;justify-content:center;">
+                <div style="font-size:12px;color:${changeColor};margin-bottom:8px;font-weight:600;opacity:0.8">${t('sys_ph_change')}</div>
+                <div style="font-size:24px;font-weight:800;color:${changeColor};line-height:1.2;display:flex;align-items:center;gap:6px">
+                    ${changeIcon} ${change !== null ? Math.abs(change) + '%' : '-'}
                 </div>
-                <div style="font-size:11px;color:\${changeColor};margin-top:6px;opacity:0.7">เทียบกับจุดเริ่มต้นแรกสุด</div>
+                <div style="font-size:11px;color:${changeColor};margin-top:6px;opacity:0.7">เทียบกับจุดเริ่มต้นแรกสุด</div>
             </div>
-        \`;
+        `;
     }
 
     function renderFiltersAndPills() {
         const filteredIngs = getFilteredIngs();
         
         // Render Filters
-        const filterHtml = \`
+        const filterHtml = `
             <div style="display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap">
                 <div style="flex:1;min-width:200px;position:relative;">
                     <span style="position:absolute;left:12px;top:10px;opacity:0.5">🔍</span>
-                    <input type="text" class="form-input" id="phSearchInput" placeholder="ค้นหาชื่อวัตถุดิบ..." value="\${filterSearch}" style="padding-left:36px;width:100%" autocomplete="off">
+                    <input type="text" class="form-input" id="phSearchInput" placeholder="ค้นหาชื่อวัตถุดิบ..." value="${filterSearch}" style="padding-left:36px;width:100%" autocomplete="off">
                 </div>
                 <div style="width:160px">
                     <select class="form-select" id="phGroupSelect">
                         <option value="all">📁 ทุกหมวดหมู่</option>
-                        \${groups.map(g => \`<option value="\${g}" \${filterGroup === g ? 'selected' : ''}>\${g}</option>\`).join('')}
+                        ${groups.map(g => `<option value="${g}" ${filterGroup === g ? 'selected' : ''}>${g}</option>`).join('')}
                     </select>
                 </div>
-                \${selectedIngId === null ? \`
+                ${selectedIngId === null ? `
                 <div style="display:flex;align-items:center;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-md);padding:4px;overflow:hidden">
-                    <button class="btn btn-sm \${showTop5Only ? 'btn-primary' : 'btn-ghost'}" style="border-radius:4px;box-shadow:none" onclick="phToggleShowAll(false)">🔥 แกว่งสุด 5 อันดับ</button>
-                    <button class="btn btn-sm \${!showTop5Only ? 'btn-primary' : 'btn-ghost'}" style="border-radius:4px;box-shadow:none" onclick="phToggleShowAll(true)">📊 ดูทั้งหมด</button>
+                    <button class="btn btn-sm ${showTop5Only ? 'btn-primary' : 'btn-ghost'}" style="border-radius:4px;box-shadow:none" onclick="phToggleShowAll(false)">🔥 แกว่งสุด 5 อันดับ</button>
+                    <button class="btn btn-sm ${!showTop5Only ? 'btn-primary' : 'btn-ghost'}" style="border-radius:4px;box-shadow:none" onclick="phToggleShowAll(true)">📊 ดูทั้งหมด</button>
                 </div>
-                \` : ''}
+                ` : ''}
             </div>
-        \`;
+        `;
         document.getElementById('phFilterArea').innerHTML = filterHtml;
 
         // Re-attach listeners because innerHTML replaced elements
@@ -357,17 +357,17 @@ function renderPriceHistory(container) {
 
     function renderPills(ingsToRender) {
         const targetIngs = ingsToRender || getFilteredIngs();
-        const pillsHtml = \`
-            <button class="ph-ing-btn filter-tab \${selectedIngId === null ? 'active' : ''}" style="margin-bottom:8px;box-shadow:0 2px 4px rgba(0,0,0,0.1)" onclick="phSelectIng(0)">
-                \${t('ing_group_all')}
+        const pillsHtml = `
+            <button class="ph-ing-btn filter-tab ${selectedIngId === null ? 'active' : ''}" style="margin-bottom:8px;box-shadow:0 2px 4px rgba(0,0,0,0.1)" onclick="phSelectIng(0)">
+                ${t('ing_group_all')}
             </button>
-            \${targetIngs.map(i => \`
-                <button class="ph-ing-btn filter-tab \${selectedIngId === i.id ? 'active' : ''}" style="margin-bottom:8px" onclick="phSelectIng(\${i.id})">
-                    \${i.name}
+            ${targetIngs.map(i => `
+                <button class="ph-ing-btn filter-tab ${selectedIngId === i.id ? 'active' : ''}" style="margin-bottom:8px" onclick="phSelectIng(${i.id})">
+                    ${i.name}
                 </button>
-            \`).join('')}
-            \${targetIngs.length === 0 ? \`<span style="font-size:13px;color:var(--text-faint);padding:6px 12px">ไม่พบวัตถุดิบ</span>\` : ''}
-        \`;
+            `).join('')}
+            ${targetIngs.length === 0 ? `<span style="font-size:13px;color:var(--text-faint);padding:6px 12px">ไม่พบวัตถุดิบ</span>` : ''}
+        `;
         const pillsContainer = document.getElementById('phPillsArea');
         if(pillsContainer) pillsContainer.innerHTML = pillsHtml;
     }
@@ -380,16 +380,16 @@ function renderPriceHistory(container) {
     }
 
     // Render main layout structure
-    container.innerHTML = \`
+    container.innerHTML = `
     <div class="page-header">
       <div>
-        <div class="page-title" style="display:flex;align-items:center;gap:8px">📈 \${t('sys_price_history_title')}</div>
-        <div class="page-subtitle">\${t('sys_price_history_sub')}</div>
+        <div class="page-title" style="display:flex;align-items:center;gap:8px">📈 ${t('sys_price_history_title')}</div>
+        <div class="page-subtitle">${t('sys_price_history_sub')}</div>
       </div>
       <div style="display:flex;gap:10px;align-items:center">
         <button class="btn btn-secondary" style="background:var(--primary);color:white;border-color:var(--primary)" onclick="phSnapshotAll()" id="phSnapBtn">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/></svg>
-          \${t('sys_save_all_prices')}
+          ${t('sys_save_all_prices')}
         </button>
       </div>
     </div>
@@ -405,35 +405,35 @@ function renderPriceHistory(container) {
 
     <!-- Chart -->
     <div class="card" style="margin-bottom:24px;overflow:hidden">
-      <div class="card-header" style="border-bottom:1px solid var(--border-light);background:var(--surface)"><div class="card-title" style="font-size:15px">📊 \${t('sys_ph_chart_title')}</div></div>
+      <div class="card-header" style="border-bottom:1px solid var(--border-light);background:var(--surface)"><div class="card-title" style="font-size:15px">📊 ${t('sys_ph_chart_title')}</div></div>
       <div style="position:relative;height:400px;padding:16px">
         <canvas id="phChart"></canvas>
         <div id="phNoData" style="display:none;position:absolute;inset:0;flex-direction:column;align-items:center;justify-content:center;gap:12px;color:var(--text-muted);background:var(--bg);z-index:10">
           <span style="font-size:48px">📭</span>
-          <div style="font-size:14px">\${t('sys_ph_no_data')}</div>
-          <button class="btn btn-primary btn-sm" onclick="phSnapshotAll()">\${t('sys_ph_snapshot')}</button>
+          <div style="font-size:14px">${t('sys_ph_no_data')}</div>
+          <button class="btn btn-primary btn-sm" onclick="phSnapshotAll()">${t('sys_ph_snapshot')}</button>
         </div>
       </div>
     </div>
 
     <!-- History Table -->
     <div class="card" style="overflow:hidden">
-      <div class="card-header" style="border-bottom:1px solid var(--border-light);background:var(--surface)"><div class="card-title" style="font-size:15px">🗓️ \${t('sys_ph_table_title')}</div></div>
+      <div class="card-header" style="border-bottom:1px solid var(--border-light);background:var(--surface)"><div class="card-title" style="font-size:15px">🗓️ ${t('sys_ph_table_title')}</div></div>
       <div style="overflow-x:auto">
         <table style="width:100%;border-collapse:collapse;font-size:14px">
           <thead>
             <tr style="background:var(--bg);border-bottom:1px solid var(--border)">
-              <th style="padding:12px 8px;text-align:left;color:var(--text-muted);font-weight:600">\${t('sys_ph_col_date')}</th>
-              <th style="padding:12px 8px;text-align:left;color:var(--text-muted);font-weight:600">\${t('sys_ph_col_ing')}</th>
-              <th style="padding:12px 8px;text-align:left;color:var(--text-muted);font-weight:600">\${t('sys_ph_col_price')}</th>
+              <th style="padding:12px 8px;text-align:left;color:var(--text-muted);font-weight:600">${t('sys_ph_col_date')}</th>
+              <th style="padding:12px 8px;text-align:left;color:var(--text-muted);font-weight:600">${t('sys_ph_col_ing')}</th>
+              <th style="padding:12px 8px;text-align:left;color:var(--text-muted);font-weight:600">${t('sys_ph_col_price')}</th>
               <th style="padding:12px 8px;text-align:center;color:var(--text-muted);font-weight:600">Trend</th>
-              <th style="padding:12px 8px;text-align:right;color:var(--text-muted);font-weight:600">\${t('sys_ph_col_src')}</th>
+              <th style="padding:12px 8px;text-align:right;color:var(--text-muted);font-weight:600">${t('sys_ph_col_src')}</th>
             </tr>
           </thead>
           <tbody id="phTableBody"></tbody>
         </table>
       </div>
-    </div>\`;
+    </div>`;
 
     // Wire up events
     window.phSelectIng = function (ingId) {
@@ -450,7 +450,7 @@ function renderPriceHistory(container) {
         const btn = document.getElementById('phSnapBtn');
         if (btn) { btn.disabled = true; btn.textContent = '⌛ กำลังบันทึก...'; }
         const count = DB.snapshotAllPrices('snapshot');
-        Toast.show(\`📸 บันทึกราคา \${count} รายการแล้ว\`, 'success');
+        Toast.show(`📸 บันทึกราคา ${count} รายการแล้ว`, 'success');
         setTimeout(() => {
             if (btn) { btn.disabled = false; btn.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/></svg> ' + t('sys_save_all_prices'); }
             redraw();
